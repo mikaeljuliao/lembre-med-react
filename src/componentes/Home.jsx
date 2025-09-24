@@ -6,6 +6,8 @@ export default function Home() {
   const [nome, setNome] = useState("");
   const [hora, setHora] = useState("");
 
+  const [remedios, setRemedios] = useState([])
+
   return (
     <div className="bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold text-center text-blue-600 py-6">
