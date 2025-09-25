@@ -12,7 +12,8 @@ export default function Home() {
   event.preventDefault();
 
   if (nome.trim() !== '' && hora.trim() !== ''){
-  constnovoMedicamento = {nome,hora}
+  const novoMedicamento = { nome, hora }
+
 
     setRemedios([...remedios, novoMedicamento])
  
@@ -28,7 +29,7 @@ export default function Home() {
       </h1>
 
       <div className="max-w-md mx-auto bg-white shadow-md rounded p-6">
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={AdicionarRemedio}>
           <input
             type="text"
             placeholder="Nome do remédio"
@@ -51,6 +52,14 @@ export default function Home() {
             Adicionar
           </button>
         </form>
+
+       {remedios.map((remedio, index) => (
+       <div key={index}>
+       <p>{remedio.nome} - {remedio.hora}</p>
+        </div>
+      ))}
+      
+
       </div>
     </div>
   );
