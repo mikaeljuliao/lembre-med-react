@@ -8,6 +8,19 @@ export default function Home() {
 
   const [remedios, setRemedios] = useState([])
 
+  function AdicionarRemedio(event){
+  event.preventDefault();
+
+  if (nome.trim() !== '' && hora.trim() !== ''){
+  constnovoMedicamento = {nome,hora}
+
+    setRemedios([...remedios, novoMedicamento])
+ 
+    setNome('')
+    setHora('')
+  }
+  }
+
   return (
     <div className="bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold text-center text-blue-600 py-6">
