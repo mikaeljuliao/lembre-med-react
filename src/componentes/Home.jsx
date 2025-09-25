@@ -6,6 +6,22 @@ export default function Home() {
   const [nome, setNome] = useState("");
   const [hora, setHora] = useState("");
 
+  const [remedios, setRemedios] = useState([])
+
+  function AdicionarRemedio(event){
+  event.preventDefault();
+
+  if (nome.trim() !== '' && hora.trim() !== ''){
+  const novoMedicamento = { nome, hora }
+
+
+    setRemedios([...remedios, novoMedicamento])
+ 
+    setNome('')
+    setHora('')
+  }
+  }
+
   return (
     <div className="bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold text-center text-blue-600 py-6">
@@ -13,7 +29,7 @@ export default function Home() {
       </h1>
 
       <div className="max-w-md mx-auto bg-white shadow-md rounded p-6">
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={AdicionarRemedio}>
           <input
             type="text"
             placeholder="Nome do remédio"
@@ -36,6 +52,14 @@ export default function Home() {
             Adicionar
           </button>
         </form>
+
+       {remedios.map((remedio, index) => (
+       <div key={index}>
+       <p>{remedio.nome} - {remedio.hora}</p>
+        </div>
+      ))}
+      
+
       </div>
     </div>
   );
