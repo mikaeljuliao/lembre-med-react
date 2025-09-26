@@ -1,25 +1,29 @@
-// Home.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Home() {
-  // estados para controlar inputs
   const [nome, setNome] = useState("");
   const [hora, setHora] = useState("");
 
-  const [remedios, setRemedios] = useState([])
+  // Já inicia com dados do localStorage
+  const [remedios, setRemedios] = useState(() => {
+    const dadosSalvos = localStorage.getItem('remedios');
+    return dadosSalvos ? JSON.parse(dadosSalvos) : [];
+  });
 
-  function AdicionarRemedio(event){
-  event.preventDefault();
+  // Sempre que mudar o estado, salva no localStorage
+  useEffect(() => {
+    localStorage.setItem("remedios", JSON.stringify(remedios));
+  }, [remedios]);
 
-  if (nome.trim() !== '' && hora.trim() !== ''){
-  const novoMedicamento = { nome, hora }
-
-
-    setRemedios([...remedios, novoMedicamento])
- 
-    setNome('')
-    setHora('')
-  }
+  
+  function AdicionarRemedio(event) {
+    event.preventDefault();
+    if (nome.trim() !== '' && hora.trim() !== '') {
+      const novoMedicamento = { nome, hora };
+      setRemedios([...remedios, novoMedicamento]);
+      setNome('');
+      setHora('');
+    }
   }
 
   return (
@@ -53,13 +57,11 @@ export default function Home() {
           </button>
         </form>
 
-       {remedios.map((remedio, index) => (
-       <div key={index}>
-       <p>{remedio.nome} - {remedio.hora}</p>
-        </div>
-      ))}
-      
-
+        {remedios.map((remedio, index) => (
+          <div key={index}>
+            <p>{remedio.nome} - {remedio.hora}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
