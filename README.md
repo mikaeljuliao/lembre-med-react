@@ -7,6 +7,6 @@ Este projeto tem como objetivo aprimorar habilidades em React, integração com 
 ## Funcionalidades principais  
 - Cadastro de lembretes de medicação  
 - Visualização de lembretes programados  
-- Sistema de notificações ou alertas (dependendo da implementação)  
+- Sistema de alertas
 - Interface responsiva  
 
