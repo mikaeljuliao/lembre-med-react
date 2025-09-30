@@ -1,0 +1,114 @@
+<!--
+.
+
+📝 Aula: Salvando e carregando dados com localStorage no React (versão final)
+
+1️⃣ O que é localStorage?
+. É um recurso do navegador que guarda dados no próprio computador do usuário.
+. Diferente de um banco de dados, só guarda strings (texto).
+. Os dados continuam lá mesmo se o usuário fechar ou recarregar a página.
+
+Exemplo simples no console:
+localStorage.setItem('nome', 'Mikael'); // salvar
+localStorage.getItem('nome');           // "Mikael"
+
+
+2️⃣ Por que usamos JSON.stringify e JSON.parse?
+. O localStorage só aceita texto.
+. Nosso estado remedios é um array de objetos.
+. Precisamos converter para string para salvar, e converter de volta para objeto para usar.
+
+JSON.stringify(remedios) // transforma array/objeto em string JSON
+JSON.parse(string)       // transforma string JSON de volta em array/objeto
+
+
+
+3️⃣ A lógica no React:
+const [remedios, setRemedios] = useState(() => {
+  const dadosSalvos = localStorage.getItem('remedios');
+  return dadosSalvos ? JSON.parse(dadosSalvos) : [];
+});
+
+useEffect(() => {
+  localStorage.setItem("remedios", JSON.stringify(remedios));
+}, [remedios]);
+
+
+
+4️⃣ Por que usamos useState(() => {...}) com função inicial?
+. O React só executa essa função na primeira renderização.
+. Com isso, ele lê do localStorage uma única vez e já inicializa remedios com o que estava salvo.
+. Sem essa função, você precisaria de dois useEffect: um para carregar e outro para salvar.
+. Assim, tudo fica mais limpo.
+
+
+
+5️⃣ O operador ternário (condição ? valor1 : valor2):
+
+Dentro do useState usamos:
+return dadosSalvos ? JSON.parse(dadosSalvos) : [];
+
+
+Isso significa:
+. Se dadosSalvos existe → converte e retorna os dados.
+. Se não existe → retorna um array vazio.
+
+
+É um jeito curto de escrever:
+if (dadosSalvos) {
+  return JSON.parse(dadosSalvos);
+} else {
+  return [];
+}
+
+
+
+6️⃣ O que significa o [remedios] no useEffect?
+. É a lista de dependências.
+. O React só roda o useEffect de novo quando algo dessa lista muda.
+. Colocando [remedios] → ele roda sempre que remedios mudar.
+. Se deixasse [], rodaria só uma vez no início.
+
+
+
+7️⃣ Detalhes do localStorage:
+. O localStorage.setItem recebe 2 parâmetros:
+. Chave: nome do item (string) → 'remedios'.
+. Valor: o que quer salvar (também string).
+
+Então:
+localStorage.setItem('remedios', JSON.stringify(remedios))
+
+. "remedios" é a chave.
+. JSON.stringify(remedios) é o valor salvo (string).
+
+
+Para ler:
+localStorage.getItem('remedios')
+
+. Retorna a string. Se quiser o array de volta, faz:
+. JSON.parse(localStorage.getItem('remedios'))
+
+
+
+8️⃣ Resumo do fluxo
+. Página abre → useState lê localStorage e preenche remedios.
+. Usuário adiciona um remédio → setRemedios atualiza o estado.
+. useEffect detecta mudança em remedios → salva os novos dados no localStorage.
+. Se recarregar a página → useState pega os dados salvos e carrega de volta.
+
+
+9️⃣ Vantagens dessa abordagem
+. Não precisa banco de dados para coisas simples.
+. Os dados ficam sempre atualizados sem funções extras.
+. Estado inicial já vem com os dados salvos (sem “flash” vazio).
+. Evita ter dois useEffect brigando entre si.
+
+
+💡 Resumo em uma frase:
+“O localStorage é um armário do navegador.
+Usamos useState para pegar o que está dentro quando o app carrega,
+e useEffect para guardar tudo de novo sempre que algo mudar.”
+
+
+-->

@@ -8,6 +8,8 @@ export default function Home() {
 
   const [remedios, setRemedios] = useState([])
 
+  
+
   function AdicionarRemedio(event){
   event.preventDefault();
 
