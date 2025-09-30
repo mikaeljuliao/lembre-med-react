@@ -1,3 +1,5 @@
+
+
 // Home.jsx
 import { useEffect, useState } from "react";
 
@@ -6,29 +8,30 @@ export default function Home() {
   const [nome, setNome] = useState("");
   const [hora, setHora] = useState("");
 
-  const [remedios, setRemedios] = useState([])
+  const [remedios, setRemedios] = useState([]);
+  const [medicamentos, setMedicamentos] = useState([]);
 
-  const [medicamento,setMedicamento] = useState([])
+  useEffect(() => {
+    // Busca o arquivo JSON que deve estar dentro da pasta "public"
+    fetch("/medicamentos.json")
+      .then((res) => res.json())
+      .then((data) => setMedicamentos(data))
+      .catch((error) =>
+        console.log("medicamentos não puderam ser carregados", error)
+      );
+  }, []);
 
-  useEffect( () => {
-    fetch("http://localhost:3001/medicamentos")
-  .then((res)=> res.json)
-  .then((data) => setMedicamento(data))
-  .catch((error) => console.log('medicamento não pode ser salvo',error))
-  },[])
+  function AdicionarRemedio(event) {
+    event.preventDefault();
 
-  function AdicionarRemedio(event){
-  event.preventDefault();
+    if (nome.trim() !== "" && hora.trim() !== "") {
+      const novoMedicamento = { nome, hora };
 
-  if (nome.trim() !== '' && hora.trim() !== ''){
-  const novoMedicamento = { nome, hora }
+      setRemedios([...remedios, novoMedicamento]);
 
-
-    setRemedios([...remedios, novoMedicamento])
- 
-    setNome('')
-    setHora('')
-  }
+      setNome("");
+      setHora("");
+    }
   }
 
   return (
@@ -62,25 +65,32 @@ export default function Home() {
           </button>
         </form>
 
-       {remedios.map((remedio, index) => (
-       <div key={index}>
-       <p>{remedio.nome} - {remedio.hora}</p>
-        </div>
-        
-      ))}
-      <div>
-        <ul>
-          {medicamento.map((medicamento)=>{
-            <li key={medicamento.id}>
-               <strong>{medicamento.nome} - {medicamento.dose}</strong> <br />
-               horario: {medicamento.horario} - frequencia: {medicamento.frequencia}
-            </li>
-          })}
-        </ul>
-      </div>
-      
+        {/* Lista de remédios adicionados pelo usuário */}
+        {remedios.map((remedio, index) => (
+          <div key={index}>
+            <p>
+              {remedio.nome} - {remedio.hora}
+            </p>
+          </div>
+        ))}
 
+        {/* Lista de medicamentos vindos do JSON */}
+        <div>
+          <ul>
+            {medicamentos.map((medicamento) => (
+              <li key={medicamento.id}>
+                <strong>
+                  {medicamento.nome} - {medicamento.dose}
+                </strong>{" "}
+                <br />
+                horário: {medicamento.horario} - frequência:{" "}
+                {medicamento.frequencia}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
 }
+
