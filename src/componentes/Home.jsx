@@ -1,5 +1,5 @@
 // Home.jsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   // estados para controlar inputs
@@ -8,7 +8,14 @@ export default function Home() {
 
   const [remedios, setRemedios] = useState([])
 
-  
+  const [medicamento,setMedicamento] = useState([])
+
+  useEffect( () => {
+    fetch("http://localhost:3001/medicamentos")
+  .then((res)=> res.json)
+  .then((data) => setMedicamento(data))
+  .catch((error) => console.log('medicamento não pode ser salvo',error))
+  },[])
 
   function AdicionarRemedio(event){
   event.preventDefault();
@@ -59,7 +66,18 @@ export default function Home() {
        <div key={index}>
        <p>{remedio.nome} - {remedio.hora}</p>
         </div>
+        
       ))}
+      <div>
+        <ul>
+          {medicamento.map((medicamento)=>{
+            <li key={medicamento.id}>
+               <strong>{medicamento.nome} - {medicamento.dose}</strong> <br />
+               horario: {medicamento.horario} - frequencia: {medicamento.frequencia}
+            </li>
+          })}
+        </ul>
+      </div>
       
 
       </div>
