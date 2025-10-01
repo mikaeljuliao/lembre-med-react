@@ -9,31 +9,39 @@ export default function Home() {
   const [hora, setHora] = useState("");
 
   const [remedios, setRemedios] = useState([]);
-  const [medicamentos, setMedicamentos] = useState([]);
 
-  useEffect(() => {
-    // Busca o arquivo JSON que deve estar dentro da pasta "public"
-    fetch("/medicamentos.json")
-      .then((res) => res.json())
-      .then((data) => setMedicamentos(data))
-      .catch((error) =>
-        console.log("medicamentos não puderam ser carregados", error)
-      );
-  }, []);
+  const [medicamentos, setMedicamentos] = useState([])
 
-  function AdicionarRemedio(event) {
-    event.preventDefault();
+   useEffect(() => {
+  fetch("/medicamentos.json")
+    .then((res) => res.json())
+    .then((data) => setMedicamentos(data))
+    .catch((error) => console.log('Erro ao carregar medicamentos', error))
+    }, [])
 
-    if (nome.trim() !== "" && hora.trim() !== "") {
-      const novoMedicamento = { nome, hora };
 
-      setRemedios([...remedios, novoMedicamento]);
 
-      setNome("");
-      setHora("");
-    }
+function AdicionarRemedio(event) {
+  event.preventDefault();
+
+  if (nome.trim() !== '' && hora.trim() !== '') {
+    // procurar no "banco" de medicamentos
+    const medicamentoEncontrado = medicamentos.find(
+      (m) => m.nome.toLowerCase() === nome.toLowerCase()
+    );
+
+    const novoMedicamento = medicamentoEncontrado
+      ? { ...medicamentoEncontrado, hora } // pega todos os dados + hora escolhida pelo usuário
+      : { nome, hora }; // só salva nome e hora se não existir no banco
+
+    setRemedios([...remedios, novoMedicamento]);
+
+    setNome('');
+    setHora('');
   }
+}
 
+ 
   return (
     <div className="bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold text-center text-blue-600 py-6">
@@ -41,7 +49,7 @@ export default function Home() {
       </h1>
 
       <div className="max-w-md mx-auto bg-white shadow-md rounded p-6">
-        <form className="space-y-4" onSubmit={AdicionarRemedio}>
+        <form className="space-y-4 " onSubmit={AdicionarRemedio}>
           <input
             type="text"
             placeholder="Nome do remédio"
@@ -66,16 +74,19 @@ export default function Home() {
         </form>
 
         {/* Lista de remédios adicionados pelo usuário */}
-        {remedios.map((remedio, index) => (
-          <div key={index}>
-            <p>
-              {remedio.nome} - {remedio.hora}
-            </p>
-          </div>
-        ))}
+    {remedios.map((remedio, index) => (
+      <div key={index} className="border mt-2 bg-green-100 border-green-600 p-2 rounded" >
+       <p><strong>{remedio.nome}</strong></p>
+       <p>Hórario escolhido: {remedio.hora}</p>
+       {remedio.dose && <p>{remedio.dose}</p>}
+       {remedio.frequencia && <p>{remedio.frequencia}</p>}
+     </div>
+
+    ))}
+
 
         {/* Lista de medicamentos vindos do JSON */}
-        <div>
+        <div className="mt-10">
           <ul>
             {medicamentos.map((medicamento) => (
               <li key={medicamento.id}>
@@ -89,6 +100,7 @@ export default function Home() {
             ))}
           </ul>
         </div>
+        
       </div>
     </div>
   );
