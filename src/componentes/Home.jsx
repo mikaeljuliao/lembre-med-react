@@ -75,11 +75,11 @@ function AdicionarRemedio(event) {
 
         {/* Lista de remédios adicionados pelo usuário */}
     {remedios.map((remedio, index) => (
-      <div key={index} className="border mt-2 bg-green-100 border-green-600 p-2 rounded" >
-       <p><strong>{remedio.nome}</strong></p>
-       <p>Hórario escolhido: {remedio.hora}</p>
-       {remedio.dose && <p>{remedio.dose}</p>}
-       {remedio.frequencia && <p>{remedio.frequencia}</p>}
+      <div key={index} className="border bg-green-100 border-green-600 p-4  mt-4 shadow-lg  rounded-lg" >
+       <p className="text-lg font-bold text-blue-600"><strong>{remedio.nome}</strong></p>
+      <p className="text-gray-800">⏰ Horário escolhido: {remedio.hora}</p>
+       {remedio.dose && <p className="text-sm text-gray-600">💊 Dose:{remedio.dose}</p>}
+       {remedio.frequencia && <p className="text-sm text-gray-600">🔄 Frequência:{remedio.frequencia}</p>}
      </div>
 
     ))}
