@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "nome": "Paracetamol",
+    "dose": "500mg",
+    "horario": "08:00",
+    "frequencia": "A cada 8h"
+  },
+  {
+    "id": 2,
+    "nome": "Amoxicilina",
+    "dose": "875mg",
+    "horario": "12:00",
+    "frequencia": "A cada 12h"
+  },
+  {
+    "id": 3,
+    "nome": "Losartana",
+    "dose": "50mg",
+    "horario": "07:30",
+    "frequencia": "1 vez ao dia"
+  },
+  {
+    "id": 4,
+    "nome": "Metformina",
+    "dose": "850mg",
+    "horario": "19:00",
+    "frequencia": "2 vezes ao dia"
+  },
+  {
+    "id": 5,
+    "nome": "Omeprazol",
+    "dose": "20mg",
+    "horario": "06:30",
+    "frequencia": "Antes do café"
+  },
+  {
+    "id": 6,
+    "nome": "Atorvastatina",
+    "dose": "40mg",
+    "horario": "22:00",
+    "frequencia": "1 vez ao dia"
+  },
+  {
+    "id": 7,
+    "nome": "Prednisona",
+    "dose": "20mg",
+    "horario": "09:00",
+    "frequencia": "1 vez ao dia"
+  },
+  {
+    "id": 8,
+    "nome": "Dipirona",
+    "dose": "1g",
+    "horario": "10:00",
+    "frequencia": "Se houver dor ou febre"
+  },
+  {
+    "id": 9,
+    "nome": "Vitamina D",
+    "dose": "7000 UI",
+    "horario": "Domingo - 08:00",
+    "frequencia": "1 vez por semana"
+  },
+  {
+    "id": 10,
+    "nome": "Ácido Fólico",
+    "dose": "5mg",
+    "horario": "07:00",
+    "frequencia": "1 vez ao dia"
+  }
+]
