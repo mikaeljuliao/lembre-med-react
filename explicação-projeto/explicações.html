@@ -111,4 +111,126 @@ Usamos useState para pegar o que está dentro quando o app carrega,
 e useEffect para guardar tudo de novo sempre que algo mudar.”
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+📚 Aula: Listagem de Medicamentos no React
+
+1. O objetivo da feature:
+
+O que queríamos com essa branch era:
+. ✅ Ler um arquivo JSON (medicamentos.json) com dados de medicamentos (nome, dose, frequência, horário etc.).
+. ✅ Exibir esses dados automaticamente na tela, sem que o usuário precise cadastrar.
+. ✅ Deixar esses dados separados da lógica principal, ou seja, mantê-los no JSON em vez de hardcodar dentro do componente.
+
+
+
+2. Preparando os estados:
+No React usamos estados (useState) para guardar informações que mudam durante a execução da aplicação.
+
+No começo do componente criamos dois estados:
+
+const [remedios, setRemedios] = useState([]); 
+const [medicamentos, setMedicamentos] = useState([]);
+
+. remedios → armazena os medicamentos que o usuário adiciona manualmente no formulário.
+. medicamentos → armazena os medicamentos que vêm do arquivo JSON.
+
+Assim conseguimos trabalhar separadamente com cada fonte de dados.
+
+
+
+3. Buscando o JSON com useEffect
+
+Para carregar os dados assim que a página abre, usamos o hook useEffect.
+
+useEffect(() => {
+  fetch("/medicamentos.json")
+    .then((res) => res.json())
+    .then((data) => setMedicamentos(data))
+    .catch((error) =>
+      console.log("Erro ao carregar medicamentos", error)
+    );
+}, []);
+
+Explicação:
+. fetch("/medicamentos.json") → faz a requisição para o arquivo JSON.
+. .then(res => res.json()) → transforma a resposta em um objeto JavaScript.
+. .then(data => setMedicamentos(data)) → guarda esses dados no estado medicamentos.
+. catch(...) → captura possíveis erros.
+. O [] no final garante que isso só rode uma vez, quando o componente for montado.
+
+
+
+4. Renderizando os medicamentos:
+
+Depois que o JSON foi carregado no estado medicamentos, basta percorrer esse array com .map() e renderizar na tela.
+
+<div className="mt-10">
+  <ul>
+    {medicamentos.map((medicamento) => (
+      <li key={medicamento.id}>
+        <strong>
+          {medicamento.nome} - {medicamento.dose}
+        </strong>{" "}
+        <br />
+        horário: {medicamento.horario} - frequência:{" "}
+        {medicamento.frequencia}
+      </li>
+    ))}
+  </ul>
+</div>
+
+
+O que acontece aqui:
+. medicamentos.map(...) → percorre cada item do array.
+. key={medicamento.id} → cada item precisa de uma chave única.
+. Dentro do JSX mostramos nome, dose, horário e frequência.
+. Ou seja, sempre que o arquivo JSON mudar, a interface automaticamente vai refletir esses dados.
+
+
+
+5. Integração com a lógica já existente:
+Antes, nosso app só cadastrava manualmente com o formulário (remedios).
+Agora temos duas listas:
+
+. Lista de remédios cadastrados pelo usuário
+. Lista de medicamentos vindos do JSON
+
+Assim a aplicação mostra tanto o que o usuário digitou quanto o que já estava registrado no “banco” de medicamentos.
+
+
+
+6. Por que isso é importante?
+. 📂 Separação de responsabilidades → os dados ficam em um arquivo externo (JSON).
+. ⚡ Reutilização → podemos mudar o JSON sem alterar o código.
+. 🔄 Dinamicidade → se o JSON for atualizado, a interface também é.
+. 💻 Próxima evolução → no futuro, esse fetch pode vir de uma API real, sem mudar muita coisa no código.
+
+
+🚀 Conclusão
+
+Na branch listagem-medicamento, aprendemos:
+1. Como usar useState para armazenar dados vindos de diferentes fontes.
+2. Como usar useEffect + fetch para buscar dados de um JSON.
+3. Como percorrer arrays com .map() para renderizar listas no React.
+4. Como separar a lógica de medicamentos cadastrados manualmente e carregados automaticamente.
+
+Isso fecha a funcionalidade de listar medicamentos.
+
+Na prática, você agora tem:
+. Um mini banco de dados local (JSON).
+. Integração desse “banco” com React.
+. Exibição dinâmica dos dados.
 -->
