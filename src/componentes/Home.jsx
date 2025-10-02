@@ -1,47 +1,39 @@
-
-
 // Home.jsx
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  // estados para controlar inputs
   const [nome, setNome] = useState("");
   const [hora, setHora] = useState("");
-
   const [remedios, setRemedios] = useState([]);
+  const [medicamentos, setMedicamentos] = useState([]);
 
-  const [medicamentos, setMedicamentos] = useState([])
+  useEffect(() => {
+    fetch("/medicamentos.json")
+      .then((res) => res.json())
+      .then((data) => setMedicamentos(data))
+      .catch((error) => console.log("Erro ao carregar medicamentos", error));
+  }, []);
 
-   useEffect(() => {
-  fetch("/medicamentos.json")
-    .then((res) => res.json())
-    .then((data) => setMedicamentos(data))
-    .catch((error) => console.log('Erro ao carregar medicamentos', error))
-    }, [])
+  function AdicionarRemedio(event) {
+    event.preventDefault();
 
+    if (nome.trim() !== "" && hora.trim() !== "") {
+      // procurar no "banco" de medicamentos
+      const medicamentoEncontrado = medicamentos.find(
+        (m) => m.nome.toLowerCase() === nome.toLowerCase()
+      );
 
+      const novoMedicamento = medicamentoEncontrado
+        ? { ...medicamentoEncontrado, hora } // pega todos os dados + hora escolhida pelo usuário
+        : { nome, hora }; // só salva nome e hora se não existir no banco
 
-function AdicionarRemedio(event) {
-  event.preventDefault();
+      setRemedios([...remedios, novoMedicamento]);
 
-  if (nome.trim() !== '' && hora.trim() !== '') {
-    // procurar no "banco" de medicamentos
-    const medicamentoEncontrado = medicamentos.find(
-      (m) => m.nome.toLowerCase() === nome.toLowerCase()
-    );
-
-    const novoMedicamento = medicamentoEncontrado
-      ? { ...medicamentoEncontrado, hora } // pega todos os dados + hora escolhida pelo usuário
-      : { nome, hora }; // só salva nome e hora se não existir no banco
-
-    setRemedios([...remedios, novoMedicamento]);
-
-    setNome('');
-    setHora('');
+      setNome("");
+      setHora("");
+    }
   }
-}
 
- 
   return (
     <div className="bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold text-center text-blue-600 py-6">
@@ -74,16 +66,25 @@ function AdicionarRemedio(event) {
         </form>
 
         {/* Lista de remédios adicionados pelo usuário */}
-    {remedios.map((remedio, index) => (
-      <div key={index} className="border bg-green-100 border-green-600 p-4  mt-4 shadow-lg  rounded-lg" >
-       <p className="text-lg font-bold text-blue-600"><strong>{remedio.nome}</strong></p>
-      <p className="text-gray-800">⏰ Horário escolhido: {remedio.hora}</p>
-       {remedio.dose && <p className="text-sm text-gray-600">💊 Dose:{remedio.dose}</p>}
-       {remedio.frequencia && <p className="text-sm text-gray-600">🔄 Frequência:{remedio.frequencia}</p>}
-     </div>
-
-    ))}
-
+        {remedios.map((remedio, index) => (
+          <div
+            key={index}
+            className="border bg-green-100 border-green-600 p-4  mt-4 shadow-lg  rounded-lg"
+          >
+            <p className="text-lg font-bold text-blue-600">
+              <strong>{remedio.nome}</strong>
+            </p>
+            <p className="text-gray-800">⏰ Horário escolhido: {remedio.hora}</p>
+            {remedio.dose && (
+              <p className="text-sm text-gray-600">💊 Dose:{remedio.dose}</p>
+            )}
+            {remedio.frequencia && (
+              <p className="text-sm text-gray-600">
+                🔄 Frequência:{remedio.frequencia}
+              </p>
+            )}
+          </div>
+        ))}
 
         {/* Lista de medicamentos vindos do JSON */}
         <div className="mt-10">
@@ -100,9 +101,7 @@ function AdicionarRemedio(event) {
             ))}
           </ul>
         </div>
-        
       </div>
     </div>
   );
 }
-
