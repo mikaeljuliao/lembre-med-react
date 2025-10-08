@@ -233,4 +233,80 @@ Na prática, você agora tem:
 . Um mini banco de dados local (JSON).
 . Integração desse “banco” com React.
 . Exibição dinâmica dos dados.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+🔹 1. git checkout develop
+
+Esse comando faz você entrar na branch develop.
+
+Se já estiver nela, o Git responde algo como Already on 'develop'.
+
+🔹 2. git merge main
+
+Aqui é onde sempre rola confusão 👀
+
+Esse comando pega o histórico da main e junta dentro da develop.
+
+Ou seja: você está atualizando a develop com tudo que já existe na main.
+
+Não é o contrário. A main não recebe nada aqui.
+
+📌 Então:
+
+Branch ativa (onde você está) = quem vai ser atualizada.
+
+Branch do merge (que você passa como argumento) = quem traz as mudanças.
+
+👉 Como você estava em develop, o merge significa:
+
+"junte as mudanças da main dentro da develop".
+
+🔹 3. O que é merge
+
+Exatamente: merge = juntar o histórico de duas branches.
+Ele cria um commit especial (merge commit) se houver diferenças entre elas.
+Se não houver conflitos, o Git une automaticamente.
+
+📌 Se houver conflitos, você precisa resolver manualmente (como aconteceu antes).
+
+🔹 4. git push origin develop
+
+O push envia a sua branch local (develop) pro repositório remoto (GitHub, GitLab etc.).
+
+origin = apelido padrão pro repositório remoto.
+
+develop = branch que você está enviando.
+
+💡 Se você só fizesse o merge localmente e não desse o push, a develop remota ficaria desatualizada.
+O push origin develop garante que a branch remota fique igual à sua local.
+
+✅ Resumindo sua explicação corrigida:
+
+checkout develop → entro na branch develop.
+
+merge main → atualizo develop com tudo que está na main.
+
+push origin develop → envio a develop atualizada pro GitHub.
 -->
