@@ -233,4 +233,193 @@ Na prática, você agora tem:
 . Um mini banco de dados local (JSON).
 . Integração desse “banco” com React.
 . Exibição dinâmica dos dados.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+🔹 1. git checkout develop
+
+Esse comando faz você entrar na branch develop.
+
+Se já estiver nela, o Git responde algo como Already on 'develop'.
+
+🔹 2. git merge main
+
+Aqui é onde sempre rola confusão 👀
+
+Esse comando pega o histórico da main e junta dentro da develop.
+
+Ou seja: você está atualizando a develop com tudo que já existe na main.
+
+Não é o contrário. A main não recebe nada aqui.
+
+📌 Então:
+
+Branch ativa (onde você está) = quem vai ser atualizada.
+
+Branch do merge (que você passa como argumento) = quem traz as mudanças.
+
+👉 Como você estava em develop, o merge significa:
+
+"junte as mudanças da main dentro da develop".
+
+🔹 3. O que é merge
+
+Exatamente: merge = juntar o histórico de duas branches.
+Ele cria um commit especial (merge commit) se houver diferenças entre elas.
+Se não houver conflitos, o Git une automaticamente.
+
+📌 Se houver conflitos, você precisa resolver manualmente (como aconteceu antes).
+
+🔹 4. git push origin develop
+
+O push envia a sua branch local (develop) pro repositório remoto (GitHub, GitLab etc.).
+
+origin = apelido padrão pro repositório remoto.
+
+develop = branch que você está enviando.
+
+💡 Se você só fizesse o merge localmente e não desse o push, a develop remota ficaria desatualizada.
+O push origin develop garante que a branch remota fique igual à sua local.
+
+
+
+
+✅ Resumindo sua explicação corrigida:
+. checkout develop → entro na branch develop.
+. merge main → atualizo develop com tudo que está na main.
+. push origin develop → envio a develop atualizada pro GitHub.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+🧠 Aula: Criando a funcionalidade Remover Remédio
+🎯 Objetivo:
+
+Permitir que o usuário remova um remédio da lista exibida na tela, de forma dinâmica, sem precisar recarregar a página.
+
+🧩 Etapas de implementação
+1️⃣ Entendimento do problema
+
+Queríamos que cada remédio adicionado tivesse um botão de remover.
+Quando o usuário clicasse, aquele remédio deveria sumir da lista imediatamente.
+
+Pra isso, precisaríamos:
+. Acessar o estado atual da lista de remédios (remedios);
+. Remover apenas o item selecionado, sem alterar o resto;
+. Atualizar o estado pra refletir essa mudança na interface 
+(React faz isso automaticamente quando o estado muda).
+
+
+
+2️⃣ Criando a função de remover
+
+Usamos o React Hook useState que controla a lista de remédios:
+
+const [remedios, setRemedios] = useState([]);
+
+
+Depois criamos a função removerRemedio:
+
+function removerRemedio(idDoRemedio) {
+  setRemedios((listaAnteriorDeRemedios) => 
+    listaAnteriorDeRemedios.filter((remedio) => remedio.id !== idDoRemedio)
+  );
+}
+
+🧩 Explicando linha por linha:
+. setRemedios(...) → é a função que atualiza o estado remedios.
+. (listaAnteriorDeRemedios) → é o estado antigo (a lista antes da remoção).
+Esse nome é só pra clareza. Em alguns códigos aparece como prev, que é 
+abreviação de previous, ou seja, “anterior”.
+. .filter() → cria uma nova lista, sem modificar a original, mantendo apenas 
+os elementos que passam no teste.
+. (remedio) => remedio.id !== idDoRemedio → esse é o teste: só ficam na lista os 
+remédios cujo id não é igual ao id que queremos remover.
+. O React então re-renderiza o componente mostrando a nova lista, já sem o remédio removido.
+
+
+
+3️⃣ Ligando o botão à função:
+
+Dentro do map() que mostra os remédios na tela, adicionamos um botão:
+
+<button
+  onClick={() => removerRemedio(remedio.id)}
+  className="mt-2 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+>
+  Remover
+</button>
+
+🧩 O que acontece aqui:
+. O onClick chama a função removerRemedio, passando o id do remédio.
+. Assim que o botão é clicado, a função roda e o item some da tela.
+
+
+
+4️⃣ Testando a funcionalidade:
+
+Passos testados:
+1. Adicionar 2 ou mais remédios.
+2. Clicar em “Remover” em um deles.
+3. Verificar se apenas aquele sumiu da lista.
+4. Conferir se o resto da lista continua igual. ✅
+
+🧹 Resultado final (resumo visual)
+function removerRemedio(idDoRemedio) {
+  setRemedios((listaAnterior) =>
+    listaAnterior.filter((remedio) => remedio.id !== idDoRemedio)
+  );
+}
+
+
+
+💡 Resumo conceitual:
+.filter() percorre a lista e cria uma nova, com todos os itens que 
+não têm o ID igual ao que queremos remover.
+Depois setRemedios atualiza o estado com essa nova lista.
+O React automaticamente refaz a renderização — e o item desaparece da tela.
+
+
+📚 Conclusão
+. Usamos o conceito de imutabilidade do React: nunca alteramos o 
+estado direto, sempre criamos uma nova lista.
+. Entendemos o uso do callback no setState, pra trabalhar com o 
+valor anterior de forma segura.
+. Aplicamos o .filter(), uma função nativa do JavaScript muito 
+usada pra manipular arrays no React.
 -->
