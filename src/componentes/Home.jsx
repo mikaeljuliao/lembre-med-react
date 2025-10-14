@@ -14,24 +14,35 @@ export default function Home() {
       .catch((error) => console.log("Erro ao carregar medicamentos", error));
   }, []);
 
-  function AdicionarRemedio(event) {
+  // ➕ Adicionar remédio
+  function adicionarRemedio(event) {
     event.preventDefault();
 
-    if (nome.trim() !== "" && hora.trim() !== "") {
-      // procurar no "banco" de medicamentos
+    if (nome.trim() !== '' && hora.trim() !== '') {
       const medicamentoEncontrado = medicamentos.find(
         (m) => m.nome.toLowerCase() === nome.toLowerCase()
       );
 
+      const id = medicamentoEncontrado ? medicamentoEncontrado.id : Date.now();
+
       const novoMedicamento = medicamentoEncontrado
-        ? { ...medicamentoEncontrado, hora } // pega todos os dados + hora escolhida pelo usuário
-        : { nome, hora }; // só salva nome e hora se não existir no banco
+        ? { ...medicamentoEncontrado, hora, id }
+        : { id, nome, hora };
 
-      setRemedios([...remedios, novoMedicamento]);
+      setRemedios((listaAnterior) => [...listaAnterior, novoMedicamento]);
 
-      setNome("");
-      setHora("");
+      setNome('');
+      setHora('');
     }
+  }
+
+  // ❌ Remover remédio
+  function removerRemedio(idDoRemedio) {
+    setRemedios((listaAnteriorDeRemedios) =>
+      listaAnteriorDeRemedios.filter(
+        (remedio) => remedio.id !== idDoRemedio
+      )
+    );
   }
 
   return (
@@ -41,7 +52,7 @@ export default function Home() {
       </h1>
 
       <div className="max-w-md mx-auto bg-white shadow-md rounded p-6">
-        <form className="space-y-4 " onSubmit={AdicionarRemedio}>
+        <form className="space-y-4" onSubmit={adicionarRemedio}>
           <input
             type="text"
             placeholder="Nome do remédio"
@@ -66,23 +77,29 @@ export default function Home() {
         </form>
 
         {/* Lista de remédios adicionados pelo usuário */}
-        {remedios.map((remedio, index) => (
+        {remedios.map((remedio) => (
           <div
-            key={index}
-            className="border bg-green-100 border-green-600 p-4  mt-4 shadow-lg  rounded-lg"
+            key={remedio.id}
+            className="border bg-green-100 border-green-600 p-4 mt-4 shadow-lg rounded-lg"
           >
             <p className="text-lg font-bold text-blue-600">
               <strong>{remedio.nome}</strong>
             </p>
             <p className="text-gray-800">⏰ Horário escolhido: {remedio.hora}</p>
             {remedio.dose && (
-              <p className="text-sm text-gray-600">💊 Dose:{remedio.dose}</p>
+              <p className="text-sm text-gray-600">💊 Dose: {remedio.dose}</p>
             )}
             {remedio.frequencia && (
               <p className="text-sm text-gray-600">
-                🔄 Frequência:{remedio.frequencia}
+                🔄 Frequência: {remedio.frequencia}
               </p>
             )}
+            <button
+              onClick={() => removerRemedio(remedio.id)}
+              className="mt-2 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+            >
+              Remover
+            </button>
           </div>
         ))}
 
@@ -93,7 +110,7 @@ export default function Home() {
               <li key={medicamento.id}>
                 <strong>
                   {medicamento.nome} - {medicamento.dose}
-                </strong>{" "}
+                </strong>
                 <br />
                 horário: {medicamento.horario} - frequência:{" "}
                 {medicamento.frequencia}
