@@ -2,11 +2,14 @@
 import { useEffect, useState } from "react";
 
 export default function Home() {
+ 
   const [nome, setNome] = useState("");
   const [hora, setHora] = useState("");
   const [remedios, setRemedios] = useState([]);
   const [medicamentos, setMedicamentos] = useState([]);
   const [remedioEmEdicao, setRemedioEmEdicao] = useState[null]
+
+
 
 
   useEffect(() => {
@@ -17,26 +20,65 @@ export default function Home() {
   }, []);
 
   // ➕ Adicionar remédio
-  function adicionarRemedio(event) {
-    event.preventDefault();
+ // preparar edição: preenche inputs e marca qual id está em edição
+function prepararEdicao(remedio) {
+  setHora(remedio.hora);
+  setNome(remedio.nome);
+  setRemedioEmEdicao(remedio.id); // ✅ nome correto da setter
+}
 
-    if (nome.trim() !== '' && hora.trim() !== '') {
-      const medicamentoEncontrado = medicamentos.find(
-        (m) => m.nome.toLowerCase() === nome.toLowerCase()
-      );
+// adicionar / salvar (agora cobre tanto adicionar quanto editar)
+function adicionarRemedio(event) {
+  event.preventDefault();
 
-      const id = medicamentoEncontrado ? medicamentoEncontrado.id : Date.now();
+  if (nome.trim() === "" || hora.trim() === "") return;
 
-      const novoMedicamento = medicamentoEncontrado
-        ? { ...medicamentoEncontrado, hora, id }
-        : { id, nome, hora };
+  // se estamos editando, vamos atualizar o remédio com esse id
+  if (remedioEmEdicao) {
+    // encontra se o nome atual do formulário corresponde a um medicamento do JSON
+    const medicamentoDoJson = medicamentos.find(
+      (m) => m.nome.toLowerCase() === nome.toLowerCase()
+    );
 
-      setRemedios((listaAnterior) => [...listaAnterior, novoMedicamento]);
+    setRemedios((listaAnterior) =>
+      listaAnterior.map((remedio) => {
+        if (remedio.id !== remedioEmEdicao) return remedio;
 
-      setNome('');
-      setHora('');
-    }
+        // Se existir no JSON, mescla os dados do JSON (dose, frequência, etc)
+        if (medicamentoDoJson) {
+          return { ...medicamentoDoJson, id: remedioEmEdicao, hora };
+        }
+
+        // Senão, atualiza somente os campos nome/hora, preservando outros campos existentes
+        return { ...remedio, nome, hora };
+      })
+    );
+
+    // limpa o modo edição
+    setRemedioEmEdicao(null);
+    setNome("");
+    setHora("");
+    return;
   }
+
+  // se não estivermos em edição: fluxo de adicionar novo remédio
+  const medicamentoEncontrado = medicamentos.find(
+    (m) => m.nome.toLowerCase() === nome.toLowerCase()
+  );
+
+  const id = medicamentoEncontrado ? medicamentoEncontrado.id : Date.now();
+
+  const novoMedicamento = medicamentoEncontrado
+    ? { ...medicamentoEncontrado, hora, id }
+    : { id, nome, hora };
+
+  setRemedios((listaAnterior) => [...listaAnterior, novoMedicamento]);
+
+  setNome("");
+  setHora("");
+}
+
+
 
   // ❌ Remover remédio
   function removerRemedio(idDoRemedio) {
@@ -70,12 +112,13 @@ export default function Home() {
             className="w-full p-2 border border-gray-300 rounded"
           />
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-          >
-            Adicionar
-          </button>
+         <button
+  type="submit"
+  className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+>
+  {remedioEmEdicao ? "Salvar Alterações" : "Adicionar"}
+</button>
+
         </form>
 
         {/* Lista de remédios adicionados pelo usuário */}
@@ -102,6 +145,14 @@ export default function Home() {
             >
               Remover
             </button>
+         <button
+  onClick={() => prepararEdicao(remedio)}
+  className="mt-2 bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+>
+  Editar
+</button>
+
+
           </div>
         ))}
 
