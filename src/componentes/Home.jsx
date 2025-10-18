@@ -7,7 +7,7 @@ export default function Home() {
   const [hora, setHora] = useState("");
   const [remedios, setRemedios] = useState([]);
   const [medicamentos, setMedicamentos] = useState([]);
-  const [remedioEmEdicao, setRemedioEmEdicao] = useState[null]
+  const [remedioEmEdicao, setRemedioEmEdicao] = useState(null)
 
 
 
