@@ -5,11 +5,17 @@ export default function Home() {
  
   const [nome, setNome] = useState("");
   const [hora, setHora] = useState("");
-  const [remedios, setRemedios] = useState([]);
+  const [remedios, setRemedios] = useState(() =>{
+    const remediosSalvos = localStorage.getItem('dadosRemedios') 
+    return remediosSalvos ? JSON.parse(remediosSalvos) : []
+  });
   const [medicamentos, setMedicamentos] = useState([]);
   const [remedioEmEdicao, setRemedioEmEdicao] = useState(null)
 
 
+  useEffect(() =>{
+    localStorage.setItem('dadosRemedios', JSON.stringify(remedios))
+  }, [remedios])
 
 
   useEffect(() => {
