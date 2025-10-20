@@ -5,11 +5,12 @@ export default function Home() {
  
   const [nome, setNome] = useState("");
   const [hora, setHora] = useState("");
-  const [remedios, setRemedios] = useState(() =>{
+  const [observacao, setObservacao] = useState("");
+  const [remedios, setRemedios] = useState(() =>{ //remedios dom usuario
     const remediosSalvos = localStorage.getItem('dadosRemedios') 
     return remediosSalvos ? JSON.parse(remediosSalvos) : []
   });
-  const [medicamentos, setMedicamentos] = useState([]);
+  const [medicamentos, setMedicamentos] = useState([]); //medicamentos do json
   const [remedioEmEdicao, setRemedioEmEdicao] = useState(null)
 
 
@@ -25,11 +26,13 @@ export default function Home() {
       .catch((error) => console.log("Erro ao carregar medicamentos", error));
   }, []);
 
+
   // ➕ Adicionar remédio
  // preparar edição: preenche inputs e marca qual id está em edição
 function prepararEdicao(remedio) {
   setHora(remedio.hora);
   setNome(remedio.nome);
+  setObservacao(remedio.observação)
   setRemedioEmEdicao(remedio.id); // ✅ nome correto da setter
 }
 
@@ -37,7 +40,7 @@ function prepararEdicao(remedio) {
 function adicionarRemedio(event) {
   event.preventDefault();
 
-  if (nome.trim() === "" || hora.trim() === "") return;
+  if (nome.trim() === "" || hora.trim() === "" || observacao.trim() === "") return;
 
   // se estamos editando, vamos atualizar o remédio com esse id
   if (remedioEmEdicao) {
@@ -56,7 +59,7 @@ function adicionarRemedio(event) {
         }
 
         // Senão, atualiza somente os campos nome/hora, preservando outros campos existentes
-        return { ...remedio, nome, hora };
+        return { ...remedio, nome, hora, observacao };
       })
     );
 
@@ -64,6 +67,7 @@ function adicionarRemedio(event) {
     setRemedioEmEdicao(null);
     setNome("");
     setHora("");
+     setObservacao("")
     return;
   }
 
@@ -75,13 +79,14 @@ function adicionarRemedio(event) {
   const id = medicamentoEncontrado ? medicamentoEncontrado.id : Date.now();
 
   const novoMedicamento = medicamentoEncontrado
-    ? { ...medicamentoEncontrado, hora, id }
-    : { id, nome, hora };
+    ? { ...medicamentoEncontrado, hora, id, observacao}
+    : { id, nome, hora,observacao };
 
   setRemedios((listaAnterior) => [...listaAnterior, novoMedicamento]);
 
   setNome("");
   setHora("");
+   setObservacao("")
 }
 
 
@@ -118,10 +123,16 @@ function adicionarRemedio(event) {
             className="w-full p-2 border border-gray-300 rounded"
           />
 
+          <textarea placeholder="Acresente algum detalhe" value={observacao}
+          onChange={(e) => setObservacao(e.target.value)} className="w-full p-2 border border-gray-300 rounded ">
+            
+          </textarea>
+
          <button
   type="submit"
   className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
 >
+
   {remedioEmEdicao ? "Salvar Alterações" : "Adicionar"}
 </button>
 
@@ -136,14 +147,27 @@ function adicionarRemedio(event) {
             <p className="text-lg font-bold text-blue-600">
               <strong>{remedio.nome}</strong>
             </p>
+
             <p className="text-gray-800">⏰ Horário escolhido: {remedio.hora}</p>
+
+            <p className="text-lg font-bold text-blue-600">
+             Observação: {remedio.observação}
+           </p>
+
             {remedio.dose && (
               <p className="text-sm text-gray-600">💊 Dose: {remedio.dose}</p>
             )}
+       
+           <p className="text-lg font-bold text-blue-600">
+
+           </p>
+
             {remedio.frequencia && (
               <p className="text-sm text-gray-600">
                 🔄 Frequência: {remedio.frequencia}
               </p>
+
+              
             )}
             <button
               onClick={() => removerRemedio(remedio.id)}
