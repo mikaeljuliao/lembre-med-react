@@ -113,26 +113,33 @@ function adicionarRemedio(event) {
 
       <div className="max-w-md mx-auto bg-white shadow-md rounded p-6">
         <form className="space-y-4" onSubmit={adicionarRemedio}>
+          <label htmlFor="nome" className="py-4 text-lg font-bold ">Nome do Medicamento:</label>
           <input
-            type="text"
+            type="text" id="nome"
             placeholder="Nome do remédio"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded"
           />
 
+         <label htmlFor="hora"  className="py-4 text-lg font-bold">Horário:</label>
           <input
             type="time"
+            placeholder="A cada quantas horas?"
+            id="hora"
             value={hora}
             onChange={(e) => setHora(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded"
           />
 
-          <input type="text" placeholder="EX: 500mg" value={dosagem} 
+
+         <label htmlFor="dosagem" className="py-4 font-bold text-lg ">Dosagem:</label>
+          <input type="text" id="dosagem" placeholder="EX: 500mg" value={dosagem} 
           onChange={(e) => setDosagem(e.target.value) }
           className="w-full p-2 border border-gray-300 rounded" />
-
-          <textarea placeholder="Acresente algum detalhe" value={observacao}
+          
+          <label htmlFor="observacao" className="py-2 font-bold text-lg ">Observações::</label>
+          <textarea id="observacao" placeholder="Acresente algum detalhe" value={observacao}
           onChange={(e) => setObservacao(e.target.value)} className="w-full p-2 border border-gray-300 rounded ">
             
           </textarea>
