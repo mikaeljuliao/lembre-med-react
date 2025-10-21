@@ -6,6 +6,7 @@ export default function Home() {
   const [nome, setNome] = useState("");
   const [hora, setHora] = useState("");
   const [observacao, setObservacao] = useState("");
+  const [dosagem, setDosagem] = useState("")
   const [remedios, setRemedios] = useState(() =>{ //remedios dom usuario
     const remediosSalvos = localStorage.getItem('dadosRemedios') 
     return remediosSalvos ? JSON.parse(remediosSalvos) : []
@@ -32,7 +33,8 @@ export default function Home() {
 function prepararEdicao(remedio) {
   setHora(remedio.hora);
   setNome(remedio.nome);
-  setObservacao(remedio.observação)
+  setObservacao(remedio.observacao)
+  setDosagem(remedio.dosagem)
   setRemedioEmEdicao(remedio.id); // ✅ nome correto da setter
 }
 
@@ -40,7 +42,7 @@ function prepararEdicao(remedio) {
 function adicionarRemedio(event) {
   event.preventDefault();
 
-  if (nome.trim() === "" || hora.trim() === "" || observacao.trim() === "") return;
+  if (nome.trim() === "" || hora.trim() === "" || dosagem.trim() === "") return;
 
   // se estamos editando, vamos atualizar o remédio com esse id
   if (remedioEmEdicao) {
@@ -55,11 +57,11 @@ function adicionarRemedio(event) {
 
         // Se existir no JSON, mescla os dados do JSON (dose, frequência, etc)
         if (medicamentoDoJson) {
-          return { ...medicamentoDoJson, id: remedioEmEdicao, hora };
+          return { ...medicamentoDoJson, id: remedioEmEdicao, hora, dosagem, observacao };
         }
 
         // Senão, atualiza somente os campos nome/hora, preservando outros campos existentes
-        return { ...remedio, nome, hora, observacao };
+        return { ...remedio, nome, hora, dosagem, observacao };
       })
     );
 
@@ -67,6 +69,7 @@ function adicionarRemedio(event) {
     setRemedioEmEdicao(null);
     setNome("");
     setHora("");
+    setDosagem("")
      setObservacao("")
     return;
   }
@@ -79,14 +82,16 @@ function adicionarRemedio(event) {
   const id = medicamentoEncontrado ? medicamentoEncontrado.id : Date.now();
 
   const novoMedicamento = medicamentoEncontrado
-    ? { ...medicamentoEncontrado, hora, id, observacao}
-    : { id, nome, hora,observacao };
+    ? { ...medicamentoEncontrado, hora, id}
+    : { id, nome, hora, dosagem, observacao };
 
   setRemedios((listaAnterior) => [...listaAnterior, novoMedicamento]);
 
   setNome("");
   setHora("");
+  setDosagem("")
    setObservacao("")
+   
 }
 
 
@@ -123,6 +128,10 @@ function adicionarRemedio(event) {
             className="w-full p-2 border border-gray-300 rounded"
           />
 
+          <input type="text" placeholder="EX: 500mg" value={dosagem} 
+          onChange={(e) => setDosagem(e.target.value) }
+          className="w-full p-2 border border-gray-300 rounded" />
+
           <textarea placeholder="Acresente algum detalhe" value={observacao}
           onChange={(e) => setObservacao(e.target.value)} className="w-full p-2 border border-gray-300 rounded ">
             
@@ -150,17 +159,21 @@ function adicionarRemedio(event) {
 
             <p className="text-gray-800">⏰ Horário escolhido: {remedio.hora}</p>
 
-            <p className="text-lg font-bold text-blue-600">
-             Observação: {remedio.observação}
+         <p className="text-lg font-bold text-blue-600">
+             Dosagem: {remedio.dosagem}
            </p>
+
+            <p className="text-lg font-bold text-blue-600">
+             Observação: {remedio.observacao}
+           </p>
+
+       
 
             {remedio.dose && (
               <p className="text-sm text-gray-600">💊 Dose: {remedio.dose}</p>
             )}
        
-           <p className="text-lg font-bold text-blue-600">
-
-           </p>
+    
 
             {remedio.frequencia && (
               <p className="text-sm text-gray-600">
