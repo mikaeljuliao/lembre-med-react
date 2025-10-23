@@ -13,11 +13,41 @@ export default function Home() {
   });
   const [medicamentos, setMedicamentos] = useState([]); //medicamentos do json
   const [remedioEmEdicao, setRemedioEmEdicao] = useState(null)
+  const [sugestoes, setSugestoes] = useState([]);
+
 
 
   useEffect(() =>{
     localStorage.setItem('dadosRemedios', JSON.stringify(remedios))
   }, [remedios])
+  useEffect(() => {
+  const nomeDigitado = nome.trim(); // nomeLimpo → nomeDigitado: mais intuitivo
+
+  // 🧹 Se o campo estiver vazio, limpa sugestões
+  if (!nomeDigitado) {
+    setSugestoes([]);
+    return;
+  }
+
+  // 🧩 Verifica se o nome digitado já é um medicamento completo
+  const nomeJaExisteNoBanco = medicamentos.some(
+    (medicamento) =>
+      medicamento.nome.toLowerCase() === nomeDigitado.toLowerCase()
+  );
+
+  if (nomeJaExisteNoBanco) {
+    setSugestoes([]);
+    return;
+  }
+
+  // 🔎 Filtra medicamentos que começam com o nome digitado
+  const medicamentosFiltrados = medicamentos.filter((medicamento) =>
+    medicamento.nome.toLowerCase().startsWith(nomeDigitado.toLowerCase())
+  );
+
+  setSugestoes(medicamentosFiltrados);
+}, [nome, medicamentos]);
+
 
 
   useEffect(() => {
@@ -121,6 +151,26 @@ function adicionarRemedio(event) {
             onChange={(e) => setNome(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded"
           />
+
+          {/* 🔽 Sugestões de medicamentos */}
+{(sugestoes.length > 0 && nome.trim()) && (
+  <ul className="border border-gray-300 rounded mt-1 bg-white shadow">
+    {sugestoes.map((s, index) => (
+      <li
+        key={index}
+        onClick={() => {
+          setNome(s.nome);
+          setSugestoes([]);
+        }}
+        className="p-2 cursor-pointer hover:bg-blue-100"
+      >
+        {s.nome}
+      </li>
+    ))}
+  </ul>
+)}
+
+
 
          <label htmlFor="hora"  className="py-4 text-lg font-bold">Horário:</label>
           <input
