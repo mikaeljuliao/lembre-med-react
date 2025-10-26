@@ -1031,4 +1031,163 @@ Essa feature ensina vários fundamentos importantes do React e JavaScript modern
 
 Com essa base, você consegue replicar a mesma ideia em qualquer outro contexto —
 por exemplo, auto-sugestões de cidades, produtos, usuários, categorias, etc.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+🧠 Aula: Feature — Adicionar Data e Hora ao Adicionar um Novo Medicamento
+🎯 Objetivo da funcionalidade
+
+Quando o usuário adiciona um novo remédio, o sistema deve registrar automaticamente a 
+data e hora exata em que o medicamento foi adicionado, mostrando essa informação 
+junto com os dados do remédio.
+
+
+🧩 1. Onde essa lógica entra no código:
+
+A lógica foi implementada dentro da função adicionarRemedio,
+que é executada quando o usuário clica em “Adicionar”.
+
+Essa função já criava um novo objeto novoMedicamento, e é exatamente nesse ponto que 
+incluímos a nova propriedade dataAdicao.
+
+
+
+
+💡 2. A criação da data formatada:
+
+Antes de montar o objeto do novo remédio, criamos a data e a hora atuais:
+
+const agora = new Date(); // cria uma data com o momento atual
+const dataFormatada = agora.toLocaleString("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+🧠 Explicando:
+
+. new Date() → cria um objeto com a data e hora atuais do sistema.
+. toLocaleString("pt-BR", {...}) → formata a data no padrão brasileiro (ex: 23/10/2025, 14:32).
+. As opções passadas (day, month, year, hour, minute) garantem que o formato fique legível.
+
+
+
+🧱 3. Montando o objeto novoMedicamento com data e hora:
+
+Abaixo está o trecho principal:
+
+const novoMedicamento = medicamentoEncontrado
+  ? { ...medicamentoEncontrado, hora, id, dataAdicao: dataFormatada }
+  : { id, nome, hora, dosagem, observacao, dataAdicao: dataFormatada };
+
+🧩 Explicando o que acontece:
+1. O operador ternário (? :) decide qual objeto criar:
+. Se o remédio já existe no JSON (medicamentoEncontrado), ele copia 
+os dados com o spread operator (...medicamentoEncontrado) e adiciona/atualiza os campos necessários.
+. Se for um remédio novo, ele cria um novo objeto do zero.
+
+2. Em ambos os casos, adicionamos:
+jsx:
+dataAdicao: dataFormatada
+
+Ou seja, toda vez que um remédio for adicionado, será registrado com o 
+campo dataAdicao contendo a data e hora da adição.
+
+
+
+🔎 4. O operador ternário com objetos (detalhado):
+
+Como o ternário retorna valores, você pode retornar qualquer tipo de dado — incluindo objetos.
+
+💬 Exemplo simples:
+
+const usuarioLogado = true;
+
+const perfil = usuarioLogado
+  ? { nome: "Mikael", status: "online" }
+  : { nome: "Visitante", status: "offline" };
+
+console.log(perfil);
+// → { nome: "Mikael", status: "online" }
+
+
+🧩 No nosso caso:
+. Se encontrou o medicamento → cria um objeto baseado nele.
+. Se não → cria um novo objeto manualmente.
+. Em ambos → adiciona a propriedade dataAdicao.
+
+
+
+🧰 5. Exibindo a data na interface:
+
+Depois de adicionar a propriedade ao estado, basta mostrar no JSX:
+
+<p className="text-sm text-gray-600">
+  📅 Adicionado em: {remedio.dataAdicao}
+</p>
+
+Se o medicamento foi adicionado agora, vai aparecer algo como:
+
+📅 Adicionado em: 23/10/2025 17:42
+
+
+
+
+⚙️ 6. Ciclo completo da lógica:
+Etapa	                          O que acontece
+🟢 1.                          Usuário clica em “Adicionar”	Executa adicionarRemedio()
+🕓 2.                          Sistema cria new Date()	Gera data/hora atual
+🧩 3.                          Formata data/hora	Deixa no formato dd/mm/aaaa hh:mm
+💾 4.                          Cria novoMedicamento com dataAdicao	Adiciona a nova propriedade ao objeto
+📦 5.                          Atualiza o estado remedios	O React re-renderiza a tela
+🖥️ 6.                          Exibe na interface a data/hora	Mostra visualmente ao usuário
+
+
+
+🧠 7.Principais métodos usados:
+
+Método	                     O que faz	                          Exemplo
+new Date()	                 Cria um objeto representando a       new Date() → Thu Oct 23 2025 17:42:10 GMT...
+                             data/hora atual.	
+toLocaleString()	           Formata data/hora conforme o         new Date().toLocaleString("pt-BR")
+                             idioma e opções.	                    → "23/10/2025 17:42"
+? : (ternário)	             Retorna um valor entre duas          condicao ? valor1 : valor2
+                             opções conforme uma condição.	
+... (spread operator)	       Copia as propriedades de um objeto   { ...user, idade: 25 }
+                             existente.	
+
+
+
+✅ 8. Resultado final:
+
+Ao adicionar um remédio:
+. Ele aparece na lista com a data e hora de adição.
+. O valor é salvo junto aos outros dados (e mantido no localStorage também).
+. Cada medicamento terá seu próprio campo dataAdicao, registrado no momento exato da criação.
+
+💬 Resumo conceitual
+
+Toda vez que adicionamos um novo item, podemos registrar 
+metadados — informações sobre o evento em si (como data/hora de criação, ID, autor etc).
+Essa prática é muito usada em sistemas reais, porque ajuda a rastrear
+quando as coisas foram criadas ou modificadas.
 -->

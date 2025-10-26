@@ -110,10 +110,19 @@ function adicionarRemedio(event) {
   );
 
   const id = medicamentoEncontrado ? medicamentoEncontrado.id : Date.now();
+  // 🕓 Gera data e hora atual formatada (ex: 24/10/2025 13:45)
+const dataAtual = new Date();
+const dataFormatada = dataAtual.toLocaleString("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
   const novoMedicamento = medicamentoEncontrado
-    ? { ...medicamentoEncontrado, hora, id}
-    : { id, nome, hora, dosagem, observacao };
+    ? { ...medicamentoEncontrado, hora, id, dataAdicaoAtual: dataFormatada}
+    : { id, nome, hora, dosagem, observacao, dataAdicaoAtual: dataFormatada };
 
   setRemedios((listaAnterior) => [...listaAnterior, novoMedicamento]);
 
@@ -215,6 +224,9 @@ function adicionarRemedio(event) {
             </p>
 
             <p className="text-gray-800">⏰ Horário escolhido: {remedio.hora}</p>
+            {remedio.dataAdicaoAtual && (
+  <p className="text-sm text-gray-600">📅 Adicionado em: {remedio.dataAdicaoAtual}</p>
+)}
 
          <p className="text-lg font-bold text-blue-600">
              Dosagem: {remedio.dosagem}
