@@ -121,8 +121,8 @@ const dataFormatada = dataAtual.toLocaleString("pt-BR", {
 });
 
   const novoMedicamento = medicamentoEncontrado
-    ? { ...medicamentoEncontrado, hora, id, dataAdicao: dataFormatada}
-    : { id, nome, hora, dosagem, observacao, dataAdicao: dataFormatada };
+    ? { ...medicamentoEncontrado, hora, id, dataAdicaoAtual: dataFormatada}
+    : { id, nome, hora, dosagem, observacao, dataAdicaoAtual: dataFormatada };
 
   setRemedios((listaAnterior) => [...listaAnterior, novoMedicamento]);
 
@@ -224,8 +224,8 @@ const dataFormatada = dataAtual.toLocaleString("pt-BR", {
             </p>
 
             <p className="text-gray-800">⏰ Horário escolhido: {remedio.hora}</p>
-            {remedio.dataAdicao && (
-  <p className="text-sm text-gray-600">📅 Adicionado em: {remedio.dataAdicao}</p>
+            {remedio.dataAdicaoAtual && (
+  <p className="text-sm text-gray-600">📅 Adicionado em: {remedio.dataAdicaoAtual}</p>
 )}
 
          <p className="text-lg font-bold text-blue-600">
