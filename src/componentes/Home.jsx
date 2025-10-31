@@ -19,7 +19,36 @@ const [historico, setHistorico] = useState(() => {
 
   const [medicamentos, setMedicamentos] = useState([]); //medicamentos do json
   const [remedioEmEdicao, setRemedioEmEdicao] = useState(null)
-  const [sugestoes, setSugestoes] = useState([]);
+  const [sugestoes, setSugestoes] = useState([])
+  
+  // novo estado: duração em horas (valor que o usuário digita)
+const [duracaoEmHoras, setDuracaoEmHoras] = useState("");
+
+// estado só para visualizar o resultado convertido (milissegundos)
+// não inicia contagem ainda — só pra conferir a conversão
+const [milissegundosConvertidos, setMilissegundosConvertidos] = useState(0);
+
+// controla o tempo restante
+const [tempoRestante, setTempoRestante] = useState(0);
+
+// controla se a contagem está rodando ou não
+const [contando, setContando] = useState(false);
+
+
+// função utilitária: converte horas (número) para milissegundos
+function horasParaMilissegundos(horas) {
+  // aceita frações (ex: 0.5 = meia hora)
+  const horasNumero = Number(horas); 
+  if (!Number.isFinite(horasNumero) || horasNumero <= 0) return 0;
+  return Math.round(horasNumero * 60 * 60 * 1000); // horas * 60min * 60s * 1000ms
+}
+
+// ação: apenas converte e guarda no estado de preview
+function converterDuracaoParaMs() {
+  const ms = horasParaMilissegundos(duracaoEmHoras);
+  setMilissegundosConvertidos(ms);
+}
+
  
 
 
@@ -27,6 +56,51 @@ const [historico, setHistorico] = useState(() => {
     localStorage.setItem('dadosRemedios', JSON.stringify(remedios))
     localStorage.setItem('historicoMedicamento', JSON.stringify(historico))
   }, [remedios, historico])
+
+
+
+  function iniciarContagem () {
+    const ms = horasParaMilissegundos(duracaoEmHoras)
+    if (ms <= 0) {
+      alert('informe um numero valido acima de 0')
+      return
+    }
+    
+  setTempoRestante(ms);
+  setContando(true);
+  }
+
+useEffect(() => {
+  let intervalo;
+
+  if (contando && tempoRestante > 0) {
+    intervalo = setInterval(() => {
+      setTempoRestante((valorAtual) => {
+        if (valorAtual <= 1000) {
+          clearInterval(intervalo);
+          setContando(false);
+          return 0;
+        }
+        return valorAtual - 1000;
+      });
+    }, 1000);
+  }
+
+  return () => clearInterval(intervalo);
+}, [contando, tempoRestante]);
+
+
+
+  function formatarTempo(ms) {
+   const totalSegundos = Math.floor(ms / 1000);
+  const horas = Math.floor(totalSegundos / 3600);
+  const minutos = Math.floor((totalSegundos % 3600) / 60);
+  const segundos = totalSegundos % 60;
+
+  return `${horas.toString().padStart(2, "0")}:${minutos
+    .toString()
+    .padStart(2, "0")}:${segundos.toString().padStart(2, "0")}`;
+}
 
 
   useEffect(() => {
@@ -202,9 +276,82 @@ const dataFormatada = dataAtual.toLocaleString("pt-BR", {
           id="hora"
           placeholder="A cada quantas horas?"
           value={hora}
-          onChange={(e) => setHora(e.target.value)}
+          onChange={(e) => {
+         const valorDigitado = e.target.value; // pega o que o usuário digitou
+         setHora(valorDigitado);               // atualiza o estado 'hora'
+         setDuracaoEmHoras(valorDigitado);     // atualiza também 'duracaoEmHoras'
+          }}
           className="w-full p-2 border border-gray-300 rounded"
         />
+
+
+
+
+
+
+{/* --- Campo: duração em horas (novo) --- */}
+<label htmlFor="duracao" className="py-2 font-bold text-lg">Duração (horas)</label>
+<input
+  id="duracao"
+  type="number"
+  min="0"
+  step="0.25"
+  placeholder="Ex: 8 ou 1.5"
+  value={duracaoEmHoras}
+  onChange={(e) => setDuracaoEmHoras(e.target.value)}
+  className="w-full p-2 border border-gray-300 rounded"
+/>
+
+<p className="mt-4 font-xl font-bold">
+  tempo restante: {tempoRestante > 0 ? formatarTempo(tempoRestante) :  "⏰ Tempo esgotado!"}
+</p>
+
+
+
+<button
+  type="button"
+  onClick={iniciarContagem}
+  className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+>
+  Iniciar contagem
+</button>
+
+
+<div className="flex gap-2 mt-2">
+  <button
+    type="button"
+    onClick={converterDuracaoParaMs}
+    className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+  >
+    Converter (mostrar ms)
+  </button>
+
+  <button
+    type="button"
+    onClick={() => { setDuracaoEmHoras(""); setMilissegundosConvertidos(0); }}
+    className="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400"
+  >
+    Limpar
+  </button>
+</div>
+
+{/* preview simples */}
+<p className="mt-2 text-sm text-gray-600">
+  Milissegundos convertidos: <strong>{milissegundosConvertidos}</strong>
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         <label htmlFor="dosagem" className="py-4 font-bold text-lg">
           Dosagem:
