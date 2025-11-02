@@ -318,7 +318,7 @@ const dataFormatada = dataAtual.toLocaleString("pt-BR", {
 
 
 <div className="flex gap-2 mt-2">
-  <button
+  <button 
     type="button"
     onClick={converterDuracaoParaMs}
     className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
