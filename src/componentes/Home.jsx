@@ -50,6 +50,16 @@ function converterDuracaoParaMs() {
 }
 
  
+// 🧠 NOVA FUNÇÃO — converte "HH:MM" para milissegundos totais
+function horaStringParaMs(horaString) {
+  if (!horaString) return 0;
+
+  const [horas, minutos] = horaString.split(":").map(Number);
+  // transforma em milissegundos: horas * 3600 * 1000 + minutos * 60 * 1000
+  const ms = horas * 3600 * 1000 + minutos * 60 * 1000;
+  return ms;
+}
+
 
 
   useEffect(() =>{
@@ -58,11 +68,31 @@ function converterDuracaoParaMs() {
   }, [remedios, historico])
 
 
+  // ⏳ Atualiza todos os contadores de remédios a cada segundo
+useEffect(() => {
+  const intervalo = setInterval(() => {
+    setRemedios((listaAnterior) =>
+      listaAnterior.map((remedio) => {
+        if (remedio.tempoRestante > 0) {
+          const novoTempo = remedio.tempoRestante - 1000; // -1 segundo
+          return { ...remedio, tempoRestante: Math.max(novoTempo, 0) };
+        }
+        return remedio; // já chegou a zero, mantém igual
+      })
+    );
+  }, 1000);
+
+  // limpa o intervalo pra evitar sobreposição
+  return () => clearInterval(intervalo);
+}, []);
+
+
+
 
   function iniciarContagem () {
-    const ms = horasParaMilissegundos(duracaoEmHoras)
-    if (ms <= 0) {
-      alert('informe um numero valido acima de 0')
+    const ms = horaStringParaMs(duracaoEmHoras)
+    if (ms < 0) {
+      alert('informe um numero valido a partir de 0')
       return
     }
     
@@ -203,9 +233,14 @@ const dataFormatada = dataAtual.toLocaleString("pt-BR", {
   minute: "2-digit",
 });
 
+// ⚙️ Calcula automaticamente o tempo restante com base na hora digitada
+const tempoInicial = horaStringParaMs(hora); // "08:30" → 30600000ms
+
+// o novo remédio começa com esse tempo
+ 
   const novoMedicamento = medicamentoEncontrado
-    ? { ...medicamentoEncontrado, hora, id, dataAdicaoAtual: dataFormatada}
-    : { id, nome, hora, dosagem, observacao, dataAdicaoAtual: dataFormatada };
+    ? { ...medicamentoEncontrado, hora, id, dataAdicaoAtual: dataFormatada, tempoRestante: tempoInicial}
+    : { id, nome, hora, dosagem, observacao, dataAdicaoAtual: dataFormatada, tempoRestante: tempoInicial };
 
   setHistorico((listaAnterior) => [...listaAnterior, novoMedicamento])  
 
@@ -280,6 +315,7 @@ const dataFormatada = dataAtual.toLocaleString("pt-BR", {
          const valorDigitado = e.target.value; // pega o que o usuário digitou
          setHora(valorDigitado);               // atualiza o estado 'hora'
          setDuracaoEmHoras(valorDigitado);     // atualiza também 'duracaoEmHoras'
+         iniciarContagem()
           }}
           className="w-full p-2 border border-gray-300 rounded"
         />
@@ -287,9 +323,9 @@ const dataFormatada = dataAtual.toLocaleString("pt-BR", {
 
 
 
+{/*
 
-
-{/* --- Campo: duração em horas (novo) --- */}
+--- Campo: duração em horas (novo) 
 <label htmlFor="duracao" className="py-2 font-bold text-lg">Duração (horas)</label>
 <input
   id="duracao"
@@ -335,7 +371,7 @@ const dataFormatada = dataAtual.toLocaleString("pt-BR", {
   </button>
 </div>
 
-{/* preview simples */}
+{/ preview simples /}
 <p className="mt-2 text-sm text-gray-600">
   Milissegundos convertidos: <strong>{milissegundosConvertidos}</strong>
 </p>
@@ -345,7 +381,7 @@ const dataFormatada = dataAtual.toLocaleString("pt-BR", {
 
 
 
-
+ */}
 
 
 
@@ -379,10 +415,18 @@ const dataFormatada = dataAtual.toLocaleString("pt-BR", {
         <button
           type="submit"
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+          onClick={iniciarContagem}
         >
           {remedioEmEdicao ? "Salvar Alterações" : "Adicionar"}
         </button>
       </form>
+
+
+
+
+
+
+
 
       {/* Lista de remédios adicionados pelo usuário */}
       {remedios.map((remedio) => (
@@ -395,6 +439,12 @@ const dataFormatada = dataAtual.toLocaleString("pt-BR", {
           </p>
 
           <p className="text-gray-800">⏰ Horário escolhido: {remedio.hora}</p>
+           <p className="mb-1 font-semibold text-gray-800">
+  ⏱️ Tempo restante:{" "}
+  {remedio.tempoRestante > 0
+    ? formatarTempo(remedio.tempoRestante)
+    : "⏰ Tempo esgotado!"}
+</p>
 
           {remedio.dataAdicaoAtual && (
             <p className="text-sm text-gray-600">
@@ -419,6 +469,8 @@ const dataFormatada = dataAtual.toLocaleString("pt-BR", {
               🔄 Frequência: {remedio.frequencia}
             </p>
           )}
+         
+
 
           <button
             onClick={() => removerRemedio(remedio.id)}
