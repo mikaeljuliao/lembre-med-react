@@ -3,18 +3,14 @@ import Navbar from './components/common/Navbar';
 import BottomNav from './components/common/BottomNav';
 import Toast from './components/common/Toast';
 
-import DashboardView from './components/dashboard/DashboardView';
-import MedicationListView from './components/medicamentos/MedicationListView';
+import InicioView from './components/dashboard/InicioView';
+import RemediosView from './components/remedios/RemediosView';
+import MinhaRotinaView from './components/rotina/MinhaRotinaView';
+import CuidadorView from './components/cuidador/CuidadorView';
+
 import MedicationFormModal from './components/medicamentos/MedicationFormModal';
 import MedicationDetailModal from './components/medicamentos/MedicationDetailModal';
-
-import TreatmentListView from './components/tratamentos/TreatmentListView';
 import TreatmentFormModal from './components/tratamentos/TreatmentFormModal';
-
-import ScheduleView from './components/agenda/ScheduleView';
-import HistoryView from './components/historico/HistoryView';
-import StockView from './components/estoque/StockView';
-import OfficialInfoView from './components/informacoes/OfficialInfoView';
 
 import {
   getStoredMedications,
@@ -28,7 +24,8 @@ import {
 } from './utils/storage';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('inicio');
+  const [simpleMode, setSimpleMode] = useState(false);
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   );
@@ -49,52 +46,39 @@ export default function App() {
   const [isTreatmentModalOpen, setIsTreatmentModalOpen] = useState(false);
   const [treatmentToEdit, setTreatmentToEdit] = useState(null);
 
-  const [officialInfoSelectedId, setOfficialInfoSelectedId] = useState(null);
-
   useEffect(() => {
-    const loadedMeds = getStoredMedications();
-    const loadedTreats = getStoredTreatments();
-    const loadedHistory = getStoredHistory();
-    setMedications(loadedMeds);
-    setTreatments(loadedTreats);
-    setHistory(loadedHistory);
+    setMedications(getStoredMedications());
+    setTreatments(getStoredTreatments());
+    setHistory(getStoredHistory());
   }, []);
 
   useEffect(() => {
-    const loadedDoses = getStoredDoses(selectedDate);
-    setDoses(loadedDoses);
+    setDoses(getStoredDoses(selectedDate));
   }, [selectedDate, treatments]);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
-    setTimeout(() => {
-      setToast(null);
-    }, 3500);
+    setTimeout(() => setToast(null), 3500);
   };
 
   const handleSaveMedication = (medData) => {
-    let updated;
     const exists = medications.some((m) => m.id === medData.id);
-    if (exists) {
-      updated = medications.map((m) => (m.id === medData.id ? medData : m));
-      showToast(`Medicamento "${medData.nome}" atualizado com sucesso!`);
-    } else {
-      updated = [medData, ...medications];
-      showToast(`Medicamento "${medData.nome}" cadastrado com sucesso!`);
-    }
+    const updated = exists
+      ? medications.map((m) => (m.id === medData.id ? medData : m))
+      : [medData, ...medications];
     setMedications(updated);
     saveStoredMedications(updated);
+    showToast(exists ? `"${medData.nome}" atualizado.` : `"${medData.nome}" adicionado.`);
   };
 
   const handleDeleteMedication = (medId) => {
-    const medToDelete = medications.find((m) => m.id === medId);
-    if (!medToDelete) return;
-
-    if (window.confirm(`Deseja realmente remover o medicamento "${medToDelete.nome}"?`)) {
+    const med = medications.find((m) => m.id === medId);
+    if (!med) return;
+    if (window.confirm(`Remover o medicamento "${med.nome}"?`)) {
       const updated = medications.filter((m) => m.id !== medId);
       setMedications(updated);
       saveStoredMedications(updated);
-      showToast(`Medicamento "${medToDelete.nome}" removido.`, 'info');
+      showToast(`"${med.nome}" removido.`, 'info');
     }
   };
 
@@ -104,32 +88,27 @@ export default function App() {
     );
     setMedications(updated);
     saveStoredMedications(updated);
-    showToast('Estoque atualizado com sucesso!');
+    showToast('Estoque atualizado.');
   };
 
   const handleSaveTreatment = (treatmentData) => {
-    let updated;
     const exists = treatments.some((t) => t.id === treatmentData.id);
-    if (exists) {
-      updated = treatments.map((t) => (t.id === treatmentData.id ? treatmentData : t));
-      showToast(`Tratamento "${treatmentData.nome}" atualizado!`);
-    } else {
-      updated = [treatmentData, ...treatments];
-      showToast(`Tratamento "${treatmentData.nome}" criado com sucesso!`);
-    }
+    const updated = exists
+      ? treatments.map((t) => (t.id === treatmentData.id ? treatmentData : t))
+      : [treatmentData, ...treatments];
     setTreatments(updated);
     saveStoredTreatments(updated);
+    showToast(exists ? `Rotina "${treatmentData.nome}" atualizada.` : `Rotina "${treatmentData.nome}" criada.`);
   };
 
   const handleDeleteTreatment = (treatmentId) => {
-    const treatToDelete = treatments.find((t) => t.id === treatmentId);
-    if (!treatToDelete) return;
-
-    if (window.confirm(`Deseja remover o tratamento "${treatToDelete.nome}"?`)) {
+    const treat = treatments.find((t) => t.id === treatmentId);
+    if (!treat) return;
+    if (window.confirm(`Remover a rotina "${treat.nome}"?`)) {
       const updated = treatments.filter((t) => t.id !== treatmentId);
       setTreatments(updated);
       saveStoredTreatments(updated);
-      showToast(`Tratamento "${treatToDelete.nome}" removido.`, 'info');
+      showToast(`Rotina "${treat.nome}" removida.`, 'info');
     }
   };
 
@@ -139,7 +118,7 @@ export default function App() {
     );
     setTreatments(updated);
     saveStoredTreatments(updated);
-    showToast(`Status do tratamento alterado para "${newStatus}".`, 'info');
+    showToast('Status da rotina alterado.', 'info');
   };
 
   const handleToggleDoseStatus = (doseId, newStatus) => {
@@ -159,7 +138,9 @@ export default function App() {
           dosagem: d.dosagem,
           treatmentNome: d.treatmentNome,
           status: newStatus,
-          observacao: isTaken ? 'Dose registrada pelo usuário.' : 'Dose pulada pelo usuário.',
+          observacao: isTaken
+            ? 'Dose registrada pelo usuário.'
+            : 'Dose não registrada pelo usuário.',
         });
         setHistory(newHist);
 
@@ -168,8 +149,7 @@ export default function App() {
             (m) => String(m.id) === String(d.medicationId) || m.nome === d.medicationNome
           );
           if (med) {
-            const newStock = Math.max(0, med.quantidadeEstoque - (d.quantidade || 1));
-            handleUpdateStock(med.id, newStock);
+            handleUpdateStock(med.id, Math.max(0, med.quantidadeEstoque - (d.quantidade || 1)));
           }
         }
       }
@@ -180,96 +160,95 @@ export default function App() {
     setDoses(updatedDoses);
     saveStoredDosesForDate(selectedDate, updatedDoses);
 
-    if (newStatus === 'taken') showToast('Dose registrada como tomada! ✓');
-    if (newStatus === 'skipped') showToast('Dose marcada como pulada.', 'info');
+    if (newStatus === 'taken') showToast('Dose registrada! ✓');
+    if (newStatus === 'skipped') showToast('Dose não registrada.', 'info');
     if (newStatus === 'pending') showToast('Dose restaurada para pendente.', 'info');
   };
 
-  const handleNavigateOfficialWithDoc = (offId) => {
-    setOfficialInfoSelectedId(offId);
-    setActiveTab('informacoes');
+  const openAddMed = () => {
+    setMedicationToEdit(null);
+    setIsMedModalOpen(true);
+  };
+
+  const openEditMed = (med) => {
+    setMedicationToEdit(med);
+    setIsMedModalOpen(true);
+  };
+
+  const openAddTreatment = () => {
+    setTreatmentToEdit(null);
+    setIsTreatmentModalOpen(true);
+  };
+
+  const openEditTreatment = (t) => {
+    setTreatmentToEdit(t);
+    setIsTreatmentModalOpen(true);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className={`min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans ${simpleMode ? 'simple-mode' : ''}`}>
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        simpleMode={simpleMode}
+        onToggleSimpleMode={() => setSimpleMode((v) => !v)}
+      />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'dashboard' && (
-          <DashboardView
+      <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-5">
+        {activeTab === 'inicio' && (
+          <InicioView
             doses={doses}
             medications={medications}
             treatments={treatments}
             onToggleDoseStatus={handleToggleDoseStatus}
-            onOpenAddMed={() => {
-              setMedicationToEdit(null);
-              setIsMedModalOpen(true);
-            }}
-            onOpenAddTreatment={() => {
-              setTreatmentToEdit(null);
-              setIsTreatmentModalOpen(true);
-            }}
-            onNavigate={(tab) => setActiveTab(tab)}
+            onNavigate={setActiveTab}
+            simpleMode={simpleMode}
           />
         )}
 
-        {activeTab === 'medicamentos' && (
-          <MedicationListView
+        {activeTab === 'remedios' && (
+          <RemediosView
             medications={medications}
-            onOpenAdd={() => {
-              setMedicationToEdit(null);
-              setIsMedModalOpen(true);
-            }}
-            onEdit={(med) => {
-              setMedicationToEdit(med);
-              setIsMedModalOpen(true);
-            }}
+            onOpenAdd={openAddMed}
+            onEdit={openEditMed}
             onDelete={handleDeleteMedication}
             onViewDetails={(med) => {
               setSelectedDetailMed(med);
               setIsDetailMedOpen(true);
             }}
-            onNavigateOfficial={handleNavigateOfficialWithDoc}
+            onNavigateOfficial={() => setActiveTab('cuidador')}
           />
         )}
 
-        {activeTab === 'tratamentos' && (
-          <TreatmentListView
-            treatments={treatments}
-            onOpenAdd={() => {
-              setTreatmentToEdit(null);
-              setIsTreatmentModalOpen(true);
-            }}
-            onEdit={(t) => {
-              setTreatmentToEdit(t);
-              setIsTreatmentModalOpen(true);
-            }}
-            onDelete={handleDeleteTreatment}
-            onToggleStatus={handleToggleTreatmentStatus}
-          />
-        )}
-
-        {activeTab === 'agenda' && (
-          <ScheduleView
+        {activeTab === 'rotina' && (
+          <MinhaRotinaView
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             doses={doses}
+            treatments={treatments}
             onToggleDoseStatus={handleToggleDoseStatus}
+            onOpenAddTreatment={openAddTreatment}
+            onEditTreatment={openEditTreatment}
+            onDeleteTreatment={handleDeleteTreatment}
+            onToggleTreatmentStatus={handleToggleTreatmentStatus}
           />
         )}
 
-        {activeTab === 'historico' && <HistoryView history={history} />}
-
-        {activeTab === 'estoque' && (
-          <StockView
+        {activeTab === 'cuidador' && (
+          <CuidadorView
             medications={medications}
             treatments={treatments}
+            history={history}
+            onOpenAddMed={openAddMed}
+            onEditMed={openEditMed}
+            onDeleteMed={handleDeleteMedication}
+            onViewMedDetails={(med) => {
+              setSelectedDetailMed(med);
+              setIsDetailMedOpen(true);
+            }}
             onUpdateStock={handleUpdateStock}
+            onNavigateOfficial={() => {}}
           />
-        )}
-
-        {activeTab === 'informacoes' && (
-          <OfficialInfoView initialSelectedId={officialInfoSelectedId} />
         )}
       </main>
 
@@ -288,7 +267,7 @@ export default function App() {
         isOpen={isDetailMedOpen}
         onClose={() => setIsDetailMedOpen(false)}
         medication={selectedDetailMed}
-        onOpenOfficialInfo={handleNavigateOfficialWithDoc}
+        onOpenOfficialInfo={() => setActiveTab('cuidador')}
       />
 
       <TreatmentFormModal

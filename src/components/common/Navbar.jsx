@@ -1,77 +1,49 @@
 import React from 'react';
-import {
-  Pill,
-  LayoutDashboard,
-  CalendarCheck,
-  Stethoscope,
-  History,
-  Package,
-  BookOpenText,
-  ShieldCheck,
-} from 'lucide-react';
+import { Home, Pill, CalendarDays, Users } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'medicamentos', label: 'Medicamentos', icon: Pill },
-  { id: 'tratamentos', label: 'Tratamentos', icon: Stethoscope },
-  { id: 'agenda', label: 'Agenda / Doses', icon: CalendarCheck },
-  { id: 'historico', label: 'Histórico', icon: History },
-  { id: 'estoque', label: 'Estoque', icon: Package },
-  { id: 'informacoes', label: 'Informações', icon: BookOpenText },
+  { id: 'inicio', label: 'Início', icon: Home },
+  { id: 'remedios', label: 'Remédios', icon: Pill },
+  { id: 'rotina', label: 'Minha Rotina', icon: CalendarDays },
+  { id: 'cuidador', label: 'Cuidador', icon: Users },
 ];
 
-export default function Navbar({ activeTab, setActiveTab }) {
+export default function Navbar({ activeTab, setActiveTab, simpleMode, onToggleSimpleMode }) {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-              <Pill className="w-6 h-6" />
+      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-14">
+          <button
+            onClick={() => setActiveTab('inicio')}
+            className="flex items-center space-x-2.5"
+          >
+            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white">
+              <Pill className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-xl font-extrabold tracking-tight text-slate-900">Dose<span className="text-blue-600">Fácil</span></span>
-                <span className="text-[10px] bg-teal-50 text-teal-700 font-semibold px-2 py-0.5 rounded-full border border-teal-200 hidden sm:inline-block">
-                  Oficial
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 font-medium hidden sm:block">
-                Organize seus medicamentos. Acompanhe seu tratamento.
-              </p>
-            </div>
-          </div>
-
-          <nav className="hidden lg:flex items-center space-x-1" aria-label="Navegação Principal">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all focus-ring ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-600 shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+            <span className="text-lg font-extrabold tracking-tight text-slate-900">
+              Dose<span className="text-blue-600">Fácil</span>
+            </span>
+          </button>
 
           <div className="flex items-center space-x-2">
-            <div className="flex items-center space-x-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-medium">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Dados Locais Seguros</span>
-            </div>
+            {onToggleSimpleMode && (
+              <button
+                onClick={onToggleSimpleMode}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
+                  simpleMode
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                }`}
+                id="btn-modo-simples"
+                aria-pressed={simpleMode}
+              >
+                {simpleMode ? '🔡 Modo Simples' : 'Modo Simples'}
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="flex lg:hidden overflow-x-auto py-2 space-x-1 border-t border-slate-100 no-scrollbar">
+        <nav className="hidden sm:flex space-x-1 pb-2" aria-label="Navegação Principal">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -79,18 +51,18 @@ export default function Navbar({ activeTab, setActiveTab }) {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all focus-ring ${
                   isActive
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 hover:bg-slate-100'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
                 <span>{item.label}</span>
               </button>
             );
           })}
-        </div>
+        </nav>
       </div>
     </header>
   );

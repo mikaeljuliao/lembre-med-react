@@ -8,6 +8,7 @@ export default function ScheduleView({
   setSelectedDate,
   doses = [],
   onToggleDoseStatus,
+  embedded = false,
 }) {
   const [filterStatus, setFilterStatus] = useState('all');
 
@@ -20,20 +21,45 @@ export default function ScheduleView({
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
-      {/* Header Banner & Date Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-900 flex items-center space-x-2">
-            <CalendarCheck className="w-6 h-6 text-purple-600" />
-            <span>Agenda de Doses</span>
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Visualização diária dos eventos de dose calculados a partir dos seus tratamentos.
-          </p>
-        </div>
+      {!embedded && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
+          <div>
+            <h2 className="text-xl font-extrabold text-slate-900 flex items-center space-x-2">
+              <CalendarCheck className="w-6 h-6 text-purple-600" />
+              <span>Agenda de Doses</span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Visualização diária dos eventos de dose calculados a partir dos seus tratamentos.
+            </p>
+          </div>
 
-        {/* Date Selector input & quick 'Hoje' button */}
-        <div className="flex items-center space-x-2 self-start sm:self-auto">
+          {/* Date Selector input & quick 'Hoje' button */}
+          <div className="flex items-center space-x-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setSelectedDate(todayStr)}
+              className={`px-3 py-2 text-xs font-bold rounded-xl border transition-colors ${
+                isToday
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              Hoje
+            </button>
+            <div className="relative">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus-ring"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {embedded && (
+        <div className="flex items-center space-x-2">
           <button
             type="button"
             onClick={() => setSelectedDate(todayStr)}
@@ -45,16 +71,14 @@ export default function ScheduleView({
           >
             Hoje
           </button>
-          <div className="relative">
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus-ring"
-            />
-          </div>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus-ring"
+          />
         </div>
-      </div>
+      )}
 
       {/* Filter Tabs */}
       <div className="flex items-center space-x-2 overflow-x-auto pb-1 no-scrollbar">
