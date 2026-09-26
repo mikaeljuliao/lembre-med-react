@@ -13,24 +13,10 @@ import {
   getCalendarLabel,
   getReminderDateDescription,
   getReminderState,
+  isDoseForActiveMedication,
   sortReminderStates,
 } from '../../utils/reminderEngine';
 import { speakText, stopSpeaking } from '../../utils/speech';
-
-function isActiveMedicationDose(dose, medications) {
-  const medicationIds = new Set(medications.map((medication) => String(medication.id)));
-
-  if (dose?.medicationId && medicationIds.has(String(dose.medicationId))) {
-    return true;
-  }
-
-  const doseName = String(dose?.medicationNome || '').trim().toLowerCase();
-
-  return medications.some(
-    (medication) =>
-      String(medication?.nome || '').trim().toLowerCase() === doseName
-  );
-}
 
 function createAlarmTone(audioContext) {
   const oscillator = audioContext.createOscillator();
@@ -57,6 +43,7 @@ export default function ProximaMedicacaoCard({
   onToggleDoseStatus,
   onUpdateDose,
   onSnoozeDose,
+  onNavigate,
 }) {
   const [now, setNow] = useState(() => new Date());
   const [selectedDoseId, setSelectedDoseId] = useState(null);
@@ -65,23 +52,37 @@ export default function ProximaMedicacaoCard({
   const announcedAlarmRef = useRef(null);
 
   const activeTodayDoses = useMemo(
-    () => doses.filter((dose) => isActiveMedicationDose(dose, medications)),
+    () => doses.filter((dose) => isDoseForActiveMedication(dose, medications)),
     [doses, medications]
   );
 
-  const pendingDoses = useMemo(() => {
-    const todayPending = activeTodayDoses.filter((dose) => dose.status === 'pending');
-    const futurePending = futureDoses
-      .filter((dose) => isActiveMedicationDose(dose, medications))
-      .filter((dose) => dose.status === 'pending');
+  const todayPendingDoses = useMemo(
+    () => activeTodayDoses.filter((dose) => dose.status === 'pending'),
+    [activeTodayDoses]
+  );
 
-    return [...todayPending, ...futurePending];
-  }, [activeTodayDoses, futureDoses, medications]);
+  const nearestFutureDose = useMemo(
+    () =>
+      sortReminderStates(
+        futureDoses
+          .filter((dose) => isDoseForActiveMedication(dose, medications))
+          .filter((dose) => dose.status === 'pending')
+          .map((dose) => getReminderState(dose, now))
+      )[0] || null,
+    [futureDoses, medications, now]
+  );
+
+  const pendingDoses = useMemo(() => {
+    if (todayPendingDoses.length > 0) return todayPendingDoses;
+    return nearestFutureDose ? [nearestFutureDose] : [];
+  }, [todayPendingDoses, nearestFutureDose]);
 
   const reminderStates = useMemo(
     () =>
       sortReminderStates(
-        pendingDoses.map((dose) => getReminderState(dose, now))
+        pendingDoses.map((dose) =>
+          dose.target ? dose : getReminderState(dose, now)
+        )
       ),
     [pendingDoses, now]
   );
@@ -97,10 +98,12 @@ export default function ProximaMedicacaoCard({
     reminderStates[0] ||
     null;
 
-  const selectedIndex = selectedDose
-    ? reminderStates.findIndex((dose) => dose.id === selectedDose.id)
-    : -1;
+  const otherTodayDoses = todayPendingDoses
+    .filter((dose) => dose.id !== selectedDose?.id)
+    .map((dose) => getReminderState(dose, now));
 
+  const visibleOtherTodayDoses = sortReminderStates(otherTodayDoses).slice(0, 4);
+  const hiddenTodayCount = Math.max(0, otherTodayDoses.length - visibleOtherTodayDoses.length);
   const takenCount = activeTodayDoses.filter((dose) => dose.status === 'taken').length;
 
   useEffect(() => {
@@ -395,63 +398,55 @@ export default function ProximaMedicacaoCard({
         </div>
       </div>
 
-      {reminderStates.length > 1 && (
+      {visibleOtherTodayDoses.length > 0 && (
         <div className="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
           <div className="px-4 pb-2 pt-3">
             <p className="text-xs font-black uppercase tracking-wider text-slate-400">
-              Próximos lembretes
+              Outros lembretes de hoje
             </p>
           </div>
 
           <div className="space-y-1">
-            {reminderStates.slice(0, 5).map((dose, index) => {
-              const selected = dose.id === selectedDose.id;
+            {visibleOtherTodayDoses.map((dose) => (
+              <button
+                key={dose.id}
+                type="button"
+                onClick={() => setSelectedDoseId(dose.id)}
+                className="flex min-h-16 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                  <span className="text-sm font-black">{formatClockTime(dose.target)}</span>
+                </span>
 
-              return (
-                <button
-                  key={dose.id}
-                  type="button"
-                  onClick={() => setSelectedDoseId(dose.id)}
-                  className={`flex min-h-16 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-blue-600 ${
-                    selected ? 'bg-blue-50' : 'hover:bg-slate-50'
-                  }`}
-                  aria-current={selected ? 'true' : undefined}
-                >
-                  <span
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
-                      dose.isDue
-                        ? 'bg-red-100 text-red-700'
-                        : selected
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {index + 1}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-base font-black text-slate-900">
+                    {dose.medicationNome}
                   </span>
-
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-base font-black text-slate-900">
-                      {dose.medicationNome}
-                    </span>
-                    <span className="mt-0.5 block text-sm font-semibold text-slate-500">
-                      Alarme às {formatClockTime(dose.target)} · {formatRemainingForUser(dose.remainingMs)}
-                    </span>
+                  <span className="mt-0.5 block text-sm font-semibold text-slate-500">
+                    {formatRemainingForUser(dose.remainingMs)}
                   </span>
+                </span>
 
-                  <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
-                </button>
-              );
-            })}
+                <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+              </button>
+            ))}
           </div>
+
+          {hiddenTodayCount > 0 && onNavigate && (
+            <button
+              type="button"
+              onClick={() => onNavigate('remedios')}
+              className="mt-1 flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+            >
+              Ver os outros {hiddenTodayCount} lembretes de hoje
+            </button>
+          )}
         </div>
       )}
 
       <div className="flex items-center justify-between px-1 text-sm">
         <span className="font-bold text-slate-500">
-          {takenCount} de {activeTodayDoses.length} tomados hoje
-        </span>
-        <span className="font-bold text-slate-400">
-          {selectedIndex + 1} de {reminderStates.length}
+          {takenCount} de {activeTodayDoses.length} doses registradas hoje
         </span>
       </div>
     </section>
