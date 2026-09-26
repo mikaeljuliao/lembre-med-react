@@ -36,24 +36,21 @@ function deduplicateMedications(medications) {
 }
 
 function mergeDuplicateTreatments(treatments, medications) {
-  const canonicalMedicationIds = new Map(
-    medications.map((medication) => [
-      normalizeMedicationName(medication.nome),
-      String(medication.id),
-    ])
-  );
   const grouped = new Map();
 
   treatments.forEach((treatment) => {
     const medication = treatment?.medicamentos?.[0];
-    const nameKey = normalizeMedicationName(medication?.nome);
-    if (!medication || !nameKey) return;
+    if (!medication || !normalizeMedicationName(medication.nome)) return;
 
-    const canonicalId =
-      canonicalMedicationIds.get(nameKey) || medication.medicamentoId;
+    const canonicalMedication = medications.find((item) => isSameMedication(item, medication));
+    const canonicalId = canonicalMedication?.id || medication.medicamentoId;
     const key = canonicalId
       ? 'id:' + String(canonicalId)
-      : 'name:' + nameKey;
+      : 'med:' + normalizeMedicationName(medication.nome) + '|' +
+        normalizeMedicationName(medication.concentracao) + '|' +
+        normalizeMedicationName(medication.apresentacao) + '|' +
+        normalizeMedicationName(medication.viaAdministracao);
+
     const existing = grouped.get(key);
 
     if (!existing) {
@@ -63,9 +60,7 @@ function mergeDuplicateTreatments(treatments, medications) {
           {
             ...medication,
             medicamentoId: canonicalId || medication.medicamentoId,
-            horarios: Array.isArray(medication.horarios)
-              ? [...new Set(medication.horarios)]
-              : [],
+            horarios: Array.isArray(medication.horarios) ? [...new Set(medication.horarios)] : [],
           },
         ],
       });
@@ -73,14 +68,19 @@ function mergeDuplicateTreatments(treatments, medications) {
     }
 
     const existingMedication = existing.medicamentos[0];
-    const horarios = [
-      ...(existingMedication.horarios || []),
-      ...(Array.isArray(medication.horarios) ? medication.horarios : []),
-    ];
 
-    existingMedication.horarios = [...new Set(horarios)].sort();
-    existingMedication.medicamentoId =
-      canonicalId || existingMedication.medicamentoId;
+    if (medication.tipoUso === 'interval' || existingMedication.tipoUso === 'interval') {
+      Object.assign(existingMedication, medication);
+      existingMedication.medicamentoId = canonicalId || existingMedication.medicamentoId;
+      return;
+    }
+
+    existingMedication.horarios = [
+      ...new Set([
+        ...(existingMedication.horarios || []),
+        ...(Array.isArray(medication.horarios) ? medication.horarios : []),
+      ]),
+    ].sort();
 
     const mergedFirstReminders = {
       ...(existingMedication.primeirosLembretesAt || {}),
@@ -88,42 +88,27 @@ function mergeDuplicateTreatments(treatments, medications) {
     };
 
     Object.keys(medication.primeirosLembretesAt || {}).forEach((horario) => {
-      const current = existingMedication.primeirosLembretesAt?.[horario];
-      const incoming = medication.primeirosLembretesAt?.[horario];
+      const currentValue = existingMedication.primeirosLembretesAt?.[horario];
+      const incomingValue = medication.primeirosLembretesAt?.[horario];
+      if (!currentValue || !incomingValue) return;
 
-      if (!current || !incoming) return;
-
-      const currentDate = new Date(current);
-      const incomingDate = new Date(incoming);
+      const currentDate = new Date(currentValue);
+      const incomingDate = new Date(incomingValue);
 
       if (
         !Number.isNaN(currentDate.getTime()) &&
         !Number.isNaN(incomingDate.getTime()) &&
         incomingDate.getTime() < currentDate.getTime()
       ) {
-        mergedFirstReminders[horario] = incoming;
+        mergedFirstReminders[horario] = incomingValue;
       }
     });
 
-    if (Object.keys(mergedFirstReminders).length > 0) {
-      existingMedication.primeirosLembretesAt = mergedFirstReminders;
-    }
-
-    const dates = [existing.dataInicio, treatment.dataInicio]
-      .filter(Boolean)
-      .sort();
-
-    if (dates.length > 0) existing.dataInicio = dates[0];
+    existingMedication.primeirosLembretesAt = mergedFirstReminders;
 
     const reminderTimes = [
-      {
-        value: existingMedication.primeiroLembreteAt,
-        horario: existingMedication.primeiroLembreteHorario,
-      },
-      {
-        value: medication.primeiroLembreteAt,
-        horario: medication.primeiroLembreteHorario || medication.horarios?.[0],
-      },
+      { value: existingMedication.primeiroLembreteAt, horario: existingMedication.primeiroLembreteHorario },
+      { value: medication.primeiroLembreteAt, horario: medication.primeiroLembreteHorario || medication.horarios?.[0] },
     ]
       .filter((item) => item.value)
       .map((item) => ({ ...item, date: new Date(item.value) }))
@@ -131,10 +116,8 @@ function mergeDuplicateTreatments(treatments, medications) {
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
     if (reminderTimes.length > 0) {
-      existingMedication.primeiroLembreteAt =
-        reminderTimes[0].date.toISOString();
-      existingMedication.primeiroLembreteHorario =
-        reminderTimes[0].horario || existingMedication.horarios?.[0];
+      existingMedication.primeiroLembreteAt = reminderTimes[0].date.toISOString();
+      existingMedication.primeiroLembreteHorario = reminderTimes[0].horario || existingMedication.horarios?.[0];
     }
   });
 
