@@ -1,3 +1,9 @@
+import {
+  formatClockTime,
+  getLocalDateString,
+  resolveReminderSelection,
+} from './reminderEngine';
+
 function isUserMedicationItem(item) {
   if (!item || typeof item !== 'object') return false;
   return Boolean(String(item.nome || '').trim());
@@ -109,75 +115,29 @@ export function calculateStockProjection(medication, activeTreatments = []) {
   };
 }
 
-function padTime(value) {
-  return String(value).padStart(2, '0');
-}
-
-function formatScheduleTime(date) {
-  return [
-    padTime(date.getHours()),
-    padTime(date.getMinutes()),
-    padTime(date.getSeconds()),
-  ].join(':');
-}
-
 export function resolveReminderTimes(horarios = [], referenceDate = new Date()) {
   if (!Array.isArray(horarios)) return [];
 
   return horarios
-    .filter((time) => typeof time === 'string' && time.trim())
-    .map((time) => {
-      const value = time.trim();
-
-      if (value.toLowerCase() === 'agora') {
-        return formatScheduleTime(referenceDate);
-      }
-
-      if (/^\d+$/.test(value)) {
-        const offsetMinutes = Number(value);
-        const resolved = new Date(referenceDate.getTime() + offsetMinutes * 60000);
-        return formatScheduleTime(resolved);
-      }
-
-      if (/^\d{2}:\d{2}$/.test(value)) {
-        return `${value}:00`;
-      }
-
-      if (/^\d{2}:\d{2}:\d{2}$/.test(value)) {
-        return value;
-      }
-
-      return value;
-    });
-}
-
-export function getLocalDateString(date = new Date()) {
-  const year = date.getFullYear();
-  const month = padTime(date.getMonth() + 1);
-  const day = padTime(date.getDate());
-  return `${year}-${month}-${day}`;
+    .map((time) => resolveReminderSelection(time, referenceDate))
+    .filter(Boolean)
+    .map((selection) => selection.horario);
 }
 
 export function getDoseScheduledAt(dateStr, horario) {
-  const [hours = 0, minutes = 0, seconds = 0] = String(horario || '00:00')
-    .split(':')
-    .map(Number);
-
-  const [year, month, day] = String(dateStr)
-    .split('-')
-    .map(Number);
-
-  const target = new Date(
+  const [year, month, day] = String(dateStr).split('-').map(Number);
+  const parsed = String(horario || '00:00:00').split(':').map(Number);
+  const date = new Date(
     Number(year),
     Number(month) - 1,
     Number(day),
-    Number(hours) || 0,
-    Number(minutes) || 0,
-    Number(seconds) || 0,
+    Number(parsed[0]) || 0,
+    Number(parsed[1]) || 0,
+    Number(parsed[2]) || 0,
     0
   );
 
-  return target.toISOString();
+  return date.toISOString();
 }
 
 export function generateDosesForDate(
@@ -196,6 +156,12 @@ export function generateDosesForDate(
       const times = med.horarios || ['08:00'];
 
       times.forEach((horario) => {
+        const firstReminderAt =
+          med.primeiroLembreteAt &&
+          getLocalDateString(new Date(med.primeiroLembreteAt)) === dateStr
+            ? med.primeiroLembreteAt
+            : getDoseScheduledAt(dateStr, horario);
+
         doses.push({
           id: `${treatment.id}-${med.medicamentoId || med.nome}-${dateStr}-${horario}`,
           treatmentId: treatment.id,
@@ -205,7 +171,7 @@ export function generateDosesForDate(
           dosagem: med.dosagem || '1 unidade',
           quantidade: med.quantidadePorDose || 1,
           horario,
-          scheduledAt: getDoseScheduledAt(dateStr, horario),
+          scheduledAt: firstReminderAt,
           data: dateStr,
           status: 'pending',
           takenAt: null,
@@ -222,33 +188,42 @@ export function generateDosesForDate(
     const second = new Date(b.scheduledAt).getTime();
 
     if (first !== second) return first - second;
-    return String(a.medicationNome).localeCompare(String(b.medicationNome));
+    return String(a.medicationNome).localeCompare(String(b.medicationNome), 'pt-BR');
   });
 }
 
-export function buildQuickReminderTreatment(nome, quantidadePorDose = 1, horarios = ['08:00']) {
+export function buildQuickReminderTreatment(
+  nome,
+  quantidadePorDose = 1,
+  horarios = ['08:00'],
+  referenceDate = new Date()
+) {
   const cleanedName = String(nome || '').trim();
   const safeQuantity = Number(quantidadePorDose) > 0 ? Number(quantidadePorDose) : 1;
-  const normalizedSchedules =
-    Array.isArray(horarios) && horarios.length > 0
-      ? resolveReminderTimes(horarios).filter(Boolean)
-      : ['08:00:00'];
+  const selection = resolveReminderSelection(horarios[0], referenceDate);
+  const fallback = resolveReminderSelection('08:00', referenceDate);
+
+  const reminder = selection || fallback;
+  const medicationId = `med-${Date.now()}`;
+  const treatmentId = `treat-${Date.now()}`;
 
   return {
-    id: `treat-${Date.now()}`,
+    id: treatmentId,
     nome: cleanedName ? `Lembrete: ${cleanedName}` : 'Lembrete do remédio',
     descricao: 'Lembrete simples para uso diário',
-    dataInicio: getLocalDateString(),
+    dataInicio: reminder.dataInicio,
     dataFim: '',
     status: 'active',
     medicamentos: [
       {
-        medicamentoId: `med-${Date.now()}`,
+        medicamentoId: medicationId,
         nome: cleanedName || 'Medicamento',
         dosagem: `${safeQuantity} comprimido${safeQuantity > 1 ? 's' : ''}`,
         quantidadePorDose: safeQuantity,
-        vezesPorDia: normalizedSchedules.length,
-        horarios: normalizedSchedules,
+        vezesPorDia: 1,
+        horarios: [reminder.horario],
+        primeiroLembreteAt: reminder.scheduledAt.toISOString(),
+        tipoLembrete: reminder.tipo,
       },
     ],
   };
