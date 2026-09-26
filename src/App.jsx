@@ -127,6 +127,9 @@ export default function App() {
       finalidade: medConfig?.finalidade || existingMedication?.finalidade || treatmentData?.finalidade || '',
       orientacaoAlimentacao: medConfig?.orientacaoAlimentacao || existingMedication?.orientacaoAlimentacao || treatmentData?.orientacaoAlimentacao || 'sem_orientacao',
       observacoes: medConfig?.observacoes || existingMedication?.observacoes || treatmentData?.observacoes || '',
+      intervaloMinimoHoras: medConfig?.intervaloMinimoHoras || existingMedication?.intervaloMinimoHoras || treatmentData?.intervaloMinimoHoras || null,
+      limiteDosesDia: medConfig?.limiteDosesDia || existingMedication?.limiteDosesDia || treatmentData?.limiteDosesDia || null,
+      condicaoUso: medConfig?.condicaoUso || existingMedication?.condicaoUso || treatmentData?.condicaoUso || '',
       horarios: nextHorarios,
       primeirosLembretesAt: nextPrimeirosLembretesAt,
       quantidadePorDose: medConfig?.quantidadePorDose || existingMedication?.quantidadePorDose || 1,
@@ -142,6 +145,9 @@ export default function App() {
           finalidade: medConfig?.finalidade || existingTreatment.finalidade || treatmentData?.finalidade || '',
           orientacaoAlimentacao: medConfig?.orientacaoAlimentacao || existingTreatment.orientacaoAlimentacao || treatmentData?.orientacaoAlimentacao || 'sem_orientacao',
           observacoes: medConfig?.observacoes || existingTreatment.observacoes || treatmentData?.observacoes || '',
+          intervaloMinimoHoras: medConfig?.intervaloMinimoHoras || existingTreatment.intervaloMinimoHoras || treatmentData?.intervaloMinimoHoras || null,
+          limiteDosesDia: medConfig?.limiteDosesDia || existingTreatment.limiteDosesDia || treatmentData?.limiteDosesDia || null,
+          condicaoUso: medConfig?.condicaoUso || existingTreatment.condicaoUso || treatmentData?.condicaoUso || '',
           medicamentos: existingTreatment.medicamentos.map((medication) =>
             (String(medication.medicamentoId || '') === String(existingMedication?.id || '') || (!existingMedication?.id && isSameMedication(medication, medConfig)))
               ? {
@@ -161,6 +167,9 @@ export default function App() {
                   orientacaoAlimentacao: medConfig?.orientacaoAlimentacao || medication.orientacaoAlimentacao || 'sem_orientacao',
                   finalidade: medConfig?.finalidade || medication.finalidade || '',
                   observacoes: medConfig?.observacoes || medication.observacoes || '',
+                  intervaloMinimoHoras: medConfig?.intervaloMinimoHoras || medication.intervaloMinimoHoras || treatmentData?.intervaloMinimoHoras || null,
+                  limiteDosesDia: medConfig?.limiteDosesDia || medication.limiteDosesDia || treatmentData?.limiteDosesDia || null,
+                  condicaoUso: medConfig?.condicaoUso || medication.condicaoUso || treatmentData?.condicaoUso || '',
                   dataInicio: treatmentData?.dataInicio || medication.dataInicio || '',
                   dataFim: treatmentData?.dataFim || medication.dataFim || '',
                 }
