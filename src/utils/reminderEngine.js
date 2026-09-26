@@ -187,6 +187,11 @@ export function formatDurationForSpeech(remainingMs) {
   if (remainingMs <= 0) return 'agora';
 
   const totalMinutes = Math.ceil(remainingMs / MINUTE_MS);
+
+  if (totalMinutes === 1 && remainingMs < MINUTE_MS) {
+    return 'menos de 1 minuto';
+  }
+
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
