@@ -124,6 +124,7 @@ export default function ProximaMedicacaoCard({
   const [selectedDoseId, setSelectedDoseId] = useState(null);
   const audioContextRef = useRef(null);
   const alarmIntervalRef = useRef(null);
+  const announcedAlarmRef = useRef(null);
 
   const pendingDoses = useMemo(
     () => doses.filter((dose) => dose.status === 'pending'),
@@ -210,7 +211,10 @@ export default function ProximaMedicacaoCard({
       }, 2500);
     }
 
-    speakText(buildSpeechText(selectedDose));
+    if (announcedAlarmRef.current !== selectedDose.id) {
+      speakText(buildSpeechText(selectedDose));
+      announcedAlarmRef.current = selectedDose.id;
+    }
 
     return () => {
       if (alarmIntervalRef.current) {
@@ -273,6 +277,7 @@ export default function ProximaMedicacaoCard({
       alarmIntervalRef.current = null;
     }
 
+    announcedAlarmRef.current = null;
     onSnoozeDose(selectedDose.id, 10);
   };
 
