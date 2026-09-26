@@ -98,13 +98,13 @@ export default function InicioView({
             </div>
             <p className="mt-1 text-sm font-medium text-slate-500">
               {dailySummary.pending > 0
-                ? dailySummary.pending + ' dose' + (dailySummary.pending === 1 ? '' : 's') + ' ainda precisa' + (dailySummary.pending === 1 ? '' : 'm') + ' ser registrada' + (dailySummary.pending === 1 ? '' : 's') + '.'
+                ? dailySummary.pending + ' dose' + (dailySummary.pending === 1 ? '' : 's') + ' ainda precisa' + (dailySummary.pending === 1 ? '' : 'm') + ' ser registrada' + (dailySummary.pending === 1 ? '' : 's') + '. A dose pendente aparece no cartão acima.'
                 : 'Todas as doses de hoje já foram registradas.'}
             </p>
           </div>
 
           <div className="divide-y divide-slate-100">
-            {takenDoses.slice(0, 5).map((dose) => (
+            {takenDoses.map((dose) => (
               <div key={dose.id} className="flex items-center gap-3 px-5 py-4">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
                   <Check className="h-5 w-5" strokeWidth={3} />
