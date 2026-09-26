@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Navbar from './components/common/Navbar';
 import BottomNav from './components/common/BottomNav';
 import Toast from './components/common/Toast';
@@ -35,6 +35,19 @@ export default function App() {
   const [treatments, setTreatments] = useState([]);
   const [doses, setDoses] = useState([]);
   const [history, setHistory] = useState([]);
+
+  const futureDoses = useMemo(() => {
+    const result = [];
+    const baseDate = new Date();
+
+    for (let offset = 1; offset <= 6; offset += 1) {
+      const date = new Date(baseDate);
+      date.setDate(baseDate.getDate() + offset);
+      result.push(...generateDosesForDate(treatments, getLocalDateString(date)));
+    }
+
+    return result;
+  }, [treatments]);
 
   const [toast, setToast] = useState(null);
 
@@ -195,6 +208,7 @@ export default function App() {
         {activeTab === 'inicio' && (
           <InicioView
             doses={doses}
+            futureDoses={futureDoses}
             medications={medications}
             onToggleDoseStatus={handleToggleDoseStatus}
             onUpdateDose={handleUpdateDose}
