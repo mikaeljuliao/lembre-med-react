@@ -1,598 +1,292 @@
 import React, { useMemo, useState } from 'react';
+import { Check, Clock3, Minus, Pill, Plus, Search } from 'lucide-react';
 import Modal from '../common/Modal';
 import { buildQuickReminderTreatment } from '../../utils/businessLogic';
 
-// Medicamentos mais comuns para idosos no Brasil
 const COMMON_MEDICATIONS = [
-  // Cardiovascular / Pressão
   { nome: 'Losartana 50mg', categoria: 'Pressão' },
   { nome: 'Losartana 25mg', categoria: 'Pressão' },
   { nome: 'Enalapril 10mg', categoria: 'Pressão' },
-  { nome: 'Enalapril 5mg', categoria: 'Pressão' },
   { nome: 'Anlodipino 5mg', categoria: 'Pressão' },
-  { nome: 'Anlodipino 10mg', categoria: 'Pressão' },
   { nome: 'Atenolol 50mg', categoria: 'Coração' },
   { nome: 'Metoprolol 50mg', categoria: 'Coração' },
   { nome: 'Furosemida 40mg', categoria: 'Diurético' },
   { nome: 'Hidroclorotiazida 25mg', categoria: 'Diurético' },
-  { nome: 'Espironolactona 25mg', categoria: 'Diurético' },
-  { nome: 'Sinvastatina 40mg', categoria: 'Colesterol' },
   { nome: 'Sinvastatina 20mg', categoria: 'Colesterol' },
-  { nome: 'Atorvastatina 20mg', categoria: 'Colesterol' },
-  { nome: 'Atorvastatina 40mg', categoria: 'Colesterol' },
-  { nome: 'AAS 100mg', categoria: 'Coração' },
-  { nome: 'Clopidogrel 75mg', categoria: 'Coração' },
-  { nome: 'Digoxina 0,25mg', categoria: 'Coração' },
-  { nome: 'Carvedilol 6,25mg', categoria: 'Coração' },
-  { nome: 'Carvedilol 25mg', categoria: 'Coração' },
-  // Diabetes
   { nome: 'Metformina 500mg', categoria: 'Diabetes' },
-  { nome: 'Metformina 850mg', categoria: 'Diabetes' },
-  { nome: 'Glibenclamida 5mg', categoria: 'Diabetes' },
-  { nome: 'Glipizida 5mg', categoria: 'Diabetes' },
-  { nome: 'Insulina NPH', categoria: 'Diabetes' },
-  { nome: 'Insulina Regular', categoria: 'Diabetes' },
-  // Dor / Anti-inflamatório
   { nome: 'Paracetamol 500mg', categoria: 'Dor' },
-  { nome: 'Paracetamol 750mg', categoria: 'Dor' },
   { nome: 'Ibuprofeno 400mg', categoria: 'Dor' },
   { nome: 'Dipirona 500mg', categoria: 'Dor' },
-  { nome: 'Codeína 30mg', categoria: 'Dor' },
-  { nome: 'Tramadol 50mg', categoria: 'Dor' },
-  // Estômago / Digestivo
   { nome: 'Omeprazol 20mg', categoria: 'Estômago' },
-  { nome: 'Omeprazol 40mg', categoria: 'Estômago' },
   { nome: 'Pantoprazol 40mg', categoria: 'Estômago' },
-  { nome: 'Ranitidina 150mg', categoria: 'Estômago' },
-  { nome: 'Domperidona 10mg', categoria: 'Estômago' },
-  // Tireoide
-  { nome: 'Levotiroxina 25mcg', categoria: 'Tireoide' },
   { nome: 'Levotiroxina 50mcg', categoria: 'Tireoide' },
-  { nome: 'Levotiroxina 75mcg', categoria: 'Tireoide' },
-  { nome: 'Levotiroxina 100mcg', categoria: 'Tireoide' },
-  // Sistema Nervoso / Psiquiátrico
-  { nome: 'Alprazolam 0,25mg', categoria: 'Ansiedade' },
-  { nome: 'Diazepam 5mg', categoria: 'Ansiedade' },
-  { nome: 'Clonazepam 0,5mg', categoria: 'Ansiedade' },
-  { nome: 'Amitriptilina 25mg', categoria: 'Depressão' },
   { nome: 'Sertralina 50mg', categoria: 'Depressão' },
-  { nome: 'Fluoxetina 20mg', categoria: 'Depressão' },
-  // Ossos e vitaminas
-  { nome: 'Carbonato de Cálcio 500mg', categoria: 'Ossos' },
   { nome: 'Vitamina D 1000 UI', categoria: 'Vitaminas' },
-  { nome: 'Ácido Fólico 5mg', categoria: 'Vitaminas' },
-  { nome: 'Ferro 40mg', categoria: 'Vitaminas' },
-  // Outros comuns
-  { nome: 'Alopurinol 300mg', categoria: 'Outros' },
-  { nome: 'Colchicina 0,5mg', categoria: 'Outros' },
-  { nome: 'Prednisolona 20mg', categoria: 'Outros' },
-  { nome: 'Prednisona 20mg', categoria: 'Outros' },
+];
+
+const QUICK_TIMES = [
+  { label: 'Agora', value: 'agora' },
+  { label: 'Em 15 min', value: '15' },
+  { label: 'Em 30 min', value: '30' },
+  { label: 'Em 1 hora', value: '60' },
 ];
 
 const QUICK_DOSES = [
-  { label: '½ comprimido', value: 0.5 },
-  { label: '1 comprimido', value: 1 },
-  { label: '1½ comprimido', value: 1.5 },
-  { label: '2 comprimidos', value: 2 },
+  { label: '½', value: 0.5 },
+  { label: '1', value: 1 },
+  { label: '1½', value: 1.5 },
+  { label: '2', value: 2 },
 ];
 
-export default function QuickReminderModal({ isOpen, onClose, onSave, existingMedications = [] }) {
+export default function QuickReminderModal({
+  isOpen,
+  onClose,
+  onSave,
+  existingMedications = [],
+}) {
   const [nome, setNome] = useState('');
   const [quantidade, setQuantidade] = useState(1);
-  const [horarios, setHorarios] = useState(['agora']);
-  const [step, setStep] = useState(1);
-  const [selectedQuickTime, setSelectedQuickTime] = useState('agora');
+  const [horario, setHorario] = useState('15');
+  const [customTime, setCustomTime] = useState('');
 
-  // Sugestões: medicamentos já cadastrados + lista comum
-  const allSuggestions = useMemo(() => {
-    const existingItems = [];
-    const existingNames = new Set();
+  const suggestions = useMemo(() => {
+    const existing = (existingMedications || [])
+      .map((medication) => ({
+        nome: String(medication?.nome || '').trim(),
+        categoria: 'Meus remédios',
+        isExisting: true,
+      }))
+      .filter((item) => item.nome);
 
-    for (const medication of existingMedications || []) {
-      const name = String(medication?.nome || '').trim();
-      const key = name.toLowerCase();
+    const existingNames = new Set(existing.map((item) => item.nome.toLowerCase()));
 
-      if (!name || existingNames.has(key)) continue;
-
-      existingNames.add(key);
-      existingItems.push({ nome: name, categoria: 'Meus remédios', isExisting: true });
-    }
-
-    const commonNames = COMMON_MEDICATIONS
-      .filter((medication) => !existingNames.has(medication.nome.toLowerCase()))
-      .map((medication) => ({ ...medication, isExisting: false }));
-
-    return [...existingItems, ...commonNames];
+    return [
+      ...existing,
+      ...COMMON_MEDICATIONS.filter(
+        (item) => !existingNames.has(item.nome.toLowerCase())
+      ),
+    ];
   }, [existingMedications]);
 
   const filteredSuggestions = useMemo(() => {
     const term = nome.trim().toLowerCase();
-    if (!term) return allSuggestions.slice(0, 6);
-    return allSuggestions.filter((item) => item.nome.toLowerCase().includes(term)).slice(0, 6);
-  }, [nome, allSuggestions]);
 
-  const handleSelectSuggestion = (item) => {
-    setNome(item.nome);
-  };
+    if (!term) return suggestions.slice(0, 6);
 
-  const handleAddTime = () => {
-    setHorarios((prev) => [...prev, '08:00']);
-  };
+    return suggestions
+      .filter((item) => item.nome.toLowerCase().includes(term))
+      .slice(0, 6);
+  }, [nome, suggestions]);
 
-  const handleRemoveTime = (index) => {
-    setHorarios((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleTimeChange = (index, value) => {
-    setHorarios((prev) => prev.map((item, i) => (i === index ? value : item)));
-  };
-
-  const applyQuickTime = (value) => {
-    const next = value === 'custom' ? ['08:00'] : [value];
-    setHorarios(next);
-    setSelectedQuickTime(value);
-  };
-
-  const handleSubmit = () => {
-    if (!nome.trim()) return;
-    const reminder = buildQuickReminderTreatment(nome, quantidade, horarios);
-    onSave(reminder);
-    // Reset
+  const reset = () => {
     setNome('');
     setQuantidade(1);
-    setHorarios(['agora']);
-    setSelectedQuickTime('agora');
-    setStep(1);
+    setHorario('15');
+    setCustomTime('');
   };
 
   const handleClose = () => {
-    setNome('');
-    setQuantidade(1);
-    setHorarios(['agora']);
-    setSelectedQuickTime('agora');
-    setStep(1);
+    reset();
     onClose();
   };
 
-  const fieldStyle = {
-    width: '100%',
-    padding: '14px 16px',
-    fontSize: '17px',
-    fontWeight: 600,
-    border: '2px solid #e2e8f0',
-    borderRadius: '16px',
-    background: '#f8fafc',
-    color: '#0f172a',
-    boxSizing: 'border-box',
-    outline: 'none',
+  const handleSave = () => {
+    const selectedTime = horario === 'custom' ? customTime : horario;
+
+    if (!nome.trim() || !selectedTime) return;
+
+    onSave(buildQuickReminderTreatment(nome, quantidade, [selectedTime]));
+    reset();
   };
 
-  const labelStyle = {
-    display: 'block',
-    fontSize: '15px',
-    fontWeight: 800,
-    color: '#374151',
-    marginBottom: '10px',
-  };
-
-  const stepButtonStyle = (active) => ({
-    width: '100%',
-    padding: '16px',
-    borderRadius: '16px',
-    border: 'none',
-    background: active
-      ? 'linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%)'
-      : '#e2e8f0',
-    color: active ? '#ffffff' : '#94a3b8',
-    fontWeight: 800,
-    fontSize: '17px',
-    cursor: active ? 'pointer' : 'not-allowed',
-    boxShadow: active ? '0 4px 12px rgba(29,78,216,0.3)' : 'none',
-    marginTop: '4px',
-  });
+  const isReady = Boolean(nome.trim() && (horario !== 'custom' || customTime));
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Adicionar lembrete de remédio">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <Modal isOpen={isOpen} onClose={handleClose} title="Adicionar remédio">
+      <div className="space-y-6">
+        <div>
+          <label
+            htmlFor="nome-remedio"
+            className="mb-2 block text-base font-black text-slate-900"
+          >
+            Qual remédio você quer lembrar?
+          </label>
 
-        {/* Indicador de progresso */}
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              style={{
-                flex: 1,
-                height: '5px',
-                borderRadius: '99px',
-                background: s <= step ? '#1d4ed8' : '#e2e8f0',
-                transition: 'background 0.2s',
-              }}
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+            <input
+              id="nome-remedio"
+              type="text"
+              value={nome}
+              onChange={(event) => setNome(event.target.value)}
+              placeholder="Digite o nome"
+              autoFocus
+              className="min-h-14 w-full rounded-2xl border-2 border-slate-200 bg-slate-50 pl-12 pr-4 text-lg font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-100"
             />
-          ))}
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {filteredSuggestions.map((item) => {
+              const selected = nome.trim().toLowerCase() === item.nome.toLowerCase();
+
+              return (
+                <button
+                  key={item.nome}
+                  type="button"
+                  onClick={() => setNome(item.nome)}
+                  className={`flex min-h-14 items-center gap-3 rounded-2xl border-2 px-3 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                    selected
+                      ? 'border-blue-600 bg-blue-50 text-blue-800'
+                      : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                  }`}
+                  aria-pressed={selected}
+                >
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                      selected
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
+                    {selected ? (
+                      <Check className="h-5 w-5" strokeWidth={3} />
+                    ) : (
+                      <Pill className="h-5 w-5" />
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-black">{item.nome}</span>
+                    <span className="block truncate text-xs font-semibold text-slate-400">
+                      {item.categoria}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div>
-          <p style={{ ...labelStyle, fontSize: '18px', marginBottom: '12px' }}>
-            Qual remédio você quer lembrar?
+          <p className="mb-3 text-base font-black text-slate-900">
+            Quantos você toma?
           </p>
 
-          <input
-            type="text"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            placeholder="Digite o nome do remédio"
-            style={{
-              ...fieldStyle,
-              fontSize: '18px',
-              minHeight: '56px',
-            }}
-            autoFocus
-            aria-label="Nome do medicamento"
-          />
-
-          <div style={{ marginTop: '18px' }}>
-            <p
-              style={{
-                fontSize: '14px',
-                fontWeight: 800,
-                color: '#64748b',
-                margin: '0 0 10px',
-              }}
-            >
-              {nome.trim() ? 'Resultados' : 'Exemplos de medicamentos'}
-            </p>
-
-            {filteredSuggestions.length > 0 ? (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                  gap: '8px',
-                }}
+          <div className="grid grid-cols-4 gap-2">
+            {QUICK_DOSES.map((dose) => (
+              <button
+                key={dose.value}
+                type="button"
+                onClick={() => setQuantidade(dose.value)}
+                className={`min-h-14 rounded-2xl border-2 text-lg font-black transition focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                  quantidade === dose.value
+                    ? 'border-blue-600 bg-blue-50 text-blue-700'
+                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+                aria-pressed={quantidade === dose.value}
               >
-                {filteredSuggestions.map((item, i) => {
-                  const selected = nome.trim().toLowerCase() === item.nome.toLowerCase();
-
-                  return (
-                    <button
-                      key={`${item.nome}-${i}`}
-                      type="button"
-                      onClick={() => handleSelectSuggestion(item)}
-                      aria-pressed={selected}
-                      style={{
-                        minHeight: '52px',
-                        padding: '9px 10px',
-                        textAlign: 'left',
-                        background: selected ? '#eff6ff' : '#f8fafc',
-                        border: `2px solid ${selected ? '#1d4ed8' : '#e2e8f0'}`,
-                        borderRadius: '14px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '9px',
-                        color: '#0f172a',
-                      }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          width: '28px',
-                          height: '28px',
-                          borderRadius: '9px',
-                          background: selected ? '#dbeafe' : '#e2e8f0',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                          fontSize: '14px',
-                        }}
-                      >
-                        💊
-                      </span>
-                      <span
-                        style={{
-                          fontSize: '13px',
-                          fontWeight: 800,
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {item.nome}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <div
-                style={{
-                  padding: '14px',
-                  borderRadius: '14px',
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  color: '#64748b',
-                  fontSize: '14px',
-                  lineHeight: 1.4,
-                }}
-              >
-                Nenhum exemplo encontrado. Você pode continuar com o nome digitado.
-              </div>
-            )}
+                {dose.label}
+              </button>
+            ))}
           </div>
 
-          <button
-            type="button"
-            onClick={() => setStep(2)}
-            disabled={!nome.trim()}
-            style={{
-              ...stepButtonStyle(!!nome.trim()),
-              marginTop: '18px',
-            }}
-          >
-            Continuar →
-          </button>
+          <div className="mt-2 flex items-center justify-center gap-5 rounded-2xl bg-slate-50 p-3">
+            <button
+              type="button"
+              onClick={() =>
+                setQuantidade((value) =>
+                  Math.max(0.5, Number((value - 0.5).toFixed(1)))
+                )
+              }
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-700 shadow-sm ring-1 ring-slate-200"
+              aria-label="Diminuir quantidade"
+            >
+              <Minus className="h-5 w-5" />
+            </button>
+
+            <span className="min-w-16 text-center text-2xl font-black text-slate-900">
+              {quantidade}
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setQuantidade((value) => Number((value + 0.5).toFixed(1)))
+              }
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm"
+              aria-label="Aumentar quantidade"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
-        {/* STEP 2 — Quantidade */}
-        {step === 2 && (
-          <div>
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '14px', fontWeight: 700, padding: 0, marginBottom: '4px' }}
-            >
-              ← Voltar
-            </button>
+        <div>
+          <p className="mb-3 text-base font-black text-slate-900">
+            Quando você quer ser lembrado?
+          </p>
 
-            <p style={labelStyle}>
-              Quantas unidades de{' '}
-              <span style={{ color: '#1d4ed8' }}>{nome}</span>?
-            </p>
-
-            {/* Botões rápidos de dose */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '16px' }}>
-              {QUICK_DOSES.map((d) => (
-                <button
-                  key={d.value}
-                  type="button"
-                  onClick={() => setQuantidade(d.value)}
-                  style={{
-                    padding: '14px',
-                    borderRadius: '14px',
-                    border: `2px solid ${quantidade === d.value ? '#1d4ed8' : '#e2e8f0'}`,
-                    background: quantidade === d.value ? '#eff6ff' : '#f8fafc',
-                    color: quantidade === d.value ? '#1d4ed8' : '#374151',
-                    fontWeight: 800,
-                    fontSize: '16px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Contador manual */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '20px',
-                padding: '16px',
-                background: '#f8fafc',
-                borderRadius: '16px',
-                border: '2px solid #e2e8f0',
-              }}
-            >
+          <div className="grid grid-cols-2 gap-2">
+            {QUICK_TIMES.map((option) => (
               <button
+                key={option.value}
                 type="button"
-                onClick={() => setQuantidade((prev) => Math.max(0.5, parseFloat((prev - 0.5).toFixed(1))))}
-                style={{
-                  width: '52px',
-                  height: '52px',
-                  borderRadius: '50%',
-                  background: '#e2e8f0',
-                  border: 'none',
-                  fontSize: '28px',
-                  fontWeight: 900,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#374151',
-                }}
+                onClick={() => setHorario(option.value)}
+                className={`min-h-14 rounded-2xl border-2 px-3 text-base font-black transition focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                  horario === option.value
+                    ? 'border-blue-600 bg-blue-50 text-blue-700'
+                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+                aria-pressed={horario === option.value}
               >
-                −
-              </button>
-              <div style={{ textAlign: 'center', minWidth: '80px' }}>
-                <p style={{ fontSize: '42px', fontWeight: 900, color: '#1d4ed8', margin: 0, lineHeight: 1 }}>
-                  {quantidade}
-                </p>
-                <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0' }}>unidade(s)</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setQuantidade((prev) => parseFloat((prev + 0.5).toFixed(1)))}
-                style={{
-                  width: '52px',
-                  height: '52px',
-                  borderRadius: '50%',
-                  background: '#1d4ed8',
-                  border: 'none',
-                  fontSize: '28px',
-                  fontWeight: 900,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#ffffff',
-                }}
-              >
-                +
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setStep(3)}
-              style={stepButtonStyle(true)}
-            >
-              Continuar →
-            </button>
-          </div>
-        )}
-
-        {/* STEP 3 — Horário */}
-        {step === 3 && (
-          <div>
-            <button
-              type="button"
-              onClick={() => setStep(2)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '14px', fontWeight: 700, padding: 0, marginBottom: '4px' }}
-            >
-              ← Voltar
-            </button>
-
-            <p style={labelStyle}>
-              Quando lembrar de tomar?
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '16px' }}>
-              {[
-                { label: '⚡ Agora', value: 'agora' },
-                { label: '⏱ Em 15 min', value: '15' },
-                { label: '⏱ Em 30 min', value: '30' },
-                { label: '🕐 Escolher horário', value: 'custom' },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => applyQuickTime(option.value)}
-                  style={{
-                    padding: '14px',
-                    borderRadius: '14px',
-                    border: `2px solid ${selectedQuickTime === option.value ? '#1d4ed8' : '#e2e8f0'}`,
-                    background: selectedQuickTime === option.value ? '#eff6ff' : '#f8fafc',
-                    color: selectedQuickTime === option.value ? '#1d4ed8' : '#374151',
-                    fontWeight: 700,
-                    fontSize: '15px',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                  }}
-                >
+                <span className="flex items-center justify-center gap-2">
+                  <Clock3 className="h-5 w-5" />
                   {option.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Horários personalizados */}
-            {selectedQuickTime === 'custom' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
-                {horarios.map((time, index) => (
-                  <div key={`${time}-${index}`} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ ...labelStyle, fontSize: '13px', marginBottom: '6px' }}>
-                        Horário {index + 1}
-                      </label>
-                      <input
-                        type="time"
-                        value={time}
-                        onChange={(e) => handleTimeChange(index, e.target.value)}
-                        style={{ ...fieldStyle, fontSize: '20px', fontWeight: 800 }}
-                      />
-                    </div>
-                    {horarios.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTime(index)}
-                        style={{
-                          marginTop: '26px',
-                          width: '42px',
-                          height: '48px',
-                          borderRadius: '12px',
-                          background: '#fef2f2',
-                          border: '2px solid #fecaca',
-                          color: '#dc2626',
-                          fontWeight: 900,
-                          fontSize: '18px',
-                          cursor: 'pointer',
-                          flexShrink: 0,
-                        }}
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={handleAddTime}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '14px',
-                    border: '2px dashed #cbd5e1',
-                    background: '#f8fafc',
-                    color: '#64748b',
-                    fontWeight: 700,
-                    fontSize: '15px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  + Adicionar outro horário
-                </button>
-              </div>
-            )}
-
-            {/* Resumo antes de confirmar */}
-            <div
-              style={{
-                background: '#f0fdf4',
-                border: '2px solid #bbf7d0',
-                borderRadius: '16px',
-                padding: '14px 16px',
-                marginBottom: '4px',
-              }}
-            >
-              <p style={{ fontSize: '13px', fontWeight: 700, color: '#166534', margin: '0 0 4px' }}>
-                ✓ Resumo do lembrete
-              </p>
-              <p style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                {nome} — {quantidade} unidade(s)
-              </p>
-              <p style={{ fontSize: '13px', color: '#64748b', margin: '2px 0 0' }}>
-                Horário:{' '}
-                {selectedQuickTime === 'agora'
-                  ? 'Agora'
-                  : selectedQuickTime === '15'
-                  ? 'Em 15 minutos'
-                  : selectedQuickTime === '30'
-                  ? 'Em 30 minutos'
-                  : horarios.join(', ')}
-              </p>
-            </div>
+                </span>
+              </button>
+            ))}
 
             <button
               type="button"
-              onClick={handleSubmit}
-              style={{
-                width: '100%',
-                padding: '18px',
-                borderRadius: '16px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                color: '#ffffff',
-                fontWeight: 900,
-                fontSize: '18px',
-                cursor: 'pointer',
-                boxShadow: '0 6px 16px rgba(5,150,105,0.35)',
-                marginTop: '8px',
-              }}
+              onClick={() => setHorario('custom')}
+              className={`min-h-14 rounded-2xl border-2 px-3 text-base font-black transition focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                horario === 'custom'
+                  ? 'border-blue-600 bg-blue-50 text-blue-700'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+              }`}
+              aria-pressed={horario === 'custom'}
             >
-              ✓ Criar lembrete
+              Escolher horário
             </button>
           </div>
-        )}
+
+          {horario === 'custom' && (
+            <div className="mt-3">
+              <label
+                htmlFor="horario-remedio"
+                className="mb-2 block text-sm font-black text-slate-700"
+              >
+                Horário
+              </label>
+              <input
+                id="horario-remedio"
+                type="time"
+                value={customTime}
+                onChange={(event) => setCustomTime(event.target.value)}
+                className="min-h-14 w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 text-2xl font-black text-slate-900 outline-none focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              />
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={!isReady}
+          className="flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 text-xl font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-200"
+        >
+          <Check className="h-6 w-6" strokeWidth={3} />
+          Criar lembrete
+        </button>
       </div>
     </Modal>
   );
