@@ -260,6 +260,19 @@ describe('businessLogic tests', () => {
       expect(generateDosesForDate([treatment], '2026-09-27').map((dose) => dose.horario)).toEqual(['06:00', '14:00', '22:00']);
     });
 
+    it('preserves the interval anchor when an existing interval medication is edited', () => {
+      const anchor = new Date(2026, 8, 26, 6, 0, 0).toISOString();
+      const treatment = buildMedicationTreatment({
+        nome: 'Antibiótico',
+        horarioInicial: '06:00',
+        intervaloHoras: 8,
+        tipoUso: 'interval',
+        preservePrimeiroLembreteAt: anchor,
+      });
+
+      expect(treatment.medicamentos[0].primeiroLembreteAt).toBe(anchor);
+    });
+
     it('does not generate doses for as-needed use', () => {
       const treatment = buildMedicationTreatment({
         nome: 'Dipirona',
