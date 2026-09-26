@@ -10,6 +10,21 @@ const STORAGE_KEYS = {
 const INITIAL_MEDICATIONS = [];
 const INITIAL_TREATMENTS = [];
 
+const LEGACY_MOCK_IDS = new Set([
+  'med-1',
+  'med-2',
+  'med-3',
+  'med-4',
+  'treat-1',
+  'treat-2',
+  'treat-3',
+  'hist-1',
+]);
+
+function isLegacyMock(item) {
+  return Boolean(item?.id && LEGACY_MOCK_IDS.has(String(item.id)));
+}
+
 function normalizeDose(dose, dateStr) {
   if (!dose || typeof dose !== 'object') return null;
 
@@ -35,7 +50,9 @@ export function getStoredMedications() {
 
   try {
     const parsed = JSON.parse(data);
-    const cleaned = sanitizeStoredData({ medications: parsed }).medications;
+    const cleaned = sanitizeStoredData({ medications: parsed }).medications.filter(
+      (medication) => !isLegacyMock(medication)
+    );
 
     if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) {
       localStorage.setItem(STORAGE_KEYS.MEDICATIONS, JSON.stringify(cleaned));
@@ -60,7 +77,9 @@ export function getStoredTreatments() {
 
   try {
     const parsed = JSON.parse(data);
-    const cleaned = sanitizeStoredData({ treatments: parsed }).treatments;
+    const cleaned = sanitizeStoredData({ treatments: parsed }).treatments.filter(
+      (treatment) => !isLegacyMock(treatment)
+    );
 
     if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) {
       localStorage.setItem(STORAGE_KEYS.TREATMENTS, JSON.stringify(cleaned));
@@ -90,6 +109,7 @@ export function getStoredDoses(dateStr = getLocalDateString()) {
 
   if (allDosesMap[dateStr]) {
     const normalized = allDosesMap[dateStr]
+      .filter((dose) => !isLegacyMock(dose) && !['treat-1', 'treat-2', 'treat-3'].includes(String(dose?.treatmentId)))
       .map((dose) => normalizeDose(dose, dateStr))
       .filter(Boolean);
 
@@ -135,7 +155,9 @@ export function getStoredHistory() {
 
   try {
     const parsed = JSON.parse(data);
-    const cleaned = sanitizeStoredData({ history: parsed }).history;
+    const cleaned = sanitizeStoredData({ history: parsed }).history.filter(
+      (entry) => !isLegacyMock(entry)
+    );
 
     if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) {
       localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(cleaned));
