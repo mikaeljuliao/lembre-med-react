@@ -45,7 +45,7 @@ export default function InicioView({
     () =>
       [...doses]
         .filter((dose) => dose.status === 'taken')
-.filter((dose) => isDoseForActiveMedication(dose, medications))
+        .filter((dose) => isDoseForActiveMedication(dose, medications))
         .sort((a, b) => getDoseTime(b) - getDoseTime(a)),
     [doses, medications]
   );
@@ -82,7 +82,6 @@ export default function InicioView({
         onToggleDoseStatus={onToggleDoseStatus}
         onUpdateDose={onUpdateDose}
         onSnoozeDose={onSnoozeDose}
-        onNavigate={onNavigate}
       />
 
       {takenDoses.length > 0 && (
