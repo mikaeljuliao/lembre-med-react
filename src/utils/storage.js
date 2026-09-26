@@ -80,6 +80,33 @@ function mergeDuplicateTreatments(treatments, medications) {
     existingMedication.medicamentoId =
       canonicalId || existingMedication.medicamentoId;
 
+    const mergedFirstReminders = {
+      ...(existingMedication.primeirosLembretesAt || {}),
+      ...(medication.primeirosLembretesAt || {}),
+    };
+
+    Object.keys(medication.primeirosLembretesAt || {}).forEach((horario) => {
+      const current = existingMedication.primeirosLembretesAt?.[horario];
+      const incoming = medication.primeirosLembretesAt?.[horario];
+
+      if (!current || !incoming) return;
+
+      const currentDate = new Date(current);
+      const incomingDate = new Date(incoming);
+
+      if (
+        !Number.isNaN(currentDate.getTime()) &&
+        !Number.isNaN(incomingDate.getTime()) &&
+        incomingDate.getTime() < currentDate.getTime()
+      ) {
+        mergedFirstReminders[horario] = incoming;
+      }
+    });
+
+    if (Object.keys(mergedFirstReminders).length > 0) {
+      existingMedication.primeirosLembretesAt = mergedFirstReminders;
+    }
+
     const dates = [existing.dataInicio, treatment.dataInicio]
       .filter(Boolean)
       .sort();
