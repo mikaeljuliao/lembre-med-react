@@ -47,7 +47,7 @@ export default function App() {
     }
 
     return result;
-  }, [treatments]);
+  }, [treatments, selectedDate]);
 
   const [toast, setToast] = useState(null);
 
