@@ -13,6 +13,11 @@ function formatToday() {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+function toMinutes(time) {
+  const [hours, minutes] = String(time || '00:00').split(':').map(Number);
+  return (Number(hours) || 0) * 60 + (Number(minutes) || 0);
+}
+
 export default function InicioView({
   doses = [],
   medications = [],
@@ -26,7 +31,16 @@ export default function InicioView({
   });
 
   const sortedDoses = useMemo(
-    () => [...doses].sort((a, b) => String(a.horario).localeCompare(String(b.horario))),
+    () =>
+      [...doses].sort((a, b) => {
+        const timeDifference = toMinutes(a.horario) - toMinutes(b.horario);
+        if (timeDifference !== 0) return timeDifference;
+
+        const nameDifference = String(a.medicationNome).localeCompare(String(b.medicationNome));
+        if (nameDifference !== 0) return nameDifference;
+
+        return String(a.id).localeCompare(String(b.id));
+      }),
     [doses]
   );
 
