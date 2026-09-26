@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pill, Search, Plus, Eye, Trash2 } from 'lucide-react';
+import { Pill, Search, Plus, Trash2, Clock3, ChevronRight } from 'lucide-react';
 
 export default function MedicationListView({
   medications = [],
@@ -201,39 +201,29 @@ export default function MedicationListView({
                   {med.nome}
                 </h3>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
                   {med.concentracao && (
-                    <span
-                      style={{
-                        background: '#f1f5f9',
-                        color: '#475569',
-                        borderRadius: '8px',
-                        padding: '4px 10px',
-                        fontSize: '14px',
-                        fontWeight: 800,
-                        border: '1px solid #e2e8f0',
-                      }}
-                    >
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#475569' }}>
                       {med.concentracao}
                     </span>
                   )}
-                  {med.apresentacao && (
-                    <span
-                      style={{
-                        background: '#f0fdf4',
-                        color: '#16a34a',
-                        borderRadius: '8px',
-                        padding: '4px 10px',
-                        fontSize: '14px',
-                        fontWeight: 800,
-                        border: '1px solid #bbf7d0',
-                      }}
-                    >
-                      {med.apresentacao}
-                    </span>
+
+                  {Array.isArray(med.horarios) && med.horarios.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1d4ed8' }}>
+                      <Clock3 style={{ width: '16px', height: '16px', flexShrink: 0 }} />
+                      <span style={{ fontSize: '14px', fontWeight: 800 }}>
+                        Lembrete às {med.horarios.join(' e ')}
+                      </span>
+                    </div>
                   )}
+
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#64748b' }}>
+                    Toque para ver os detalhes
+                  </span>
                 </div>
               </div>
+
+              <ChevronRight style={{ width: '22px', height: '22px', color: '#94a3b8', flexShrink: 0 }} />
 
               {/* Botão de excluir */}
               <button
