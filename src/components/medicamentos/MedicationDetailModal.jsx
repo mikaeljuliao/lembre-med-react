@@ -86,6 +86,11 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
                 </p>
               )}
             </div>
+          ) : medication.tipoUso === 'interval' ? (
+            <div className="rounded-xl bg-white px-4 py-3">
+              <p className="text-base font-black text-slate-900">A cada {medication.intervaloHoras} horas</p>
+              <p className="mt-1 text-sm font-semibold text-slate-500">Primeiro horário: {medication.horarioInicial || horarios[0] || '--:--'}</p>
+            </div>
           ) : (
             <div className="grid grid-cols-2 gap-2">
               {horarios.map((horario) => (
