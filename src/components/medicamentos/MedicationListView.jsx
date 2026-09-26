@@ -100,6 +100,7 @@ export default function MedicationListView({
             const horarios = Array.isArray(medication.horarios)
               ? medication.horarios.map((horario) => String(horario).slice(0, 5))
               : [];
+            const isAsNeeded = medication.tipoUso === 'as_needed';
 
             return (
               <div
@@ -126,22 +127,25 @@ export default function MedicationListView({
                       </span>
                     </div>
 
-                    {medication.concentracao && (
-                      <p className="mt-1 text-sm font-bold text-slate-500">
-                        {medication.concentracao}
-                      </p>
-                    )}
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-sm font-bold text-slate-500">
+                      {medication.concentracao && <span>{medication.concentracao}</span>}
+                      {medication.viaAdministracao && <span>· {medication.viaAdministracao}</span>}
+                    </div>
 
                     <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold text-blue-700">
                       <span className="inline-flex items-center gap-1.5">
                         <Clock3 className="h-4 w-4" />
-                        {horarios.length > 0
-                          ? horarios.join(' · ')
-                          : 'Horário não informado'}
+                        {isAsNeeded
+                          ? 'Quando precisar'
+                          : horarios.length > 0
+                            ? horarios.join(' · ')
+                            : 'Horário não informado'}
                       </span>
-                      <span className="text-slate-500">
-                        {horarios.length} {horarios.length === 1 ? 'horário por dia' : 'horários por dia'}
-                      </span>
+                      {!isAsNeeded && (
+                        <span className="text-slate-500">
+                          {horarios.length} {horarios.length === 1 ? 'horário por dia' : 'horários por dia'}
+                        </span>
+                      )}
                     </div>
 
                     <p className="mt-2 text-sm font-semibold text-slate-500">
