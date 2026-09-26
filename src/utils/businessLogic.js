@@ -1,26 +1,11 @@
-const KNOWN_MOCK_MEDICATIONS = new Set([
-  'paracetamol',
-  'losartana',
-  'amoxicilina',
-  'dipirona',
-  'omeprazol',
-  'ibuprofeno',
-]);
-
 function isUserMedicationItem(item) {
   if (!item || typeof item !== 'object') return false;
-  const nome = String(item.nome || '').trim();
-  if (!nome) return false;
-  if (KNOWN_MOCK_MEDICATIONS.has(nome.toLowerCase())) return false;
-  return true;
+  return Boolean(String(item.nome || '').trim());
 }
 
 function isUserTreatmentItem(item) {
   if (!item || typeof item !== 'object') return false;
-  const nome = String(item.nome || '').trim();
-  if (!nome) return false;
-  if (KNOWN_MOCK_MEDICATIONS.has(nome.toLowerCase())) return false;
-  return true;
+  return Boolean(String(item.nome || '').trim());
 }
 
 export function sanitizeStoredData(payload = {}) {
@@ -35,9 +20,7 @@ export function sanitizeStoredData(payload = {}) {
   const history = Array.isArray(payload.history)
     ? payload.history.filter((entry) => {
         if (!entry || typeof entry !== 'object') return false;
-        const medicationNome = String(entry.medicationNome || '').trim();
-        if (!medicationNome) return false;
-        return !KNOWN_MOCK_MEDICATIONS.has(medicationNome.toLowerCase());
+        return Boolean(String(entry.medicationNome || '').trim());
       })
     : [];
 
