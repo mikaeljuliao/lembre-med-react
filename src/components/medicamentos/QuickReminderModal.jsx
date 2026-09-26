@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Check, Clock3, Minus, Pill, Plus, Search } from 'lucide-react';
 import Modal from '../common/Modal';
 import { buildQuickReminderTreatment } from '../../utils/businessLogic';
+import { getReminderDateDescription, resolveNextScheduledAt } from '../../utils/reminderEngine';
 
 const COMMON_MEDICATIONS = [
   { nome: 'Losartana 50mg', categoria: 'Pressão' },
@@ -29,6 +30,7 @@ const QUICK_TIMES = [
   { label: 'Em 15 min', value: '15' },
   { label: 'Em 30 min', value: '30' },
   { label: 'Em 1 hora', value: '60' },
+  { label: 'Em 2 horas', value: '120' },
 ];
 
 const QUICK_DOSES = [
@@ -100,6 +102,10 @@ export default function QuickReminderModal({
   };
 
   const isReady = Boolean(nome.trim() && (horario !== 'custom' || customTime));
+  const selectedSchedule = horario === 'custom' ? customTime : horario;
+  const previewTarget = selectedSchedule
+    ? resolveNextScheduledAt(selectedSchedule, new Date())
+    : null;
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Adicionar remédio">
@@ -258,6 +264,17 @@ export default function QuickReminderModal({
               Escolher horário
             </button>
           </div>
+
+          {previewTarget && (
+            <div className="mt-3 rounded-2xl bg-blue-50 px-4 py-3">
+              <p className="text-xs font-black uppercase tracking-wider text-blue-500">
+                O alarme vai tocar
+              </p>
+              <p className="mt-1 text-lg font-black text-blue-800">
+                {getReminderDateDescription(previewTarget, new Date())}
+              </p>
+            </div>
+          )}
 
           {horario === 'custom' && (
             <div className="mt-3">
