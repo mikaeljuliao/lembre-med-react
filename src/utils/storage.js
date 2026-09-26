@@ -11,16 +11,7 @@ const STORAGE_KEYS = {
 const INITIAL_MEDICATIONS = [];
 const INITIAL_TREATMENTS = [];
 
-const LEGACY_MOCK_IDS = new Set([
-  'med-1',
-  'med-2',
-  'med-3',
-  'med-4',
-  'treat-1',
-  'treat-2',
-  'treat-3',
-  'hist-1',
-]);
+const LEGACY_MOCK_IDS = new Set(['med-1', 'med-2', 'med-3', 'med-4', 'treat-1', 'treat-2', 'treat-3', 'hist-1']);
 
 function isLegacyMock(item) {
   return Boolean(item?.id && LEGACY_MOCK_IDS.has(String(item.id)));
@@ -28,15 +19,17 @@ function isLegacyMock(item) {
 
 function normalizeDose(dose, dateStr) {
   if (!dose || typeof dose !== 'object') return null;
-
   const normalizedDate = dose.data || dateStr;
   const horario = String(dose.horario || '00:00');
   const scheduledAt = dose.scheduledAt || getDoseScheduledAt(normalizedDate, horario);
+  const status = ['pending', 'taken', 'skipped', 'missed'].includes(dose.status) ? dose.status : 'pending';
 
   return {
     ...dose,
     data: normalizedDate,
     scheduledAt,
+    status,
+    takenAt: status === 'taken' ? dose.takenAt || null : null,
     snoozedUntil: dose.snoozedUntil || null,
     alarmMuted: Boolean(dose.alarmMuted),
   };
@@ -48,17 +41,10 @@ export function getStoredMedications() {
     localStorage.setItem(STORAGE_KEYS.MEDICATIONS, JSON.stringify(INITIAL_MEDICATIONS));
     return [];
   }
-
   try {
     const parsed = JSON.parse(data);
-    const cleaned = sanitizeStoredData({ medications: parsed }).medications.filter(
-      (medication) => !isLegacyMock(medication)
-    );
-
-    if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) {
-      localStorage.setItem(STORAGE_KEYS.MEDICATIONS, JSON.stringify(cleaned));
-    }
-
+    const cleaned = sanitizeStoredData({ medications: parsed }).medications.filter((medication) => !isLegacyMock(medication));
+    if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) localStorage.setItem(STORAGE_KEYS.MEDICATIONS, JSON.stringify(cleaned));
     return cleaned;
   } catch {
     return [];
@@ -75,17 +61,10 @@ export function getStoredTreatments() {
     localStorage.setItem(STORAGE_KEYS.TREATMENTS, JSON.stringify(INITIAL_TREATMENTS));
     return [];
   }
-
   try {
     const parsed = JSON.parse(data);
-    const cleaned = sanitizeStoredData({ treatments: parsed }).treatments.filter(
-      (treatment) => !isLegacyMock(treatment)
-    );
-
-    if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) {
-      localStorage.setItem(STORAGE_KEYS.TREATMENTS, JSON.stringify(cleaned));
-    }
-
+    const cleaned = sanitizeStoredData({ treatments: parsed }).treatments.filter((treatment) => !isLegacyMock(treatment));
+    if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) localStorage.setItem(STORAGE_KEYS.TREATMENTS, JSON.stringify(cleaned));
     return cleaned;
   } catch {
     return [];
@@ -99,7 +78,6 @@ export function saveStoredTreatments(treatments) {
 export function getStoredDoses(dateStr = getLocalDateString()) {
   const allDosesData = localStorage.getItem(STORAGE_KEYS.DOSES);
   let allDosesMap = {};
-
   if (allDosesData) {
     try {
       allDosesMap = JSON.parse(allDosesData);
@@ -112,26 +90,18 @@ export function getStoredDoses(dateStr = getLocalDateString()) {
   const generated = generateDosesForDate(treatments, dateStr);
   const stored = Array.isArray(allDosesMap[dateStr])
     ? allDosesMap[dateStr]
-        .filter(
-          (dose) =>
-            !isLegacyMock(dose) &&
-            !['treat-1', 'treat-2', 'treat-3'].includes(String(dose?.treatmentId))
-        )
+        .filter((dose) => !isLegacyMock(dose) && !['treat-1', 'treat-2', 'treat-3'].includes(String(dose?.treatmentId)))
         .map((dose) => normalizeDose(dose, dateStr))
         .filter(Boolean)
     : [];
-
   const storedById = new Map(stored.map((dose) => [dose.id, dose]));
-
   const normalized = generated.map((dose) => {
     const previous = storedById.get(dose.id);
-
     if (!previous) return dose;
-
     return {
       ...dose,
-      status: previous.status || dose.status,
-      takenAt: previous.takenAt || null,
+      status: previous.status,
+      takenAt: previous.takenAt,
       skipReason: previous.skipReason || null,
       snoozedUntil: previous.snoozedUntil || null,
       alarmMuted: Boolean(previous.alarmMuted),
@@ -146,7 +116,6 @@ export function getStoredDoses(dateStr = getLocalDateString()) {
 export function saveStoredDosesForDate(dateStr, doses) {
   const allDosesData = localStorage.getItem(STORAGE_KEYS.DOSES);
   let allDosesMap = {};
-
   if (allDosesData) {
     try {
       allDosesMap = JSON.parse(allDosesData);
@@ -154,29 +123,20 @@ export function saveStoredDosesForDate(dateStr, doses) {
       allDosesMap = {};
     }
   }
-
   allDosesMap[dateStr] = doses.map((dose) => normalizeDose(dose, dateStr)).filter(Boolean);
   localStorage.setItem(STORAGE_KEYS.DOSES, JSON.stringify(allDosesMap));
 }
 
 export function getStoredHistory() {
   const data = localStorage.getItem(STORAGE_KEYS.HISTORY);
-
   if (!data) {
     localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify([]));
     return [];
   }
-
   try {
     const parsed = JSON.parse(data);
-    const cleaned = sanitizeStoredData({ history: parsed }).history.filter(
-      (entry) => !isLegacyMock(entry)
-    );
-
-    if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) {
-      localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(cleaned));
-    }
-
+    const cleaned = sanitizeStoredData({ history: parsed }).history.filter((entry) => !isLegacyMock(entry));
+    if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(cleaned));
     return cleaned;
   } catch {
     return [];
@@ -186,12 +146,11 @@ export function getStoredHistory() {
 export function addHistoryEntry(entry) {
   const history = getStoredHistory();
   const newEntry = {
-    id: `hist-${Date.now()}`,
+    id: 'hist-' + Date.now(),
     timestamp: new Date().toISOString(),
     ...entry,
   };
   const updated = [newEntry, ...history];
-
   localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(updated));
   return updated;
 }
