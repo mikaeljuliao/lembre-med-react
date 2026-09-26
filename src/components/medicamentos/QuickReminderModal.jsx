@@ -92,6 +92,7 @@ export default function QuickReminderModal({
         nome: String(medication?.nome || '').trim(),
         categoria: 'Meus remédios',
         isExisting: true,
+        medication,
       }))
       .filter((item) => item.nome);
     const existingNames = new Set(existing.map((item) => item.nome.toLowerCase()));
@@ -128,6 +129,27 @@ export default function QuickReminderModal({
   const handleClose = () => {
     reset();
     onClose();
+  };
+
+  const handleSuggestionSelect = (item) => {
+    setNome(item.nome);
+    if (!item.medication) return;
+
+    const medication = item.medication;
+    setApresentacao(medication.apresentacao || 'Comprimido');
+    setQuantidade(medication.quantidadePorDose || 1);
+    setUnidadeDose(medication.unidadeDose || 'unidade');
+    setTipoUso(medication.tipoUso || 'scheduled');
+    setOrientacaoAlimentacao(medication.orientacaoAlimentacao || 'sem_orientacao');
+    setPrincipioAtivo(medication.principioAtivo || '');
+    setConcentracao(medication.concentracao || '');
+    setViaAdministracao(medication.viaAdministracao || 'Oral');
+    setFinalidade(medication.finalidade || '');
+    setObservacoes(medication.observacoes || '');
+    setValidade(medication.validade || '');
+    setIntervaloMinimoHoras(medication.intervaloMinimoHoras || '');
+    setLimiteDosesDia(medication.limiteDosesDia || '');
+    setCondicaoUso(medication.condicaoUso || '');
   };
 
   const handlePresentationChange = (value) => {
@@ -227,7 +249,7 @@ export default function QuickReminderModal({
             {filteredSuggestions.map((item) => {
               const selected = nome.trim().toLowerCase() === item.nome.toLowerCase();
               return (
-                <button key={item.nome} type="button" onClick={() => setNome(item.nome)} className={`flex min-h-14 items-center gap-3 rounded-2xl border-2 px-3 py-2 text-left ${selected ? 'border-blue-600 bg-blue-50 text-blue-800' : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'}`} aria-pressed={selected}>
+                <button key={item.nome} type="button" onClick={() => handleSuggestionSelect(item)} className={`flex min-h-14 items-center gap-3 rounded-2xl border-2 px-3 py-2 text-left ${selected ? 'border-blue-600 bg-blue-50 text-blue-800' : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'}`} aria-pressed={selected}>
                   <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${selected ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
                     {selected ? <Check className="h-5 w-5" strokeWidth={3} /> : <Pill className="h-5 w-5" />}
                   </span>
