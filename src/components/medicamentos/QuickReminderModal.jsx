@@ -309,24 +309,20 @@ export default function QuickReminderModal({
 
         <div>
           <p className="mb-3 text-base font-black text-slate-900">Quando você precisa usar?</p>
-          <div className="grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => setTipoUso('scheduled')} className={`min-h-16 rounded-2xl border-2 px-4 text-left ${tipoUso === 'scheduled' ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white'}`} aria-pressed={tipoUso === 'scheduled'}>
-              <span className="block text-base font-black text-slate-900">Todos os dias</span>
-              <span className="mt-1 block text-xs font-semibold text-slate-500">Receba lembretes nos horários definidos</span>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <button type="button" onClick={() => setTipoUso('scheduled')} className={tipoUso === 'scheduled' ? 'min-h-16 rounded-2xl border-2 border-blue-600 bg-blue-50 px-4 text-left' : 'min-h-16 rounded-2xl border-2 border-slate-200 bg-white px-4 text-left'} aria-pressed={tipoUso === 'scheduled'}>
+              <span className="block text-base font-black text-slate-900">Horários fixos</span>
+              <span className="mt-1 block text-xs font-semibold text-slate-500">Ex.: 08:00 e 20:00</span>
             </button>
-            <button type="button" onClick={() => setTipoUso('as_needed')} className={`min-h-16 rounded-2xl border-2 px-4 text-left ${tipoUso === 'as_needed' ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white'}`} aria-pressed={tipoUso === 'as_needed'}>
+            <button type="button" onClick={() => setTipoUso('interval')} className={tipoUso === 'interval' ? 'min-h-16 rounded-2xl border-2 border-blue-600 bg-blue-50 px-4 text-left' : 'min-h-16 rounded-2xl border-2 border-slate-200 bg-white px-4 text-left'} aria-pressed={tipoUso === 'interval'}>
+              <span className="block text-base font-black text-slate-900">A cada intervalo</span>
+              <span className="mt-1 block text-xs font-semibold text-slate-500">Ex.: a cada 8 horas</span>
+            </button>
+            <button type="button" onClick={() => setTipoUso('as_needed')} className={tipoUso === 'as_needed' ? 'min-h-16 rounded-2xl border-2 border-blue-600 bg-blue-50 px-4 text-left' : 'min-h-16 rounded-2xl border-2 border-slate-200 bg-white px-4 text-left'} aria-pressed={tipoUso === 'as_needed'}>
               <span className="block text-base font-black text-slate-900">Quando precisar</span>
-              <span className="mt-1 block text-xs font-semibold text-slate-500">Não cria um alarme fixo</span>
+              <span className="mt-1 block text-xs font-semibold text-slate-500">Sem alarme fixo</span>
             </button>
           </div>
-        </div>
-
-        {tipoUso === 'interval' && (
-          <div className="space-y-4 rounded-2xl border-2 border-blue-100 bg-blue-50/60 p-4">
-            <div>
-              <p className="text-base font-black text-slate-900">Intervalo do lembrete</p>
-              <p className="mt-1 text-sm font-semibold text-slate-500">Use quando a orientação indicar um intervalo, como a cada 6 ou 8 horas.</p>
-            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="intervalo-horas" className="mb-2 block text-sm font-black text-slate-700">A cada quantas horas?</label>
