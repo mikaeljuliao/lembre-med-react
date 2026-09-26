@@ -321,6 +321,26 @@ export default function QuickReminderModal({
           </div>
         </div>
 
+        {tipoUso === 'interval' && (
+          <div className="space-y-4 rounded-2xl border-2 border-blue-100 bg-blue-50/60 p-4">
+            <div>
+              <p className="text-base font-black text-slate-900">Intervalo do lembrete</p>
+              <p className="mt-1 text-sm font-semibold text-slate-500">Use quando a orientação indicar um intervalo, como a cada 6 ou 8 horas.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="intervalo-horas" className="mb-2 block text-sm font-black text-slate-700">A cada quantas horas?</label>
+                <input id="intervalo-horas" type="number" min="1" max="24" step="1" value={intervaloHoras} onChange={(event) => setIntervaloHoras(event.target.value)} placeholder="Ex.: 8" className="min-h-13 w-full rounded-xl border-2 border-slate-200 bg-white px-3 text-center text-xl font-black outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
+              </div>
+              <div>
+                <label htmlFor="horario-inicial" className="mb-2 block text-sm font-black text-slate-700">Primeiro horário</label>
+                <input id="horario-inicial" type="time" value={horarioInicial} onChange={(event) => setHorarioInicial(event.target.value)} className="min-h-13 w-full rounded-xl border-2 border-slate-200 bg-white px-3 text-xl font-black outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
+              </div>
+            </div>
+            <p className="text-xs font-semibold text-slate-500">Exemplo: 06:00 a cada 8 horas → 06:00, 14:00 e 22:00.</p>
+          </div>
+        )}
+
         {tipoUso === 'scheduled' && (
           <div className="rounded-2xl border-2 border-blue-100 bg-blue-50/60 p-4">
             <div className="flex items-center justify-between gap-3">
