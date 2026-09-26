@@ -11,7 +11,6 @@ import AjudaView from './components/ajuda/AjudaView';
 
 import MedicationDetailModal from './components/medicamentos/MedicationDetailModal';
 import QuickReminderModal from './components/medicamentos/QuickReminderModal';
-import TreatmentFormModal from './components/tratamentos/TreatmentFormModal';
 
 import {
   getStoredMedications,
@@ -28,7 +27,7 @@ import { generateDosesForDate, getLocalDateString } from './utils/businessLogic'
 export default function App() {
   const [activeTab, setActiveTab] = useState('inicio');
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
+    getLocalDateString()
   );
 
   const [medications, setMedications] = useState([]);
@@ -57,23 +56,9 @@ export default function App() {
     setDoses(getStoredDoses(selectedDate));
   }, [selectedDate, treatments]);
 
-  const refreshDoseState = (nextDate = selectedDate) => {
-    setDoses(getStoredDoses(nextDate));
-  };
-
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
-  };
-
-  const handleSaveMedication = (medData) => {
-    const exists = medications.some((m) => m.id === medData.id);
-    const updated = exists
-      ? medications.map((m) => (m.id === medData.id ? medData : m))
-      : [medData, ...medications];
-    setMedications(updated);
-    saveStoredMedications(updated);
-    showToast(exists ? `"${medData.nome}" atualizado.` : `"${medData.nome}" adicionado.`);
   };
 
   const handleQuickReminderSave = (treatmentData) => {
@@ -131,46 +116,6 @@ export default function App() {
     });
   };
 
-  const handleSaveTreatment = (treatmentData) => {
-    const exists = treatments.some((t) => t.id === treatmentData.id);
-    const updated = exists
-      ? treatments.map((t) => (t.id === treatmentData.id ? treatmentData : t))
-      : [treatmentData, ...treatments];
-    setTreatments(updated);
-    saveStoredTreatments(updated);
-    const today = getLocalDateString();
-    setSelectedDate(today);
-    refreshDoseState(today);
-    showToast(exists ? `Rotina "${treatmentData.nome}" atualizada.` : `Rotina "${treatmentData.nome}" criada.`);
-  };
-
-  const handleDeleteTreatment = (treatmentId) => {
-    const treat = treatments.find((t) => t.id === treatmentId);
-    if (!treat) return;
-    setDeleteRequest({
-      type: 'treatment',
-      title: 'Remover lembrete',
-      message: `Deseja remover "${treat.nome}"?`,
-      item: treat,
-      onConfirm: () => {
-        const updated = treatments.filter((t) => t.id !== treatmentId);
-        setTreatments(updated);
-        saveStoredTreatments(updated);
-        showToast(`Rotina "${treat.nome}" removida.`, 'info');
-        setDeleteRequest(null);
-      },
-    });
-  };
-
-  const handleToggleTreatmentStatus = (treatmentId, newStatus) => {
-    const updated = treatments.map((t) =>
-      t.id === treatmentId ? { ...t, status: newStatus } : t
-    );
-    setTreatments(updated);
-    saveStoredTreatments(updated);
-    showToast('Status da rotina alterado.', 'info');
-  };
-
   const handleToggleDoseStatus = (doseId, newStatus) => {
     const updatedDoses = doses.map((d) => {
       if (d.id !== doseId) return d;
@@ -224,16 +169,6 @@ export default function App() {
       snoozedUntil,
       alarmMuted: false,
     });
-  };
-
-  const openAddTreatment = () => {
-    setTreatmentToEdit(null);
-    setIsTreatmentModalOpen(true);
-  };
-
-  const openEditTreatment = (t) => {
-    setTreatmentToEdit(t);
-    setIsTreatmentModalOpen(true);
   };
 
   return (
@@ -290,13 +225,6 @@ export default function App() {
         existingMedications={medications}
       />
 
-      <TreatmentFormModal
-        isOpen={isTreatmentModalOpen}
-        onClose={() => setIsTreatmentModalOpen(false)}
-        onSave={handleSaveTreatment}
-        treatmentToEdit={treatmentToEdit}
-        availableMedications={medications}
-      />
 
       {deleteRequest && (
         <Modal isOpen={!!deleteRequest} onClose={() => setDeleteRequest(null)} title={deleteRequest.title}>
