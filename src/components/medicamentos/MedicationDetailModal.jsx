@@ -1,7 +1,7 @@
 import React from 'react';
 import Modal from '../common/Modal';
 import Badge from '../common/Badge';
-import { Pill, BookOpenText, Calendar } from 'lucide-react';
+import { Pill, BookOpenText, Calendar, Clock3 } from 'lucide-react';
 import { OFFICIAL_MEDICINES } from '../../data/officialMedicines';
 
 export default function MedicationDetailModal({ isOpen, onClose, medication, onOpenOfficialInfo }) {
@@ -12,7 +12,7 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Detalhes: ${medication.nome}`}>
+    <Modal isOpen={isOpen} onClose={onClose} title="Meu medicamento">
       <div className="space-y-4">
         <div className="flex items-center justify-between bg-slate-50 p-3.5 rounded-xl border border-slate-100">
           <div className="flex items-center space-x-3">
@@ -20,7 +20,7 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
               <Pill className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-base font-extrabold text-slate-900">{medication.nome}</h4>
+              <h4 className="text-xl font-extrabold text-slate-900">{medication.nome}</h4>
               <p className="text-xs text-slate-500">
                 {medication.principioAtivo || 'Princípio ativo não especificado'}
               </p>
@@ -53,6 +53,28 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
           <div className="bg-blue-50/60 p-3.5 rounded-xl border border-blue-100 text-xs text-slate-700">
             <span className="font-bold text-blue-900 block mb-1">Observações do Usuário:</span>
             <p className="leading-relaxed">{medication.observacoes}</p>
+          </div>
+        )}
+
+        {Array.isArray(medication.horarios) && medication.horarios.length > 0 && (
+          <div className="rounded-2xl border-2 border-blue-100 bg-blue-50 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock3 className="w-5 h-5 text-blue-600" />
+              <div>
+                <h5 className="text-base font-extrabold text-slate-900">Quando tomar</h5>
+                <p className="text-xs text-slate-500">Horários configurados para este lembrete</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {medication.horarios.map((horario) => (
+                <div key={horario} className="rounded-xl bg-white border border-blue-100 px-3 py-3 text-center">
+                  <span className="block text-xl font-black text-blue-700">{horario}</span>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {medication.quantidadePorDose || 1} {Number(medication.quantidadePorDose) === 1 ? 'unidade' : 'unidades'}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
