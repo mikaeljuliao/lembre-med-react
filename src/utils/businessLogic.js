@@ -302,7 +302,9 @@ export function buildMedicationTreatment(
     vezesPorDia: horarios.length,
     horarios,
     primeirosLembretesAt,
-    primeiroLembreteAt: firstSelection?.scheduledAt?.toISOString() || null,
+    primeiroLembreteAt: tipoUso === 'interval' && data.preservePrimeiroLembreteAt
+      ? data.preservePrimeiroLembreteAt
+      : firstSelection?.scheduledAt?.toISOString() || null,
     primeiroLembreteHorario: firstSelection?.horario || null,
     tipoLembrete: tipoUso,
     tipoUso,
