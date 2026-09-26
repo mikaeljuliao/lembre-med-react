@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Check, Clock3, Minus, Pill, Plus, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import Modal from '../common/Modal';
-import { buildMedicationTreatment } from '../../utils/businessLogic';
+import { buildMedicationTreatment, isSameMedication } from '../../utils/businessLogic';
 import { formatClockTime, getCalendarLabel, resolveNextScheduledAt } from '../../utils/reminderEngine';
 
 const COMMON_MEDICATIONS = [
@@ -150,8 +150,14 @@ export default function QuickReminderModal({
     ? resolveNextScheduledAt(selectedSchedule, new Date())
     : null;
 
-  const isExistingMedication = existingMedications.some(
-    (medication) => String(medication?.nome || '').trim().toLowerCase() === nome.trim().toLowerCase()
+  const isExistingMedication = existingMedications.some((medication) =>
+    isSameMedication(medication, {
+      nome,
+      apresentacao,
+      concentracao,
+      viaAdministracao,
+      principioAtivo,
+    })
   );
 
   const isReady = Boolean(nome.trim() && Number(quantidade) > 0 && (tipoUso === 'as_needed' || horarios.every(Boolean)));
