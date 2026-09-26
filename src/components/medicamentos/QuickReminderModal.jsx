@@ -85,23 +85,30 @@ export default function QuickReminderModal({ isOpen, onClose, onSave, existingMe
 
   // Sugestões: medicamentos já cadastrados + lista comum
   const allSuggestions = useMemo(() => {
-    const existingNames = (existingMedications || []).map((m) => m.nome).filter(Boolean);
-    const commonNames = COMMON_MEDICATIONS.map((m) => ({ nome: m.nome, categoria: m.categoria, isExisting: false }));
-    const existingItems = existingNames.map((n) => ({ nome: n, categoria: 'Meus remédios', isExisting: true }));
-    // Existing first, then common (deduplicado)
-    const merged = [...existingItems];
-    for (const c of commonNames) {
-      if (!merged.some((e) => e.nome.toLowerCase() === c.nome.toLowerCase())) {
-        merged.push(c);
-      }
+    const existingItems = [];
+    const existingNames = new Set();
+
+    for (const medication of existingMedications || []) {
+      const name = String(medication?.nome || '').trim();
+      const key = name.toLowerCase();
+
+      if (!name || existingNames.has(key)) continue;
+
+      existingNames.add(key);
+      existingItems.push({ nome: name, categoria: 'Meus remédios', isExisting: true });
     }
-    return merged;
+
+    const commonNames = COMMON_MEDICATIONS
+      .filter((medication) => !existingNames.has(medication.nome.toLowerCase()))
+      .map((medication) => ({ ...medication, isExisting: false }));
+
+    return [...existingItems, ...commonNames];
   }, [existingMedications]);
 
   const filteredSuggestions = useMemo(() => {
     const term = nome.trim().toLowerCase();
-    if (!term) return allSuggestions.slice(0, 8);
-    return allSuggestions.filter((item) => item.nome.toLowerCase().includes(term)).slice(0, 8);
+    if (!term) return allSuggestions.slice(0, 6);
+    return allSuggestions.filter((item) => item.nome.toLowerCase().includes(term)).slice(0, 6);
   }, [nome, allSuggestions]);
 
   const handleSelectSuggestion = (item) => {
@@ -253,8 +260,8 @@ export default function QuickReminderModal({ isOpen, onClose, onSave, existingMe
                       onClick={() => handleSelectSuggestion(item)}
                       aria-pressed={selected}
                       style={{
-                        minHeight: '54px',
-                        padding: '10px 12px',
+                        minHeight: '52px',
+                        padding: '9px 10px',
                         textAlign: 'left',
                         background: selected ? '#eff6ff' : '#f8fafc',
                         border: `2px solid ${selected ? '#1d4ed8' : '#e2e8f0'}`,
@@ -269,24 +276,24 @@ export default function QuickReminderModal({ isOpen, onClose, onSave, existingMe
                       <span
                         aria-hidden="true"
                         style={{
-                          width: '30px',
-                          height: '30px',
+                          width: '28px',
+                          height: '28px',
                           borderRadius: '9px',
                           background: selected ? '#dbeafe' : '#e2e8f0',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0,
-                          fontSize: '15px',
+                          fontSize: '14px',
                         }}
                       >
                         💊
                       </span>
                       <span
                         style={{
-                          fontSize: '14px',
+                          fontSize: '13px',
                           fontWeight: 800,
-                          lineHeight: 1.25,
+                          lineHeight: 1.2,
                         }}
                       >
                         {item.nome}
