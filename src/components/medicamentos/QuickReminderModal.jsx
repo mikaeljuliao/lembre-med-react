@@ -262,7 +262,8 @@ export default function QuickReminderModal({
             <p className="text-xs font-black uppercase tracking-wider text-blue-600">1. Identificação</p>
             <label htmlFor="nome-remedio" className="mt-1 block text-lg font-black text-slate-900">
             Qual remédio você quer cadastrar?
-          </label>
+            </label>
+          </div>
           <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input id="nome-remedio" type="text" value={nome} onChange={(event) => setNome(event.target.value)} placeholder="Digite o nome do remédio" autoFocus className="min-h-14 w-full rounded-2xl border-2 border-slate-200 bg-slate-50 pl-12 pr-4 text-lg font-bold text-slate-900 outline-none focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-100" />
@@ -407,8 +408,6 @@ export default function QuickReminderModal({
             </div>
           </div>
         )}
-
-        </div>
 
         </section>
 
