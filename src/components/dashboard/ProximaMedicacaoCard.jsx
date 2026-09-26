@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
+  ChevronRight,
+  Clock3,
+  ListChecks,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -56,8 +59,13 @@ export default function ProximaMedicacaoCard({
   );
 
   const todayPendingDoses = useMemo(
-    () => activeTodayDoses.filter((dose) => dose.status === 'pending'),
-    [activeTodayDoses]
+    () =>
+      sortReminderStates(
+        activeTodayDoses
+          .filter((dose) => dose.status === 'pending')
+          .map((dose) => getReminderState(dose, now))
+      ),
+    [activeTodayDoses, now]
   );
 
   const nearestFutureDose = useMemo(
@@ -71,34 +79,15 @@ export default function ProximaMedicacaoCard({
     [futureDoses, medications, now]
   );
 
-  const pendingDoses = useMemo(() => {
-    if (todayPendingDoses.length > 0) return todayPendingDoses;
-    return nearestFutureDose ? [nearestFutureDose] : [];
-  }, [todayPendingDoses, nearestFutureDose]);
-
-  const reminderStates = useMemo(
+  const selectedTodayDose = useMemo(
     () =>
-      sortReminderStates(
-        pendingDoses.map((dose) =>
-          dose.target ? dose : getReminderState(dose, now)
-        )
-      ),
-    [pendingDoses, now]
+      todayPendingDoses.find((dose) => dose.id === selectedDoseId) ||
+      todayPendingDoses[0] ||
+      null,
+    [todayPendingDoses, selectedDoseId]
   );
 
-  const dueDoses = useMemo(
-    () => reminderStates.filter((dose) => dose.isDue),
-    [reminderStates]
-  );
-
-  const selectedDose =
-    todayPendingDoses.length > 0
-      ? dueDoses[0] ||
-        reminderStates.find((dose) => dose.id === selectedDoseId) ||
-        reminderStates[0] ||
-        null
-      : null;
-
+  const selectedDose = selectedTodayDose;
   const nextFutureReminder =
     todayPendingDoses.length === 0 ? nearestFutureDose : null;
 
@@ -112,15 +101,27 @@ export default function ProximaMedicacaoCard({
   }, []);
 
   useEffect(() => {
-    if (reminderStates.length === 0) {
+    if (todayPendingDoses.length === 0) {
       setSelectedDoseId(null);
       return;
     }
 
-    if (!reminderStates.some((dose) => dose.id === selectedDoseId)) {
-      setSelectedDoseId(reminderStates[0].id);
+    const selectedStillPending = todayPendingDoses.some(
+      (dose) => dose.id === selectedDoseId
+    );
+
+    if (!selectedStillPending) {
+      const dueDose = todayPendingDoses.find((dose) => dose.isDue);
+      setSelectedDoseId((dueDose || todayPendingDoses[0]).id);
+      return;
     }
-  }, [reminderStates, selectedDoseId]);
+
+    const dueDose = todayPendingDoses.find((dose) => dose.isDue);
+
+    if (dueDose && dueDose.id !== selectedDoseId) {
+      setSelectedDoseId(dueDose.id);
+    }
+  }, [todayPendingDoses, selectedDoseId]);
 
   useEffect(() => {
     if (!selectedDose?.isDue || selectedDose.alarmMuted) {
@@ -334,6 +335,12 @@ export default function ProximaMedicacaoCard({
     );
   }
 
+  const selectableDoses = todayPendingDoses;
+
+  const handleSelectDose = (doseId) => {
+    setSelectedDoseId(doseId);
+  };
+
   const alarmActive = selectedDose.isDue && !selectedDose.alarmMuted;
   const cardClass = selectedDose.isDue ? 'bg-red-600' : 'bg-blue-600';
   const calendarLabel = getCalendarLabel(selectedDose.target, now);
@@ -411,6 +418,84 @@ export default function ProximaMedicacaoCard({
                 : `O próximo alarme será às ${formatClockTime(selectedDose.target)}.`}
             </p>
           </div>
+
+          {selectableDoses.length > 1 && (
+            <div className="mt-5 rounded-2xl border border-white/15 bg-white/10 p-3">
+              <div className="flex items-center gap-2 px-1 pb-2">
+                <ListChecks className="h-5 w-5 text-white/80" />
+                <p className="text-sm font-black text-white">
+                  Outras doses pendentes hoje
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                {selectableDoses.map((dose) => {
+                  const isSelected = dose.id === selectedDose.id;
+
+                  return (
+                    <button
+                      key={dose.id}
+                      type="button"
+                      onClick={() => handleSelectDose(dose.id)}
+                      className={
+                        'flex min-h-14 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition focus:outline-none focus:ring-2 focus:ring-white ' +
+                        (isSelected
+                          ? 'bg-white text-slate-900 shadow-sm'
+                          : 'bg-white/10 text-white hover:bg-white/15')
+                      }
+                      aria-pressed={isSelected}
+                    >
+                      <div
+                        className={
+                          'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ' +
+                          (isSelected
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-white/10 text-white')
+                        }
+                      >
+                        <Clock3 className="h-5 w-5" />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base font-black tabular-nums">
+                            {formatClockTime(dose.target)}
+                          </span>
+                          {dose.isDue && (
+                            <span
+                              className={
+                                'rounded-full px-2 py-0.5 text-[10px] font-black uppercase ' +
+                                (isSelected
+                                  ? 'bg-red-100 text-red-700'
+                                  : 'bg-white/15 text-white')
+                              }
+                            >
+                              Agora
+                            </span>
+                          )}
+                        </div>
+                        <p
+                          className={
+                            'truncate text-sm font-bold ' +
+                            (isSelected ? 'text-slate-600' : 'text-white/75')
+                          }
+                        >
+                          {dose.medicationNome} · {dose.dosagem}
+                        </p>
+                      </div>
+
+                      <ChevronRight
+                        className={
+                          'h-5 w-5 shrink-0 ' +
+                          (isSelected ? 'text-blue-600' : 'text-white/60')
+                        }
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="mt-6 grid gap-3">
             <button
