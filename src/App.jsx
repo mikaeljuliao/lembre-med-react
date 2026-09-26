@@ -54,6 +54,18 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      const today = getLocalDateString();
+
+      setSelectedDate((currentDate) =>
+        currentDate === today ? currentDate : today
+      );
+    }, 30000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
     setDoses(getStoredDoses(selectedDate));
   }, [selectedDate, treatments]);
 
