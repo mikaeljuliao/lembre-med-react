@@ -23,7 +23,7 @@ import {
   addHistoryEntry,
 } from './utils/storage';
 import { getLocalDateString } from './utils/reminderEngine';
-import { generateDosesForDate } from './utils/businessLogic';
+import { generateDosesForDate, normalizeMedicationName } from './utils/businessLogic';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('inicio');
@@ -78,30 +78,76 @@ export default function App() {
 
   const handleQuickReminderSave = (treatmentData) => {
     const medConfig = treatmentData?.medicamentos?.[0];
-    const medName = medConfig?.nome || 'Medicamento';
-    const medicationId = medConfig?.medicamentoId || 'med-' + Date.now();
+    const medName = String(medConfig?.nome || 'Medicamento').trim();
+    const medicationKey = normalizeMedicationName(medName);
+    const existingMedication = medications.find(
+      (medication) => normalizeMedicationName(medication.nome) === medicationKey
+    );
+    const existingTreatment = treatments.find((treatment) =>
+      (treatment.medicamentos || []).some(
+        (medication) =>
+          String(medication.medicamentoId || '') === String(existingMedication?.id || '') ||
+          normalizeMedicationName(medication.nome) === medicationKey
+      )
+    );
+
+    const selectedHorario = String(medConfig?.horarios?.[0] || '').trim();
+    const nextHorarios = existingTreatment
+      ? [...new Set([
+          ...(existingTreatment.medicamentos?.[0]?.horarios || []),
+          ...(selectedHorario ? [selectedHorario] : []),
+        ])].sort()
+      : medConfig?.horarios || [];
+
+    const medicationId = existingMedication?.id || medConfig?.medicamentoId || 'med-' + Date.now();
+    const treatmentId = existingTreatment?.id || treatmentData.id;
 
     const medRecord = {
+      ...(existingMedication || {}),
       id: medicationId,
-      nome: medName,
-      principioAtivo: '',
-      apresentacao: 'Comprimido',
-      concentracao: '',
-      unidade: 'comprimidos',
-      validade: '',
-      observacoes: '',
-      horarios: medConfig?.horarios || [],
-      quantidadePorDose: medConfig?.quantidadePorDose || 1,
-      lembreteId: treatmentData.id,
+      nome: existingMedication?.nome || medName,
+      principioAtivo: existingMedication?.principioAtivo || '',
+      apresentacao: existingMedication?.apresentacao || 'Comprimido',
+      concentracao: existingMedication?.concentracao || '',
+      unidade: existingMedication?.unidade || 'comprimidos',
+      validade: existingMedication?.validade || '',
+      observacoes: existingMedication?.observacoes || '',
+      horarios: nextHorarios,
+      quantidadePorDose: medConfig?.quantidadePorDose || existingMedication?.quantidadePorDose || 1,
+      lembreteId: treatmentId,
     };
+
+    const updatedTreatment = existingTreatment
+      ? {
+          ...existingTreatment,
+          medicamentos: existingTreatment.medicamentos.map((medication, index) =>
+            index === 0
+              ? {
+                  ...medication,
+                  medicamentoId: medicationId,
+                  nome: existingMedication?.nome || medName,
+                  quantidadePorDose: medConfig?.quantidadePorDose || medication.quantidadePorDose || 1,
+                  dosagem: String(medConfig?.quantidadePorDose || medication.quantidadePorDose || 1) + ' comprimido' + (Number(medConfig?.quantidadePorDose || medication.quantidadePorDose || 1) > 1 ? 's' : ''),
+                  horarios: nextHorarios,
+                }
+              : medication
+          ),
+        }
+      : {
+          ...treatmentData,
+          id: treatmentId,
+          medicamentos: treatmentData.medicamentos.map((medication, index) =>
+            index === 0 ? { ...medication, medicamentoId: medicationId } : medication
+          ),
+        };
 
     const updatedMedications = [
       medRecord,
       ...medications.filter((medication) => medication.id !== medicationId),
     ];
     const updatedTreatments = [
-      treatmentData,
-      ...treatments.filter((treatment) => treatment.id !== treatmentData.id),
+      updatedTreatment,
+      ...treatments.filter((treatment) => treatment.id !== treatmentId),
     ];
 
     setMedications(updatedMedications);
@@ -115,7 +161,12 @@ export default function App() {
     setDoses(nextDoses);
     setIsQuickReminderModalOpen(false);
     setActiveTab('inicio');
-    showToast(medName + ' adicionado e lembrete criado.', 'success');
+    showToast(
+      existingMedication
+        ? medName + ' já estava cadastrado. Novo horário adicionado ao lembrete.'
+        : medName + ' adicionado e lembrete criado.',
+      'success'
+    );
   };
 
   const handleDeleteMedication = (medId) => {
