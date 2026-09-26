@@ -6,3 +6,8 @@ export function speakText(text) {
   utterance.rate = 0.9;
   window.speechSynthesis.speak(utterance);
 }
+
+export function stopSpeaking() {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+}
