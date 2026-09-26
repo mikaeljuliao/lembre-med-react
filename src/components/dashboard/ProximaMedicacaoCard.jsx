@@ -273,6 +273,11 @@ export default function ProximaMedicacaoCard({
     onSnoozeDose(selectedDose.id, 10);
   };
 
+  const handleEnableAlarm = () => {
+    if (!selectedDose || !onUpdateDose) return;
+    onUpdateDose(selectedDose.id, { alarmMuted: false });
+  };
+
   const handleListen = () => {
     if (!selectedDose) return;
     speakText(buildSpeechText(selectedDose));
@@ -385,14 +390,25 @@ export default function ProximaMedicacaoCard({
                 >
                   Adiar 10 min
                 </button>
-                <button
-                  type="button"
-                  onClick={handleMute}
-                  className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border-2 border-white/35 bg-white/10 px-3 py-3 text-sm font-black text-white transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white"
-                >
-                  <VolumeX className="h-4 w-4" />
-                  Silenciar
-                </button>
+                {selectedDose.alarmMuted ? (
+                  <button
+                    type="button"
+                    onClick={handleEnableAlarm}
+                    className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border-2 border-white/35 bg-white/10 px-3 py-3 text-sm font-black text-white transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white"
+                  >
+                    <Volume2 className="h-4 w-4" />
+                    Ativar som
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleMute}
+                    className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border-2 border-white/35 bg-white/10 px-3 py-3 text-sm font-black text-white transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white"
+                  >
+                    <VolumeX className="h-4 w-4" />
+                    Silenciar
+                  </button>
+                )}
               </div>
             )}
 
