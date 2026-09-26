@@ -2,7 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { Check, Clock3, Minus, Pill, Plus, Search } from 'lucide-react';
 import Modal from '../common/Modal';
 import { buildQuickReminderTreatment } from '../../utils/businessLogic';
-import { getReminderDateDescription, resolveNextScheduledAt } from '../../utils/reminderEngine';
+import {
+  formatClockTime,
+  getCalendarLabel,
+  resolveNextScheduledAt,
+} from '../../utils/reminderEngine';
 
 const COMMON_MEDICATIONS = [
   { nome: 'Losartana 50mg', categoria: 'Pressão' },
@@ -174,7 +178,7 @@ export default function QuickReminderModal({
 
         <div>
           <p className="mb-3 text-base font-black text-slate-900">
-            Quantos você toma?
+            Quantos comprimidos por vez?
           </p>
 
           <div className="grid grid-cols-4 gap-2">
@@ -228,7 +232,7 @@ export default function QuickReminderModal({
 
         <div>
           <p className="mb-3 text-base font-black text-slate-900">
-            Quando você quer ser lembrado?
+            Quando você quer receber o primeiro lembrete?
           </p>
 
           <div className="grid grid-cols-2 gap-2">
@@ -266,13 +270,21 @@ export default function QuickReminderModal({
           </div>
 
           {previewTarget && (
-            <div className="mt-3 rounded-2xl bg-blue-50 px-4 py-3">
+            <div className="mt-3 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4">
               <p className="text-xs font-black uppercase tracking-wider text-blue-500">
-                O alarme vai tocar
+                Primeiro lembrete
               </p>
-              <p className="mt-1 text-lg font-black text-blue-800">
-                {getReminderDateDescription(previewTarget, new Date())}
+              <p className="mt-1 text-xl font-black text-blue-800">
+                {getCalendarLabel(previewTarget, new Date())}, às {formatClockTime(previewTarget)}
               </p>
+              <p className="mt-2 text-sm font-semibold leading-5 text-blue-700">
+                Depois, o lembrete continua todos os dias às {formatClockTime(previewTarget)}.
+              </p>
+              {getCalendarLabel(previewTarget, new Date()) === 'Amanhã' && (
+                <p className="mt-2 text-sm font-bold text-blue-800">
+                  Esse horário já passou hoje. Por isso, o primeiro lembrete será amanhã.
+                </p>
+              )}
             </div>
           )}
 
@@ -282,8 +294,11 @@ export default function QuickReminderModal({
                 htmlFor="horario-remedio"
                 className="mb-2 block text-sm font-black text-slate-700"
               >
-                Horário
+                Que horas?
               </label>
+              <p className="mb-2 text-sm font-semibold text-slate-500">
+                Escolha o horário em que você costuma tomar este remédio.
+              </p>
               <input
                 id="horario-remedio"
                 type="time"
