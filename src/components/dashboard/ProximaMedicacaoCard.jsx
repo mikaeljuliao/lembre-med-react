@@ -141,7 +141,7 @@ export default function ProximaMedicacaoCard({
     }
 
     if (announcedAlarmRef.current !== selectedDose.id) {
-      speakText(buildReminderSpeech(selectedDose, now));
+      speakText(buildReminderSpeech(selectedDose, new Date()));
       announcedAlarmRef.current = selectedDose.id;
     }
 
@@ -151,7 +151,7 @@ export default function ProximaMedicacaoCard({
         alarmIntervalRef.current = null;
       }
     };
-  }, [selectedDose?.id, selectedDose?.isDue, selectedDose?.alarmMuted, now]);
+  }, [selectedDose?.id, selectedDose?.isDue, selectedDose?.alarmMuted]);
 
   useEffect(() => {
     return () => {
