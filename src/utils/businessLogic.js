@@ -156,7 +156,11 @@ export function generateDosesForDate(
     if (treatment.dataFim && dateStr > treatment.dataFim) return;
 
     (treatment.medicamentos || []).forEach((med) => {
-      const times = med.horarios || ['08:00'];
+      if (med.tipoUso === 'as_needed') return;
+
+      const times = Array.isArray(med.horarios) && med.horarios.length > 0
+        ? med.horarios
+        : ['08:00'];
 
       times.forEach((horario) => {
         const scheduleFirstReminderAt =
@@ -183,8 +187,18 @@ export function generateDosesForDate(
           treatmentNome: treatment.nome,
           medicationId: med.medicamentoId,
           medicationNome: med.nome,
-          dosagem: med.dosagem || '1 unidade',
+          dosagem:
+            med.dosagem ||
+            String(med.quantidadePorDose || 1) + ' ' + (med.unidadeDose || 'unidade'),
           quantidade: med.quantidadePorDose || 1,
+          unidadeDose: med.unidadeDose || 'unidade',
+          principioAtivo: med.principioAtivo || '',
+          concentracao: med.concentracao || '',
+          apresentacao: med.apresentacao || 'Medicamento',
+          viaAdministracao: med.viaAdministracao || '',
+          orientacaoAlimentacao: med.orientacaoAlimentacao || 'sem_orientacao',
+          finalidade: med.finalidade || '',
+          observacoes: med.observacoes || '',
           horario,
           scheduledAt: firstReminderAt,
           data: dateStr,
@@ -207,43 +221,89 @@ export function generateDosesForDate(
   });
 }
 
+export function buildMedicationTreatment(
+  data = {},
+  referenceDate = new Date()
+) {
+  const cleanedName = String(data.nome || '').trim();
+  const safeQuantity =
+    Number(data.quantidadePorDose) > 0 ? Number(data.quantidadePorDose) : 1;
+  const unidadeDose = String(data.unidadeDose || 'unidade').trim() || 'unidade';
+  const tipoUso = data.tipoUso === 'as_needed' ? 'as_needed' : 'scheduled';
+  const horarios = tipoUso === 'scheduled'
+    ? [...new Set((Array.isArray(data.horarios) ? data.horarios : []).filter(Boolean))]
+    : [];
+
+  const firstSelection = horarios[0]
+    ? resolveReminderSelection(horarios[0], referenceDate)
+    : null;
+  const fallback = resolveReminderSelection('08:00', referenceDate);
+  const reminder = firstSelection || fallback;
+  const medicationId = data.medicamentoId || 'med-' + Date.now();
+  const treatmentId = data.treatmentId || 'treat-' + Date.now();
+  const primeirosLembretesAt = {};
+
+  if (tipoUso === 'scheduled') {
+    horarios.forEach((horario) => {
+      const selection = resolveReminderSelection(horario, referenceDate);
+      if (selection) {
+        primeirosLembretesAt[selection.horario] = selection.scheduledAt.toISOString();
+      }
+    });
+  }
+
+  const medication = {
+    medicamentoId: medicationId,
+    nome: cleanedName || 'Medicamento',
+    principioAtivo: String(data.principioAtivo || '').trim(),
+    concentracao: String(data.concentracao || '').trim(),
+    apresentacao: String(data.apresentacao || 'Comprimido').trim(),
+    viaAdministracao: String(data.viaAdministracao || '').trim(),
+    unidadeDose,
+    quantidadePorDose: safeQuantity,
+    dosagem: String(safeQuantity) + ' ' + unidadeDose,
+    vezesPorDia: horarios.length,
+    horarios,
+    primeirosLembretesAt,
+    primeiroLembreteAt: firstSelection?.scheduledAt?.toISOString() || null,
+    primeiroLembreteHorario: firstSelection?.horario || null,
+    tipoLembrete: tipoUso === 'as_needed' ? 'as_needed' : 'scheduled',
+    tipoUso,
+    orientacaoAlimentacao: data.orientacaoAlimentacao || 'sem_orientacao',
+    finalidade: String(data.finalidade || '').trim(),
+    observacoes: String(data.observacoes || '').trim(),
+    validade: String(data.validade || '').trim(),
+  };
+
+  return {
+    id: treatmentId,
+    nome: cleanedName ? 'Lembrete: ' + cleanedName : 'Lembrete do remédio',
+    descricao: String(data.finalidade || '').trim() || 'Lembrete para uso do medicamento',
+    dataInicio: data.dataInicio || reminder.dataInicio,
+    dataFim: data.dataFim || '',
+    status: 'active',
+    tipoUso,
+    orientacaoAlimentacao: data.orientacaoAlimentacao || 'sem_orientacao',
+    finalidade: String(data.finalidade || '').trim(),
+    observacoes: String(data.observacoes || '').trim(),
+    medicamentos: [medication],
+  };
+}
+
 export function buildQuickReminderTreatment(
   nome,
   quantidadePorDose = 1,
   horarios = ['08:00'],
   referenceDate = new Date()
 ) {
-  const cleanedName = String(nome || '').trim();
-  const safeQuantity = Number(quantidadePorDose) > 0 ? Number(quantidadePorDose) : 1;
-  const selection = resolveReminderSelection(horarios[0], referenceDate);
-  const fallback = resolveReminderSelection('08:00', referenceDate);
-
-  const reminder = selection || fallback;
-  const medicationId = `med-${Date.now()}`;
-  const treatmentId = `treat-${Date.now()}`;
-
-  return {
-    id: treatmentId,
-    nome: cleanedName ? `Lembrete: ${cleanedName}` : 'Lembrete do remédio',
-    descricao: 'Lembrete simples para uso diário',
-    dataInicio: reminder.dataInicio,
-    dataFim: '',
-    status: 'active',
-    medicamentos: [
-      {
-        medicamentoId: medicationId,
-        nome: cleanedName || 'Medicamento',
-        dosagem: `${safeQuantity} comprimido${safeQuantity > 1 ? 's' : ''}`,
-        quantidadePorDose: safeQuantity,
-        vezesPorDia: 1,
-        horarios: [reminder.horario],
-        primeiroLembreteAt: reminder.scheduledAt.toISOString(),
-        primeiroLembreteHorario: reminder.horario,
-        primeirosLembretesAt: {
-          [reminder.horario]: reminder.scheduledAt.toISOString(),
-        },
-        tipoLembrete: reminder.tipo,
-      },
-    ],
-  };
+  return buildMedicationTreatment(
+    {
+      nome,
+      quantidadePorDose,
+      unidadeDose: 'comprimido' + (Number(quantidadePorDose) > 1 ? 's' : ''),
+      horarios,
+      apresentacao: 'Comprimido',
+    },
+    referenceDate
+  );
 }
