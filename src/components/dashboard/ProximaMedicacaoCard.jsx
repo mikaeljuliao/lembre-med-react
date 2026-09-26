@@ -266,6 +266,7 @@ export default function ProximaMedicacaoCard({
   }
 
   if (!selectedDose) {
+    const takenCount = activeTodayDoses.filter((dose) => dose.status === 'taken').length;
     const skippedCount = activeTodayDoses.filter((dose) => dose.status === 'skipped').length;
     const allTaken =
       activeTodayDoses.length > 0 &&
