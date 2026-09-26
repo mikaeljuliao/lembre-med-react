@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
-  ChevronRight,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -11,7 +10,6 @@ import {
   formatCountdown,
   formatRemainingForUser,
   getCalendarLabel,
-  getDailyDoseSummary,
   getReminderDateDescription,
   getReminderState,
   isDoseForActiveMedication,
@@ -104,13 +102,6 @@ export default function ProximaMedicacaoCard({
   const nextFutureReminder =
     todayPendingDoses.length === 0 ? nearestFutureDose : null;
 
-  const otherTodayDoses = todayPendingDoses
-    .filter((dose) => dose.id !== selectedDose?.id)
-    .map((dose) => getReminderState(dose, now));
-
-  const visibleOtherTodayDoses = sortReminderStates(otherTodayDoses);
-  const dailySummary = getDailyDoseSummary(doses, medications);
-  const takenCount = dailySummary.taken;
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -465,88 +456,7 @@ export default function ProximaMedicacaoCard({
         </div>
       </div>
 
-      {todayPendingDoses.length > 0 && (
-        <div className="rounded-3xl border border-blue-200 bg-blue-50 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-black uppercase tracking-wider text-blue-700">
-                Resumo de hoje
-              </p>
-              <p className="mt-1 text-base font-black text-slate-900">
-                {dailySummary.taken} de {dailySummary.total} doses registradas
-              </p>
-            </div>
-            <span className="rounded-full bg-white px-3 py-1.5 text-sm font-black text-blue-700">
-              {dailySummary.pending} pendente{dailySummary.pending === 1 ? '' : 's'}
-            </span>
-          </div>
-          <div className="mt-3 rounded-2xl bg-white px-4 py-3">
-            <p className="text-xs font-black uppercase tracking-wider text-slate-400">
-              Falta registrar
-            </p>
-            <p className="mt-1 text-base font-black text-slate-900">
-              {selectedDose.medicationNome} · {formatClockTime(selectedDose.target)}
-            </p>
-            {dailySummary.pending > 1 && (
-              <p className="mt-1 text-sm font-semibold text-slate-500">
-                As outras doses pendentes de hoje estão listadas logo abaixo.
-              </p>
-            )}
-          </div>
-        </div>
-      )}
 
-      {visibleOtherTodayDoses.length > 0 && (
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-100 px-5 py-4">
-            <p className="text-xs font-black uppercase tracking-wider text-slate-400">
-              Outras doses pendentes de hoje
-            </p>
-            <p className="mt-1 text-sm font-semibold text-slate-500">
-              Estas são as doses além da que aparece no cartão acima.
-            </p>
-          </div>
-
-          <div className="divide-y divide-slate-100">
-            {visibleOtherTodayDoses.map((dose) => (
-              <button
-                key={dose.id}
-                type="button"
-                onClick={() => setSelectedDoseId(dose.id)}
-                className="flex min-h-16 w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
-              >
-                <span className="flex h-11 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
-                  <span className="text-sm font-black">{formatClockTime(dose.target)}</span>
-                </span>
-
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-base font-black text-slate-900">
-                    {dose.medicationNome}
-                  </span>
-                  <span className="mt-0.5 block text-sm font-semibold text-slate-500">
-                    {formatRemainingForUser(dose.remainingMs)}
-                  </span>
-                </span>
-
-                <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <FutureReminderSchedule
-        doses={futureDoses}
-        medications={medications}
-        now={now}
-        title="Próximos dias"
-      />
-
-      <div className="flex items-center justify-between px-1 text-sm">
-        <span className="font-bold text-slate-500">
-          {dailySummary.taken} tomadas · {dailySummary.pending} pendente{dailySummary.pending === 1 ? '' : 's'} · {dailySummary.total} no total
-        </span>
-      </div>
     </section>
   );
 }
