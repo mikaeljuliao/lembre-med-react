@@ -399,7 +399,21 @@ export default function ProximaMedicacaoCard({
             </p>
             <p className="mt-2 text-lg font-bold text-white/85">
               {selectedDose.dosagem}
+              {selectedDose.concentracao ? ' · ' + selectedDose.concentracao : ''}
             </p>
+            {selectedDose.orientacaoAlimentacao &&
+              selectedDose.orientacaoAlimentacao !== 'sem_orientacao' && (
+                <p className="mt-2 text-sm font-bold text-white/75">
+                  Orientação cadastrada: {
+                    {
+                      jejum: 'em jejum',
+                      antes: 'antes da refeição',
+                      durante: 'durante a refeição',
+                      depois: 'depois da refeição',
+                    }[selectedDose.orientacaoAlimentacao] || selectedDose.orientacaoAlimentacao
+                  }
+                </p>
+              )}
           </div>
 
           <div className="mt-6 rounded-2xl bg-white/10 px-5 py-4">
