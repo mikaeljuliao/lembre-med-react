@@ -79,6 +79,68 @@ export default function App() {
   const handleQuickReminderSave = (treatmentData) => {
     const medConfig = treatmentData?.medicamentos?.[0];
     const medName = String(medConfig?.nome || 'Medicamento').trim();
+
+    if (medConfig?.medicamentoId) {
+      const existingMedication = medications.find(
+        (medication) => String(medication.id) === String(medConfig.medicamentoId)
+      );
+      const existingTreatment = treatments.find((treatment) =>
+        (treatment.medicamentos || []).some(
+          (medication) => String(medication.medicamentoId) === String(medConfig.medicamentoId)
+        )
+      );
+
+      if (existingMedication && existingTreatment) {
+        const updatedMedication = {
+          ...existingMedication,
+          ...medConfig,
+          id: existingMedication.id,
+          medicamentoId: undefined,
+        };
+        delete updatedMedication.medicamentoId;
+
+        const updatedTreatment = {
+          ...existingTreatment,
+          tipoUso: medConfig.tipoUso || existingTreatment.tipoUso || 'scheduled',
+          dataFim: treatmentData.dataFim || '',
+          finalidade: medConfig.finalidade || '',
+          orientacaoAlimentacao: medConfig.orientacaoAlimentacao || 'sem_orientacao',
+          observacoes: medConfig.observacoes || '',
+          intervaloMinimoHoras: medConfig.intervaloMinimoHoras || null,
+          limiteDosesDia: medConfig.limiteDosesDia || null,
+          condicaoUso: medConfig.condicaoUso || '',
+          dataInicio: existingTreatment.dataInicio || treatmentData.dataInicio,
+          medicamentos: existingTreatment.medicamentos.map((medication) =>
+            String(medication.medicamentoId) === String(medConfig.medicamentoId)
+              ? { ...medConfig, medicamentoId: existingMedication.id }
+              : medication
+          ),
+        };
+
+        const updatedMedications = medications.map((medication) =>
+          medication.id === existingMedication.id ? updatedMedication : medication
+        );
+        const updatedTreatments = treatments.map((treatment) =>
+          treatment.id === existingTreatment.id ? updatedTreatment : treatment
+        );
+
+        setMedications(updatedMedications);
+        saveStoredMedications(updatedMedications);
+        setTreatments(updatedTreatments);
+        saveStoredTreatments(updatedTreatments);
+
+        const today = getLocalDateString();
+        const refreshedDoses = getStoredDoses(today);
+        setSelectedDate(today);
+        setDoses(refreshedDoses);
+        setIsQuickReminderModalOpen(false);
+        setIsDetailMedOpen(false);
+        setSelectedDetailMed(updatedMedication);
+        setActiveTab('remedios');
+        showToast(medName + ' atualizado. Os lembretes foram recalculados.', 'success');
+        return;
+      }
+    }
     const existingMedication = medications.find(
       (medication) => isSameMedication(medication, medConfig)
     );
