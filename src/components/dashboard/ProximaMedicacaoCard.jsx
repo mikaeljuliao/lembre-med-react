@@ -12,10 +12,6 @@ function getTodayTarget(horario, referenceDate = new Date()) {
 function getRemainingMsForTime(horario, referenceDate = new Date()) {
   const target = getTodayTarget(horario, referenceDate);
 
-  if (target.getTime() < referenceDate.getTime()) {
-    target.setDate(target.getDate() + 1);
-  }
-
   return Math.max(0, target.getTime() - referenceDate.getTime());
 }
 
