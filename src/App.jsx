@@ -23,7 +23,7 @@ import {
   addHistoryEntry,
 } from './utils/storage';
 import { getLocalDateString } from './utils/reminderEngine';
-import { generateDosesForDate, normalizeMedicationName } from './utils/businessLogic';
+import { generateDosesForDate, isSameMedication } from './utils/businessLogic';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('inicio');
@@ -79,15 +79,14 @@ export default function App() {
   const handleQuickReminderSave = (treatmentData) => {
     const medConfig = treatmentData?.medicamentos?.[0];
     const medName = String(medConfig?.nome || 'Medicamento').trim();
-    const medicationKey = normalizeMedicationName(medName);
     const existingMedication = medications.find(
-      (medication) => normalizeMedicationName(medication.nome) === medicationKey
+      (medication) => isSameMedication(medication, medConfig)
     );
     const existingTreatment = treatments.find((treatment) =>
       (treatment.medicamentos || []).some(
         (medication) =>
           String(medication.medicamentoId || '') === String(existingMedication?.id || '') ||
-          normalizeMedicationName(medication.nome) === medicationKey
+          (!existingMedication?.id && isSameMedication(medication, medConfig))
       )
     );
 
@@ -95,7 +94,7 @@ export default function App() {
     const existingMedicationConfig = existingTreatment?.medicamentos?.find(
       (medication) =>
         String(medication.medicamentoId || '') === String(existingMedication?.id || '') ||
-        normalizeMedicationName(medication.nome) === medicationKey
+        (!existingMedication?.id && isSameMedication(medication, medConfig))
     );
     const existingHorarios = existingMedicationConfig?.horarios || [];
     const nextHorarios = [...new Set([...existingHorarios, ...incomingHorarios])].sort();
@@ -144,7 +143,7 @@ export default function App() {
           orientacaoAlimentacao: medConfig?.orientacaoAlimentacao || existingTreatment.orientacaoAlimentacao || treatmentData?.orientacaoAlimentacao || 'sem_orientacao',
           observacoes: medConfig?.observacoes || existingTreatment.observacoes || treatmentData?.observacoes || '',
           medicamentos: existingTreatment.medicamentos.map((medication) =>
-            (String(medication.medicamentoId || '') === String(existingMedication?.id || '') || normalizeMedicationName(medication.nome) === medicationKey)
+            (String(medication.medicamentoId || '') === String(existingMedication?.id || '') || (!existingMedication?.id && isSameMedication(medication, medConfig)))
               ? {
                   ...medication,
                   medicamentoId: medicationId,
