@@ -1,4 +1,4 @@
-import { generateDosesForDate, sanitizeStoredData } from './businessLogic';
+import { generateDosesForDate, getDoseScheduledAt, getLocalDateString, sanitizeStoredData } from './businessLogic';
 
 const STORAGE_KEYS = {
   MEDICATIONS: 'dosefacil_medications',
@@ -8,8 +8,23 @@ const STORAGE_KEYS = {
 };
 
 const INITIAL_MEDICATIONS = [];
-
 const INITIAL_TREATMENTS = [];
+
+function normalizeDose(dose, dateStr) {
+  if (!dose || typeof dose !== 'object') return null;
+
+  const normalizedDate = dose.data || dateStr;
+  const horario = String(dose.horario || '00:00');
+  const scheduledAt = dose.scheduledAt || getDoseScheduledAt(normalizedDate, horario);
+
+  return {
+    ...dose,
+    data: normalizedDate,
+    scheduledAt,
+    snoozedUntil: dose.snoozedUntil || null,
+    alarmMuted: Boolean(dose.alarmMuted),
+  };
+}
 
 export function getStoredMedications() {
   const data = localStorage.getItem(STORAGE_KEYS.MEDICATIONS);
@@ -17,14 +32,17 @@ export function getStoredMedications() {
     localStorage.setItem(STORAGE_KEYS.MEDICATIONS, JSON.stringify(INITIAL_MEDICATIONS));
     return [];
   }
+
   try {
     const parsed = JSON.parse(data);
     const cleaned = sanitizeStoredData({ medications: parsed }).medications;
+
     if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) {
       localStorage.setItem(STORAGE_KEYS.MEDICATIONS, JSON.stringify(cleaned));
     }
+
     return cleaned;
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -39,14 +57,17 @@ export function getStoredTreatments() {
     localStorage.setItem(STORAGE_KEYS.TREATMENTS, JSON.stringify(INITIAL_TREATMENTS));
     return [];
   }
+
   try {
     const parsed = JSON.parse(data);
     const cleaned = sanitizeStoredData({ treatments: parsed }).treatments;
+
     if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) {
       localStorage.setItem(STORAGE_KEYS.TREATMENTS, JSON.stringify(cleaned));
     }
+
     return cleaned;
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -55,27 +76,29 @@ export function saveStoredTreatments(treatments) {
   localStorage.setItem(STORAGE_KEYS.TREATMENTS, JSON.stringify(treatments));
 }
 
-export function getStoredDoses(dateStr = new Date().toISOString().split('T')[0]) {
+export function getStoredDoses(dateStr = getLocalDateString()) {
   const allDosesData = localStorage.getItem(STORAGE_KEYS.DOSES);
   let allDosesMap = {};
+
   if (allDosesData) {
     try {
       allDosesMap = JSON.parse(allDosesData);
-    } catch (e) {
+    } catch {
       allDosesMap = {};
     }
   }
 
   if (allDosesMap[dateStr]) {
-    const filtered = allDosesMap[dateStr].filter((dose) => {
-      const medicationName = String(dose?.medicationNome || '').trim();
-      return medicationName && !['paracetamol', 'losartana', 'amoxicilina', 'dipirona', 'omeprazol', 'ibuprofeno'].includes(medicationName.toLowerCase());
-    });
-    if (filtered.length !== allDosesMap[dateStr].length) {
-      allDosesMap[dateStr] = filtered;
+    const normalized = allDosesMap[dateStr]
+      .map((dose) => normalizeDose(dose, dateStr))
+      .filter(Boolean);
+
+    if (JSON.stringify(normalized) !== JSON.stringify(allDosesMap[dateStr])) {
+      allDosesMap[dateStr] = normalized;
       localStorage.setItem(STORAGE_KEYS.DOSES, JSON.stringify(allDosesMap));
     }
-    return filtered;
+
+    return normalized;
   }
 
   const treatments = getStoredTreatments();
@@ -89,31 +112,37 @@ export function getStoredDoses(dateStr = new Date().toISOString().split('T')[0])
 export function saveStoredDosesForDate(dateStr, doses) {
   const allDosesData = localStorage.getItem(STORAGE_KEYS.DOSES);
   let allDosesMap = {};
+
   if (allDosesData) {
     try {
       allDosesMap = JSON.parse(allDosesData);
-    } catch (e) {
+    } catch {
       allDosesMap = {};
     }
   }
-  allDosesMap[dateStr] = doses;
+
+  allDosesMap[dateStr] = doses.map((dose) => normalizeDose(dose, dateStr)).filter(Boolean);
   localStorage.setItem(STORAGE_KEYS.DOSES, JSON.stringify(allDosesMap));
 }
 
 export function getStoredHistory() {
   const data = localStorage.getItem(STORAGE_KEYS.HISTORY);
+
   if (!data) {
     localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify([]));
     return [];
   }
+
   try {
     const parsed = JSON.parse(data);
     const cleaned = sanitizeStoredData({ history: parsed }).history;
+
     if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) {
       localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(cleaned));
     }
+
     return cleaned;
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -126,6 +155,7 @@ export function addHistoryEntry(entry) {
     ...entry,
   };
   const updated = [newEntry, ...history];
+
   localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(updated));
   return updated;
 }
