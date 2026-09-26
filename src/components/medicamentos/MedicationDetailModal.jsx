@@ -1,7 +1,7 @@
 import React from 'react';
 import Modal from '../common/Modal';
 import Badge from '../common/Badge';
-import { Pill, BookOpenText, Calendar, Clock3, Utensils, Info } from 'lucide-react';
+import { Pill, BookOpenText, Calendar, Clock3, Utensils, Info, Pencil } from 'lucide-react';
 import { OFFICIAL_MEDICINES } from '../../data/officialMedicines';
 
 const MEAL_LABELS = {
@@ -12,7 +12,7 @@ const MEAL_LABELS = {
   depois: 'Depois da refeição',
 };
 
-export default function MedicationDetailModal({ isOpen, onClose, medication, onOpenOfficialInfo }) {
+export default function MedicationDetailModal({ isOpen, onClose, medication, onOpenOfficialInfo, onEdit }) {
   if (!medication) return null;
 
   const officialMatch = OFFICIAL_MEDICINES.find(
@@ -23,6 +23,12 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Meu medicamento">
+      <div className="mb-4 flex gap-2">
+        <button type="button" onClick={() => onEdit(medication)} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200">
+          <Pencil className="h-4 w-4" />
+          Editar informações
+        </button>
+      </div>
       <div className="max-h-[78vh] space-y-4 overflow-y-auto pr-1">
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
           <div className="flex min-w-0 items-center gap-3">
