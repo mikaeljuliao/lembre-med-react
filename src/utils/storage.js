@@ -87,17 +87,25 @@ function mergeDuplicateTreatments(treatments, medications) {
     if (dates.length > 0) existing.dataInicio = dates[0];
 
     const reminderTimes = [
-      existingMedication.primeiroLembreteAt,
-      medication.primeiroLembreteAt,
+      {
+        value: existingMedication.primeiroLembreteAt,
+        horario: existingMedication.primeiroLembreteHorario,
+      },
+      {
+        value: medication.primeiroLembreteAt,
+        horario: medication.primeiroLembreteHorario || medication.horarios?.[0],
+      },
     ]
-      .filter(Boolean)
-      .map((value) => new Date(value))
-      .filter((value) => !Number.isNaN(value.getTime()))
-      .sort((a, b) => a.getTime() - b.getTime());
+      .filter((item) => item.value)
+      .map((item) => ({ ...item, date: new Date(item.value) }))
+      .filter((item) => !Number.isNaN(item.date.getTime()))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
 
     if (reminderTimes.length > 0) {
       existingMedication.primeiroLembreteAt =
-        reminderTimes[0].toISOString();
+        reminderTimes[0].date.toISOString();
+      existingMedication.primeiroLembreteHorario =
+        reminderTimes[0].horario || existingMedication.horarios?.[0];
     }
   });
 
