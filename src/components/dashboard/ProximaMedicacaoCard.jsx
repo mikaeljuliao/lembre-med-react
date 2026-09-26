@@ -93,10 +93,15 @@ export default function ProximaMedicacaoCard({
   );
 
   const selectedDose =
-    dueDoses[0] ||
-    reminderStates.find((dose) => dose.id === selectedDoseId) ||
-    reminderStates[0] ||
-    null;
+    todayPendingDoses.length > 0
+      ? dueDoses[0] ||
+        reminderStates.find((dose) => dose.id === selectedDoseId) ||
+        reminderStates[0] ||
+        null
+      : null;
+
+  const nextFutureReminder =
+    todayPendingDoses.length === 0 ? nearestFutureDose : null;
 
   const otherTodayDoses = todayPendingDoses
     .filter((dose) => dose.id !== selectedDose?.id)
@@ -168,7 +173,7 @@ export default function ProximaMedicacaoCard({
     }
 
     if (announcedAlarmRef.current !== selectedDose.id) {
-      speakText(buildReminderSpeech(selectedDose, new Date()));
+      speakText(buildReminderSpeech(doseToRead, new Date()));
       announcedAlarmRef.current = selectedDose.id;
     }
 
@@ -234,7 +239,8 @@ export default function ProximaMedicacaoCard({
   };
 
   const handleListen = async () => {
-    if (!selectedDose) return;
+    const doseToRead = selectedDose || nextFutureReminder;
+    if (!doseToRead) return;
 
     const AudioCtor = window.AudioContext || window.webkitAudioContext;
 
@@ -268,17 +274,61 @@ export default function ProximaMedicacaoCard({
   }
 
   if (!selectedDose) {
+    const skippedCount = activeTodayDoses.filter((dose) => dose.status === 'skipped').length;
+    const allTaken =
+      activeTodayDoses.length > 0 &&
+      takenCount === activeTodayDoses.length;
+
     return (
-      <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-7 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-sm">
-          <Check className="h-9 w-9" strokeWidth={3} />
+      <section className="space-y-4">
+        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-7 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-sm">
+            <Check className="h-9 w-9" strokeWidth={3} />
+          </div>
+          <h2 className="mt-5 text-2xl font-black text-slate-900">
+            {allTaken
+              ? 'Todas as doses de hoje foram registradas'
+              : 'Não há mais doses pendentes hoje'}
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-base leading-6 text-slate-600">
+            {allTaken
+              ? takenCount + ' de ' + activeTodayDoses.length + ' doses registradas.'
+              : skippedCount > 0
+                ? skippedCount + ' dose' + (skippedCount === 1 ? '' : 's') + ' marcada' + (skippedCount === 1 ? '' : 's') + ' como não tomada.'
+                : 'Você não tem mais medicamentos pendentes neste dia.'}
+          </p>
         </div>
-        <h2 className="mt-5 text-2xl font-black text-slate-900">
-          Por hoje, está tudo certo
-        </h2>
-        <p className="mx-auto mt-2 max-w-md text-base leading-6 text-slate-600">
-          Você não tem mais medicamentos pendentes neste dia.
-        </p>
+
+        {nextFutureReminder && (
+          <div className="rounded-3xl border border-blue-200 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-wider text-blue-600">
+                  Próximo lembrete
+                </p>
+                <p className="mt-1 text-xl font-black text-slate-900">
+                  {getCalendarLabel(nextFutureReminder.target, now)}, às {formatClockTime(nextFutureReminder.target)}
+                </p>
+                <p className="mt-2 text-lg font-black text-slate-900">
+                  {nextFutureReminder.medicationNome}
+                </p>
+                <p className="text-sm font-bold text-slate-500">
+                  {nextFutureReminder.dosagem}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleListen}
+                className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border-2 border-blue-100 bg-blue-50 px-3 py-2 text-sm font-extrabold text-blue-700 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                aria-label={'Ouvir informações do próximo lembrete de ' + nextFutureReminder.medicationNome}
+              >
+                <Volume2 className="h-5 w-5" />
+                <span>Ouvir</span>
+              </button>
+            </div>
+          </div>
+        )}
       </section>
     );
   }
