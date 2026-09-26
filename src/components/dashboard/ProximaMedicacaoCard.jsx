@@ -49,12 +49,37 @@ export default function ProximaMedicacaoCard({
   const alarmIntervalRef = useRef(null);
   const announcedAlarmRef = useRef(null);
 
+  const activeMedicationIds = useMemo(
+    () => new Set(medications.map((medication) => String(medication.id))),
+    [medications]
+  );
+
+  const isActiveMedicationDose = (dose) => {
+    if (dose?.medicationId && activeMedicationIds.has(String(dose.medicationId))) {
+      return true;
+    }
+
+    const doseName = String(dose?.medicationNome || '').trim().toLowerCase();
+
+    return medications.some(
+      (medication) =>
+        String(medication?.nome || '').trim().toLowerCase() === doseName
+    );
+  };
+
+  const activeTodayDoses = useMemo(
+    () => doses.filter(isActiveMedicationDose),
+    [doses, medications]
+  );
+
   const pendingDoses = useMemo(() => {
-    const todayPending = doses.filter((dose) => dose.status === 'pending');
-    const futurePending = futureDoses.filter((dose) => dose.status === 'pending');
+    const todayPending = activeTodayDoses.filter((dose) => dose.status === 'pending');
+    const futurePending = futureDoses
+      .filter(isActiveMedicationDose)
+      .filter((dose) => dose.status === 'pending');
 
     return [...todayPending, ...futurePending];
-  }, [doses, futureDoses]);
+  }, [activeTodayDoses, futureDoses, medications]);
 
   const reminderStates = useMemo(
     () =>
@@ -79,7 +104,7 @@ export default function ProximaMedicacaoCard({
     ? reminderStates.findIndex((dose) => dose.id === selectedDose.id)
     : -1;
 
-  const takenCount = doses.filter((dose) => dose.status === 'taken').length;
+  const takenCount = activeTodayDoses.filter((dose) => dose.status === 'taken').length;
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -226,7 +251,7 @@ export default function ProximaMedicacaoCard({
     speakText(buildReminderSpeech(selectedDose, new Date()));
   };
 
-  if (medications.length === 0 && doses.length === 0) {
+  if (medications.length === 0) {
     return (
       <section className="rounded-3xl border border-slate-200 bg-white p-7 text-center shadow-sm">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-3xl">
@@ -426,7 +451,7 @@ export default function ProximaMedicacaoCard({
 
       <div className="flex items-center justify-between px-1 text-sm">
         <span className="font-bold text-slate-500">
-          {takenCount} de {doses.length} tomados hoje
+          {takenCount} de {activeTodayDoses.length} tomados hoje
         </span>
         <span className="font-bold text-slate-400">
           {selectedIndex + 1} de {reminderStates.length}
