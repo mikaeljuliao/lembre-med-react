@@ -31,7 +31,7 @@ function getUpcomingDoses(doses, referenceDate = new Date()) {
 function formatTargetLabel(horario, referenceDate = new Date()) {
   const target = getTodayTarget(horario, referenceDate);
   return target.getTime() < referenceDate.getTime()
-    ? `Amanhã, às ${horario}`
+    ? `Atrasado · hoje, às ${horario}`
     : `Hoje, às ${horario}`;
 }
 
