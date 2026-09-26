@@ -112,7 +112,6 @@ export default function App() {
 
     const medicationId = existingMedication?.id || medConfig?.medicamentoId || 'med-' + Date.now();
     const treatmentId = existingTreatment?.id || treatmentData.id;
-    const sourceMedication = existingMedicationConfig || medConfig;
     const medRecord = {
       ...(existingMedication || {}),
       id: medicationId,
@@ -124,13 +123,15 @@ export default function App() {
       unidadeDose: medConfig?.unidadeDose || existingMedication?.unidadeDose || 'unidade',
       quantidadePorDose: medConfig?.quantidadePorDose || existingMedication?.quantidadePorDose || 1,
       validade: medConfig?.validade || existingMedication?.validade || '',
+      dataInicio: treatmentData?.dataInicio || existingMedication?.dataInicio || '',
+      dataFim: treatmentData?.dataFim || existingMedication?.dataFim || '',
       finalidade: medConfig?.finalidade || existingMedication?.finalidade || treatmentData?.finalidade || '',
       orientacaoAlimentacao: medConfig?.orientacaoAlimentacao || existingMedication?.orientacaoAlimentacao || treatmentData?.orientacaoAlimentacao || 'sem_orientacao',
       observacoes: medConfig?.observacoes || existingMedication?.observacoes || treatmentData?.observacoes || '',
       horarios: nextHorarios,
       primeirosLembretesAt: nextPrimeirosLembretesAt,
       quantidadePorDose: medConfig?.quantidadePorDose || existingMedication?.quantidadePorDose || 1,
-      tipoUso: medConfig?.tipoUso || existingMedication?.tipoUso || treatmentData?.tipoUso || 'scheduled',
+      tipoUso: existingMedicationConfig?.tipoUso || medConfig?.tipoUso || existingMedication?.tipoUso || treatmentData?.tipoUso || 'scheduled',
       lembreteId: treatmentId,
     };
 
@@ -161,6 +162,8 @@ export default function App() {
                   orientacaoAlimentacao: medConfig?.orientacaoAlimentacao || medication.orientacaoAlimentacao || 'sem_orientacao',
                   finalidade: medConfig?.finalidade || medication.finalidade || '',
                   observacoes: medConfig?.observacoes || medication.observacoes || '',
+                  dataInicio: treatmentData?.dataInicio || medication.dataInicio || '',
+                  dataFim: treatmentData?.dataFim || medication.dataFim || '',
                 }
               : medication
           ),
