@@ -404,6 +404,8 @@ export default function QuickReminderModal({
           </div>
         )}
 
+        </div>
+
         <div>
           <button type="button" onClick={() => setShowDetails((value) => !value)} className="flex min-h-12 w-full items-center justify-between rounded-2xl border-2 border-slate-200 bg-white px-4 text-left text-base font-black text-slate-800">
             <span>Mais informações (opcional)</span>
