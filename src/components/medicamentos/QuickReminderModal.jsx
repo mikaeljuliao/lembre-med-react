@@ -219,8 +219,9 @@ export default function QuickReminderModal({
     nome.trim() &&
       Number(quantidade) > 0 &&
       (tipoUso === 'scheduled' ||
-        (Number(intervaloMinimoHoras) > 0 && Number(limiteDosesDia) > 0 && condicaoUso.trim())) &&
-      (tipoUso === 'as_needed' || horarios.every(Boolean))
+        (tipoUso === 'interval' && Number(intervaloHoras) > 0 && horarioInicial) ||
+        (tipoUso === 'as_needed' && Number(intervaloMinimoHoras) > 0 && Number(limiteDosesDia) > 0 && condicaoUso.trim())) &&
+      (tipoUso !== 'scheduled' || horarios.every(Boolean))
   );
 
   const handleSave = () => {
@@ -252,7 +253,7 @@ export default function QuickReminderModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Adicionar remédio">
+    <Modal isOpen={isOpen} onClose={handleClose} title={isEditing ? "Editar remédio" : "Adicionar remédio"}>
       <div className="max-h-[78vh] space-y-6 overflow-y-auto pr-1">
         <div>
           <label htmlFor="nome-remedio" className="mb-2 block text-base font-black text-slate-900">
@@ -435,7 +436,7 @@ export default function QuickReminderModal({
 
         <button type="button" onClick={handleSave} disabled={!isReady} className="flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 text-xl font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-200">
           <Check className="h-6 w-6" strokeWidth={3} />
-          {isExistingMedication ? 'Adicionar horário' : 'Cadastrar remédio'}
+          {isEditing ? 'Salvar alterações' : isExistingMedication ? 'Adicionar horário' : 'Cadastrar remédio'}
         </button>
       </div>
     </Modal>
