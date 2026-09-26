@@ -285,6 +285,9 @@ export function buildMedicationTreatment(
     orientacaoAlimentacao: data.orientacaoAlimentacao || 'sem_orientacao',
     finalidade: String(data.finalidade || '').trim(),
     observacoes: String(data.observacoes || '').trim(),
+    intervaloMinimoHoras: Number(data.intervaloMinimoHoras) > 0 ? Number(data.intervaloMinimoHoras) : null,
+    limiteDosesDia: Number(data.limiteDosesDia) > 0 ? Number(data.limiteDosesDia) : null,
+    condicaoUso: String(data.condicaoUso || '').trim(),
     validade: String(data.validade || '').trim(),
   };
 
@@ -299,6 +302,9 @@ export function buildMedicationTreatment(
     orientacaoAlimentacao: data.orientacaoAlimentacao || 'sem_orientacao',
     finalidade: String(data.finalidade || '').trim(),
     observacoes: String(data.observacoes || '').trim(),
+    intervaloMinimoHoras: Number(data.intervaloMinimoHoras) > 0 ? Number(data.intervaloMinimoHoras) : null,
+    limiteDosesDia: Number(data.limiteDosesDia) > 0 ? Number(data.limiteDosesDia) : null,
+    condicaoUso: String(data.condicaoUso || '').trim(),
     medicamentos: [medication],
   };
 }
