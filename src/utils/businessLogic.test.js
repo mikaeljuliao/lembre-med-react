@@ -6,6 +6,7 @@ import {
   buildQuickReminderTreatment,
   resolveReminderTimes,
   sanitizeStoredData,
+  normalizeMedicationName,
 } from './businessLogic';
 
 describe('businessLogic tests', () => {
@@ -155,7 +156,10 @@ describe('businessLogic tests', () => {
 
       const cleaned = sanitizeStoredData(payload);
 
-      expect(cleaned.medications).toEqual([{ id: 'm-2', nome: 'Remédio do usuário' }]);
+      expect(cleaned.medications).toEqual([
+        { id: 'm-1', nome: 'Paracetamol' },
+        { id: 'm-2', nome: 'Remédio do usuário' },
+      ]);
       expect(cleaned.treatments).toEqual([{ id: 't-2', nome: 'Rotina do usuário' }]);
       expect(cleaned.history).toEqual([]);
     });
