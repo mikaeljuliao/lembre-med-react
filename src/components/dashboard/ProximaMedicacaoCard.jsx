@@ -1,30 +1,42 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Volume2, Check, Clock, ChevronRight } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Volume2, Check, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { speakText } from '../../utils/speech';
 
-function toMinutes(time) {
-  const [hours, minutes] = String(time || '00:00').split(':').map(Number);
-  return (Number.isFinite(hours) ? hours : 0) * 60 + (Number.isFinite(minutes) ? minutes : 0);
+function getTodayTarget(horario, referenceDate = new Date()) {
+  const [hours, minutes] = String(horario || '00:00').split(':').map(Number);
+  const target = new Date(referenceDate);
+  target.setHours(Number(hours) || 0, Number(minutes) || 0, 0, 0);
+  return target;
 }
 
-function getNextPendingDose(doses, referenceDate = new Date()) {
-  const pending = doses
-    .filter((d) => d.status === 'pending')
-    .sort((a, b) => a.horario.localeCompare(b.horario));
+function getRemainingMsForTime(horario, referenceDate = new Date()) {
+  const target = getTodayTarget(horario, referenceDate);
 
-  if (pending.length === 0) return null;
+  if (target.getTime() < referenceDate.getTime()) {
+    target.setDate(target.getDate() + 1);
+  }
 
-  const currentMinutes = referenceDate.getHours() * 60 + referenceDate.getMinutes();
-  const upcoming = pending.find((d) => toMinutes(d.horario) >= currentMinutes);
-  return upcoming || pending[0];
+  return Math.max(0, target.getTime() - referenceDate.getTime());
 }
 
-function getSecondNextDose(doses, firstDose) {
-  if (!firstDose) return null;
-  const pending = doses
-    .filter((d) => d.status === 'pending' && d.id !== firstDose.id)
-    .sort((a, b) => a.horario.localeCompare(b.horario));
-  return pending[0] || null;
+function getUpcomingDoses(doses, referenceDate = new Date()) {
+  return doses
+    .filter((dose) => dose.status === 'pending')
+    .map((dose) => ({
+      ...dose,
+      remainingMs: getRemainingMsForTime(dose.horario, referenceDate),
+    }))
+    .sort((a, b) => {
+      if (a.remainingMs !== b.remainingMs) return a.remainingMs - b.remainingMs;
+      return String(a.medicationNome).localeCompare(String(b.medicationNome));
+    });
+}
+
+function formatTargetLabel(horario, referenceDate = new Date()) {
+  const target = getTodayTarget(horario, referenceDate);
+  return target.getTime() < referenceDate.getTime()
+    ? `Amanhã, às ${horario}`
+    : `Hoje, às ${horario}`;
 }
 
 function buildSpeechText(dose) {
@@ -57,8 +69,12 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
   const [alarmActive, setAlarmActive] = useState(false);
   const alarmIntervalRef = useRef(null);
 
-  const nextDose = getNextPendingDose(doses, now);
-  const secondDose = getSecondNextDose(doses, nextDose);
+  const upcomingDoses = useMemo(() => getUpcomingDoses(doses, now), [doses, now]);
+  const [selectedDoseId, setSelectedDoseId] = useState(null);
+  const selectedDose = upcomingDoses.find((dose) => dose.id === selectedDoseId) || upcomingDoses[0] || null;
+  const selectedIndex = selectedDose
+    ? upcomingDoses.findIndex((dose) => dose.id === selectedDose.id)
+    : -1;
 
   const takenCount = doses.filter((d) => d.status === 'taken').length;
   const pendingCount = doses.filter((d) => d.status === 'pending').length;
@@ -70,21 +86,27 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
   }, []);
 
   useEffect(() => {
-    if (!nextDose) {
+    if (upcomingDoses.length === 0) {
+      setSelectedDoseId(null);
+      return;
+    }
+
+    if (!selectedDoseId || !upcomingDoses.some((dose) => dose.id === selectedDoseId)) {
+      setSelectedDoseId(upcomingDoses[0].id);
+    }
+  }, [upcomingDoses, selectedDoseId]);
+
+  useEffect(() => {
+    if (!selectedDose) {
       setAlarmActive(false);
       return;
     }
 
-    const remainingSeconds = Math.ceil(getRemainingMsForTime(nextDose.horario, now) / 1000);
-    if (remainingSeconds <= 0 && pendingCount > 0) {
-      setAlarmActive(true);
-    } else if (remainingSeconds > 0) {
-      setAlarmActive(false);
-    }
-  }, [nextDose, now, pendingCount]);
+    setAlarmActive(selectedDose.remainingMs <= 0);
+  }, [selectedDose]);
 
   useEffect(() => {
-    if (!alarmActive || !nextDose) {
+    if (!alarmActive || !selectedDose) {
       if (alarmIntervalRef.current) {
         clearInterval(alarmIntervalRef.current);
         alarmIntervalRef.current = null;
@@ -107,7 +129,7 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
       oscillator.stop(audioContext.currentTime + 0.25);
     };
 
-    speakText(buildSpeechText(nextDose));
+    speakText(buildSpeechText(selectedDose));
     playAlarmTone();
     alarmIntervalRef.current = setInterval(playAlarmTone, 2200);
 
@@ -117,7 +139,7 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
         alarmIntervalRef.current = null;
       }
     };
-  }, [alarmActive, nextDose]);
+  }, [alarmActive, selectedDose]);
 
   if (totalCount === 0) {
     return (
@@ -133,7 +155,7 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
     );
   }
 
-  if (!nextDose) {
+  if (!selectedDose) {
     return (
       <div className={`bg-emerald-600 rounded-3xl shadow-lg text-white text-center ${simpleMode ? 'p-10' : 'p-8'}`}>
         <div className={`${simpleMode ? 'text-6xl mb-6' : 'text-4xl mb-4'}`}>✅</div>
@@ -150,7 +172,7 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
     );
   }
 
-  const countdownMs = getRemainingMsForTime(nextDose.horario, now);
+  const countdownMs = getRemainingMsForTime(selectedDose.horario, now);
   const countdownText = formatCountdown(countdownMs);
 
   const handleTomar = () => {
@@ -160,7 +182,7 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
   };
 
   const handleOuvir = () => {
-    speakText(buildSpeechText(nextDose));
+    speakText(buildSpeechText(selectedDose));
   };
 
   if (simpleMode) {
@@ -169,8 +191,8 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
         <div className="px-8 pt-8 pb-6 text-center">
           <p className="text-blue-200 text-lg font-semibold mb-1">Seu próximo remédio</p>
           <p className="text-4xl font-black tracking-tight mb-1">{countdownText}</p>
-          <p className="text-4xl font-extrabold mt-4 mb-2">{nextDose.medicationNome}</p>
-          <p className="text-2xl text-blue-100 mb-6">{nextDose.dosagem}</p>
+          <p className="text-4xl font-extrabold mt-4 mb-2">{selectedDose.medicationNome}</p>
+          <p className="text-2xl text-blue-100 mb-6">{selectedDose.dosagem}</p>
 
           <button
             onClick={handleTomar}
@@ -191,10 +213,20 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
           )}
         </div>
 
-        {secondDose && (
-          <div className="bg-blue-700/50 px-8 py-4 flex items-center justify-between">
-            <span className="text-blue-200 text-lg">Próximo:</span>
-            <span className="text-white font-bold text-lg">{secondDose.horario} — {secondDose.medicationNome}</span>
+        {upcomingDoses.length > 1 && (
+          <div className="bg-blue-700/50 px-5 py-3 flex items-center justify-between gap-3">
+            <button type="button" onClick={selectPrevious} aria-label="Ver medicamento anterior" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+            <div className="min-w-0 text-center">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-200">Lembretes próximos</p>
+              <p className="mt-1 truncate text-sm font-extrabold text-white">
+                {selectedIndex + 1} de {upcomingDoses.length} · {selectedDose.horario} · {selectedDose.medicationNome}
+              </p>
+            </div>
+            <button type="button" onClick={selectNext} aria-label="Ver próximo medicamento" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+              <ChevronRight className="h-6 w-6" />
+            </button>
           </div>
         )}
 
@@ -223,7 +255,10 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
             <p className="text-blue-200 text-xs font-semibold uppercase tracking-wider mb-1">Próximo remédio</p>
             <div className="flex items-center space-x-2">
               <Clock className="w-5 h-5 text-blue-300" />
-              <span className="text-3xl font-black tracking-tight">{nextDose.horario}</span>
+              <div>
+                <span className="block text-3xl font-black tracking-tight">{selectedDose.horario}</span>
+                <span className="block text-xs font-bold text-blue-200">{targetLabel}</span>
+              </div>
             </div>
           </div>
           <button
@@ -242,8 +277,8 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
         </div>
 
         <div className="mb-6">
-          <h2 className="text-2xl font-extrabold mb-1">{nextDose.medicationNome}</h2>
-          <p className="text-blue-100 text-base">{nextDose.dosagem}</p>
+          <h2 className="text-2xl font-extrabold mb-1">{selectedDose.medicationNome}</h2>
+          <p className="text-blue-100 text-base">{selectedDose.dosagem}</p>
         </div>
 
         <button
@@ -266,13 +301,20 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
         )}
       </div>
 
-      {secondDose && (
-        <div className="bg-blue-700/40 px-7 py-3 flex items-center justify-between">
-          <span className="text-blue-300 text-sm">Próximo:</span>
-          <div className="flex items-center space-x-2 text-sm text-white font-semibold">
-            <span>{secondDose.horario} — {secondDose.medicationNome}</span>
-            <ChevronRight className="w-4 h-4 text-blue-300" />
+      {upcomingDoses.length > 1 && (
+        <div className="bg-blue-700/40 px-5 py-3 flex items-center justify-between gap-3">
+          <button type="button" onClick={selectPrevious} aria-label="Ver medicamento anterior" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <div className="min-w-0 text-center">
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-blue-200">Lembretes próximos</p>
+            <p className="mt-1 truncate text-sm font-extrabold text-white">
+              {selectedIndex + 1} de {upcomingDoses.length} · {selectedDose.horario} · {selectedDose.medicationNome}
+            </p>
           </div>
+          <button type="button" onClick={selectNext} aria-label="Ver próximo medicamento" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
       )}
 
