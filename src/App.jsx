@@ -92,12 +92,26 @@ export default function App() {
     );
 
     const selectedHorario = String(medConfig?.horarios?.[0] || '').trim();
+    const existingHorarios = existingTreatment?.medicamentos?.[0]?.horarios || [];
     const nextHorarios = existingTreatment
       ? [...new Set([
-          ...(existingTreatment.medicamentos?.[0]?.horarios || []),
+          ...existingHorarios,
           ...(selectedHorario ? [selectedHorario] : []),
         ])].sort()
       : medConfig?.horarios || [];
+
+    const nextPrimeirosLembretesAt = {
+      ...(existingTreatment?.medicamentos?.[0]?.primeirosLembretesAt || {}),
+    };
+
+    if (
+      selectedHorario &&
+      !existingHorarios.includes(selectedHorario) &&
+      medConfig?.primeirosLembretesAt?.[selectedHorario]
+    ) {
+      nextPrimeirosLembretesAt[selectedHorario] =
+        medConfig.primeirosLembretesAt[selectedHorario];
+    }
 
     const medicationId = existingMedication?.id || medConfig?.medicamentoId || 'med-' + Date.now();
     const treatmentId = existingTreatment?.id || treatmentData.id;
@@ -113,6 +127,7 @@ export default function App() {
       validade: existingMedication?.validade || '',
       observacoes: existingMedication?.observacoes || '',
       horarios: nextHorarios,
+      primeirosLembretesAt: nextPrimeirosLembretesAt,
       quantidadePorDose: medConfig?.quantidadePorDose || existingMedication?.quantidadePorDose || 1,
       lembreteId: treatmentId,
     };
@@ -129,6 +144,7 @@ export default function App() {
                   quantidadePorDose: medConfig?.quantidadePorDose || medication.quantidadePorDose || 1,
                   dosagem: String(medConfig?.quantidadePorDose || medication.quantidadePorDose || 1) + ' comprimido' + (Number(medConfig?.quantidadePorDose || medication.quantidadePorDose || 1) > 1 ? 's' : ''),
                   horarios: nextHorarios,
+                  primeirosLembretesAt: nextPrimeirosLembretesAt,
                 }
               : medication
           ),
