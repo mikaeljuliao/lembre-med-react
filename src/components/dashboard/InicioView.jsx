@@ -1,7 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import { Pill, HeartPulse, Plus, CheckCircle2, Clock3 } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Check, Plus } from 'lucide-react';
 import ProximaMedicacaoCard from './ProximaMedicacaoCard';
-import DoseTomadaModal from './DoseTomadaModal';
 
 function formatToday() {
   const value = new Date().toLocaleDateString('pt-BR', {
@@ -13,157 +12,114 @@ function formatToday() {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function toMinutes(time) {
-  const [hours, minutes] = String(time || '00:00').split(':').map(Number);
-  return (Number(hours) || 0) * 60 + (Number(minutes) || 0);
+function getDoseTime(dose) {
+  if (dose?.scheduledAt) {
+    const scheduledAt = new Date(dose.scheduledAt);
+
+    if (!Number.isNaN(scheduledAt.getTime())) {
+      return scheduledAt.getTime();
+    }
+  }
+
+  const [hours = 0, minutes = 0] = String(dose?.horario || '00:00')
+    .split(':')
+    .map(Number);
+
+  return (Number(hours) || 0) * 60 * 60000 + (Number(minutes) || 0) * 60000;
 }
 
 export default function InicioView({
   doses = [],
   medications = [],
   onToggleDoseStatus,
+  onUpdateDose,
+  onSnoozeDose,
   onNavigate,
 }) {
-  const [confirmModal, setConfirmModal] = useState({
-    open: false,
-    dose: null,
-    nextDose: null,
-  });
-
-  const sortedDoses = useMemo(
+  const takenDoses = useMemo(
     () =>
-      [...doses].sort((a, b) => {
-        const timeDifference = toMinutes(a.horario) - toMinutes(b.horario);
-        if (timeDifference !== 0) return timeDifference;
-
-        const nameDifference = String(a.medicationNome).localeCompare(String(b.medicationNome));
-        if (nameDifference !== 0) return nameDifference;
-
-        return String(a.id).localeCompare(String(b.id));
-      }),
+      [...doses]
+        .filter((dose) => dose.status === 'taken')
+        .sort((a, b) => getDoseTime(b) - getDoseTime(a)),
     [doses]
   );
 
-  const pendingDoses = sortedDoses.filter((dose) => dose.status === 'pending');
-  const takenDoses = sortedDoses.filter((dose) => dose.status === 'taken');
-
-  const handleDoseTaken = (dose, nextDose) => {
-    setConfirmModal({ open: true, dose, nextDose });
-  };
-
-  const handleCloseConfirm = () => {
-    setConfirmModal({ open: false, dose: null, nextDose: null });
-  };
+  const hasMedications = medications.length > 0;
 
   return (
-    <div className="space-y-5 pb-24 animate-fade-in">
-      <header className="pt-2">
-        <p className="text-sm font-semibold text-slate-500">{formatToday()}</p>
-        <h1 className="mt-1 text-2xl font-black leading-tight text-slate-900">
-          O que você precisa fazer agora?
-        </h1>
-      </header>
+    <div className="space-y-5 pb-24">
+      <header className="flex flex-col gap-4 pt-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-bold text-slate-500">{formatToday()}</p>
+          <h1 className="mt-1 text-2xl font-black leading-tight text-slate-900 sm:text-3xl">
+            O que você precisa fazer agora?
+          </h1>
+        </div>
 
-      <ProximaMedicacaoCard
-        doses={sortedDoses}
-        onToggleDoseStatus={onToggleDoseStatus}
-        onDoseTaken={handleDoseTaken}
-      />
-
-      {medications.length === 0 ? (
-        <section className="rounded-3xl border-2 border-dashed border-blue-200 bg-blue-50 p-6 text-center">
-          <Pill className="mx-auto mb-3 h-10 w-10 text-blue-600" />
-          <h2 className="text-xl font-black text-slate-900">Vamos começar?</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            Adicione seu primeiro medicamento e o DoseFácil cuidará dos lembretes.
-          </p>
+        {hasMedications && (
           <button
             type="button"
             onClick={() => onNavigate('remedios')}
-            className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-base font-extrabold text-white shadow-sm"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-blue-100 bg-white px-4 py-2.5 text-sm font-black text-blue-700 shadow-sm transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
           >
             <Plus className="h-5 w-5" />
-            Adicionar medicamento
+            Adicionar remédio
           </button>
-        </section>
-      ) : (
-        <>
-          <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 px-5 py-4">
-              <h2 className="text-lg font-black text-slate-900">Hoje</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                {takenDoses.length > 0
-                  ? `${takenDoses.length} dose${takenDoses.length !== 1 ? 's' : ''} registrada${takenDoses.length !== 1 ? 's' : ''}`
-                  : pendingDoses.length > 0
-                    ? 'Veja abaixo o que está programado.'
-                    : 'Nenhum lembrete para hoje.'}
-              </p>
-            </div>
+        )}
+      </header>
 
-            {sortedDoses.length > 0 ? (
-              <div className="divide-y divide-slate-100">
-                {sortedDoses.map((dose) => {
-                  const taken = dose.status === 'taken';
+      <ProximaMedicacaoCard
+        doses={doses}
+        medications={medications}
+        onToggleDoseStatus={onToggleDoseStatus}
+        onUpdateDose={onUpdateDose}
+        onSnoozeDose={onSnoozeDose}
+      />
 
-                  return (
-                    <div key={dose.id} className="flex items-center gap-3 px-5 py-4">
-                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${taken ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>
-                        {taken ? <CheckCircle2 className="h-5 w-5" /> : <Clock3 className="h-5 w-5" />}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-base font-extrabold text-slate-900">{dose.medicationNome}</p>
-                        <p className="mt-0.5 text-sm text-slate-500">
-                          {dose.horario} · {dose.dosagem}
-                        </p>
-                      </div>
-
-                      <span className={`shrink-0 text-xs font-extrabold ${taken ? 'text-emerald-700' : 'text-slate-500'}`}>
-                        {taken ? 'Tomado' : 'Pendente'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="px-5 py-6 text-sm text-slate-500">
-                Seus medicamentos estão cadastrados, mas nenhum lembrete está programado para hoje.
-              </div>
-            )}
-          </section>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => onNavigate('remedios')}
-              className="flex min-h-28 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white p-4 text-center shadow-sm"
-            >
-              <Pill className="h-7 w-7 text-blue-600" />
-              <span className="text-sm font-extrabold text-slate-900">Meus remédios</span>
-              <span className="text-xs text-slate-500">
-                {medications.length} cadastrado{medications.length !== 1 ? 's' : ''}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onNavigate('saude')}
-              className="flex min-h-28 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white p-4 text-center shadow-sm"
-            >
-              <HeartPulse className="h-7 w-7 text-teal-600" />
-              <span className="text-sm font-extrabold text-slate-900">Saúde</span>
-              <span className="text-xs text-slate-500">Informações de saúde</span>
-            </button>
+      {takenDoses.length > 0 && (
+        <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 px-5 py-4">
+            <h2 className="text-lg font-black text-slate-900">Tomados hoje</h2>
+            <p className="mt-1 text-sm font-medium text-slate-500">
+              O que você já registrou.
+            </p>
           </div>
-        </>
+
+          <div className="divide-y divide-slate-100">
+            {takenDoses.slice(0, 5).map((dose) => (
+              <div key={dose.id} className="flex items-center gap-3 px-5 py-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                  <Check className="h-5 w-5" strokeWidth={3} />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-base font-black text-slate-900">
+                    {dose.medicationNome}
+                  </p>
+                  <p className="mt-0.5 text-sm font-semibold text-slate-500">
+                    {dose.dosagem} · {dose.horario}
+                  </p>
+                </div>
+
+                <span className="shrink-0 text-sm font-black text-emerald-700">
+                  Tomado
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
-      <DoseTomadaModal
-        isOpen={confirmModal.open}
-        dose={confirmModal.dose}
-        nextDose={confirmModal.nextDose}
-        onClose={handleCloseConfirm}
-      />
+      {!hasMedications && (
+        <button
+          type="button"
+          onClick={() => onNavigate('remedios')}
+          className="flex min-h-16 w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 py-4 text-lg font-black text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200"
+        >
+          <Plus className="h-6 w-6" />
+          Adicionar meu primeiro remédio
+        </button>
+      )}
     </div>
   );
 }
