@@ -54,7 +54,7 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
             <span className="mb-1 block text-xs font-bold text-slate-400">Validade</span>
             <span className="flex items-center gap-1 text-sm font-bold text-slate-900">
               <Calendar className="h-4 w-4 text-slate-400" />
-              {medication.validade ? new Date(medication.validade).toLocaleDateString('pt-BR') : 'Não informada'}
+              {medication.validade ? new Date(medication.validade + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não informada'}
             </span>
           </div>
         </div>
