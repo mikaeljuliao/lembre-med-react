@@ -212,7 +212,7 @@ export default function MedicationListView({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1d4ed8' }}>
                       <Clock3 style={{ width: '16px', height: '16px', flexShrink: 0 }} />
                       <span style={{ fontSize: '14px', fontWeight: 800 }}>
-                        Lembrete às {med.horarios.join(' e ')}
+                        Lembrete às {med.horarios.map((horario) => String(horario).slice(0, 5)).join(' e ')}
                       </span>
                     </div>
                   )}
