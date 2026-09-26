@@ -88,6 +88,41 @@ describe('reminderEngine', () => {
     ).toBe(false);
   });
 
+
+  it('does not count doses from another day in the daily summary', async () => {
+    const { getDailyDoseSummary } = await import('./reminderEngine');
+
+    const referenceDate = new Date(2026, 8, 26, 12, 0, 0);
+    const medications = [{ id: 'm1', nome: 'Paracetamol' }];
+    const doses = [
+      {
+        id: 'today-1',
+        medicationId: 'm1',
+        status: 'taken',
+        scheduledAt: new Date(2026, 8, 26, 8, 0, 0).toISOString(),
+      },
+      {
+        id: 'today-2',
+        medicationId: 'm1',
+        status: 'pending',
+        scheduledAt: new Date(2026, 8, 26, 18, 0, 0).toISOString(),
+      },
+      {
+        id: 'tomorrow-1',
+        medicationId: 'm1',
+        status: 'pending',
+        scheduledAt: new Date(2026, 8, 27, 8, 0, 0).toISOString(),
+      },
+    ];
+
+    expect(getDailyDoseSummary(doses, medications, referenceDate)).toEqual({
+      total: 2,
+      taken: 1,
+      pending: 1,
+      skipped: 0,
+    });
+  });
+
   it('keeps total, taken and pending counts from the same active dose set', async () => {
     const { getDailyDoseSummary } = await import('./reminderEngine');
 
