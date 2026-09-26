@@ -127,20 +127,95 @@ export function saveStoredDosesForDate(dateStr, doses) {
   localStorage.setItem(STORAGE_KEYS.DOSES, JSON.stringify(allDosesMap));
 }
 
+function reconcileHistoryWithStoredDoses(history) {
+  const dosesData = localStorage.getItem(STORAGE_KEYS.DOSES);
+  if (!dosesData) return history;
+
+  let dosesMap = {};
+  try {
+    dosesMap = JSON.parse(dosesData);
+  } catch {
+    return history;
+  }
+
+  const existingDoseIds = new Set(
+    history
+      .map((entry) => entry?.doseId)
+      .filter(Boolean)
+      .map((doseId) => String(doseId))
+  );
+
+  const reconciled = [...history];
+
+  Object.entries(dosesMap).forEach(([dateStr, dateDoses]) => {
+    if (!Array.isArray(dateDoses)) return;
+
+    dateDoses.forEach((dose) => {
+      if (!dose || !['taken', 'skipped'].includes(dose.status)) return;
+
+      const doseId = String(dose.id || '');
+      const alreadyExistsById = doseId && existingDoseIds.has(doseId);
+
+      const alreadyExistsByLegacyData = history.some(
+        (entry) =>
+          !entry.doseId &&
+          String(entry.data || dateStr) === String(dose.data || dateStr) &&
+          String(entry.horario || '') === String(dose.horario || '') &&
+          String(entry.medicationNome || '').trim().toLowerCase() ===
+            String(dose.medicationNome || '').trim().toLowerCase() &&
+          entry.status === dose.status
+      );
+
+      if (alreadyExistsById || alreadyExistsByLegacyData) return;
+
+      reconciled.push({
+        id: 'hist-reconciled-' + dateStr + '-' + String(dose.id || Date.now()),
+        timestamp: dose.takenAt || dose.scheduledAt || new Date(dateStr + 'T00:00:00').toISOString(),
+        doseId: dose.id || null,
+        data: dose.data || dateStr,
+        horario: dose.horario || null,
+        scheduledAt: dose.scheduledAt || null,
+        medicationNome: dose.medicationNome,
+        dosagem: dose.dosagem,
+        treatmentNome: dose.treatmentNome,
+        status: dose.status,
+        observacao:
+          dose.status === 'taken'
+            ? 'Dose recuperada do estado salvo.'
+            : 'Registro recuperado do estado salvo.',
+      });
+
+      if (doseId) existingDoseIds.add(doseId);
+    });
+  });
+
+  return reconciled.sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+}
+
 export function getStoredHistory() {
   const data = localStorage.getItem(STORAGE_KEYS.HISTORY);
-  if (!data) {
-    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify([]));
-    return [];
+  let parsed = [];
+
+  if (data) {
+    try {
+      parsed = JSON.parse(data);
+    } catch {
+      parsed = [];
+    }
   }
-  try {
-    const parsed = JSON.parse(data);
-    const cleaned = sanitizeStoredData({ history: parsed }).history.filter((entry) => !isLegacyMock(entry));
-    if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(cleaned));
-    return cleaned;
-  } catch {
-    return [];
+
+  const cleaned = sanitizeStoredData({ history: parsed }).history.filter(
+    (entry) => !isLegacyMock(entry)
+  );
+  const reconciled = reconcileHistoryWithStoredDoses(cleaned);
+
+  if (JSON.stringify(parsed) !== JSON.stringify(reconciled)) {
+    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(reconciled));
   }
+
+  return reconciled;
 }
 
 export function addHistoryEntry(entry) {
