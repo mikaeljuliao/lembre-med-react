@@ -135,7 +135,10 @@ export default function ProximaMedicacaoCard({
     [pendingDoses, now]
   );
 
+  const dueDoses = dosesWithState.filter((dose) => dose.isDue);
+
   const selectedDose =
+    dueDoses[0] ||
     dosesWithState.find((dose) => dose.id === selectedDoseId) ||
     dosesWithState[0] ||
     null;
