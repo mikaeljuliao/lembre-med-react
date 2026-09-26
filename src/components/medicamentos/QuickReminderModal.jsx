@@ -158,6 +158,7 @@ export default function QuickReminderModal({
     setFinalidade(medication.finalidade || '');
     setObservacoes(medication.observacoes || '');
     setValidade(medication.validade || '');
+    setDataFim(medication.dataFim || '');
     setIntervaloMinimoHoras(medication.intervaloMinimoHoras || '');
     setLimiteDosesDia(medication.limiteDosesDia || '');
     setCondicaoUso(medication.condicaoUso || '');
@@ -233,7 +234,7 @@ export default function QuickReminderModal({
       unidadeDose,
       tipoUso,
       horarios,
-      dataFim: tipoUso === 'scheduled' ? dataFim : '',
+      dataFim: tipoUso === 'as_needed' ? '' : dataFim,
       orientacaoAlimentacao,
       principioAtivo,
       concentracao,
@@ -337,7 +338,7 @@ export default function QuickReminderModal({
           </div>
         )}
 
-        {tipoUso === 'scheduled' && (
+        {(tipoUso === 'scheduled' || tipoUso === 'interval') && (
           <div className="rounded-2xl border-2 border-blue-100 bg-blue-50/60 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
