@@ -108,26 +108,39 @@ export function getStoredDoses(dateStr = getLocalDateString()) {
     }
   }
 
-  if (allDosesMap[dateStr]) {
-    const normalized = allDosesMap[dateStr]
-      .filter((dose) => !isLegacyMock(dose) && !['treat-1', 'treat-2', 'treat-3'].includes(String(dose?.treatmentId)))
-      .map((dose) => normalizeDose(dose, dateStr))
-      .filter(Boolean);
-
-    if (JSON.stringify(normalized) !== JSON.stringify(allDosesMap[dateStr])) {
-      allDosesMap[dateStr] = normalized;
-      localStorage.setItem(STORAGE_KEYS.DOSES, JSON.stringify(allDosesMap));
-    }
-
-    return normalized;
-  }
-
   const treatments = getStoredTreatments();
   const generated = generateDosesForDate(treatments, dateStr);
+  const stored = Array.isArray(allDosesMap[dateStr])
+    ? allDosesMap[dateStr]
+        .filter(
+          (dose) =>
+            !isLegacyMock(dose) &&
+            !['treat-1', 'treat-2', 'treat-3'].includes(String(dose?.treatmentId))
+        )
+        .map((dose) => normalizeDose(dose, dateStr))
+        .filter(Boolean)
+    : [];
 
-  allDosesMap[dateStr] = generated;
+  const storedById = new Map(stored.map((dose) => [dose.id, dose]));
+
+  const normalized = generated.map((dose) => {
+    const previous = storedById.get(dose.id);
+
+    if (!previous) return dose;
+
+    return {
+      ...dose,
+      status: previous.status || dose.status,
+      takenAt: previous.takenAt || null,
+      skipReason: previous.skipReason || null,
+      snoozedUntil: previous.snoozedUntil || null,
+      alarmMuted: Boolean(previous.alarmMuted),
+    };
+  });
+
+  allDosesMap[dateStr] = normalized;
   localStorage.setItem(STORAGE_KEYS.DOSES, JSON.stringify(allDosesMap));
-  return generated;
+  return normalized;
 }
 
 export function saveStoredDosesForDate(dateStr, doses) {
