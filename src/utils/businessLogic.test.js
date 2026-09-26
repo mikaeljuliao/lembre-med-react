@@ -3,6 +3,9 @@ import {
   calculateAdherence,
   calculateStockProjection,
   generateDosesForDate,
+  buildQuickReminderTreatment,
+  resolveReminderTimes,
+  sanitizeStoredData,
 } from './businessLogic';
 
 describe('businessLogic tests', () => {
@@ -109,6 +112,52 @@ describe('businessLogic tests', () => {
       expect(doses.length).toBe(2);
       expect(doses[0].horario).toBe('08:00');
       expect(doses[1].horario).toBe('20:00');
+    });
+  });
+
+  describe('buildQuickReminderTreatment', () => {
+    it('creates a simple reminder treatment from name, quantity and schedule', () => {
+      const reminder = buildQuickReminderTreatment('Losartana', 1, ['08:00', '20:00']);
+
+      expect(reminder.nome).toBe('Lembrete: Losartana');
+      expect(reminder.status).toBe('active');
+      expect(reminder.medicamentos).toHaveLength(1);
+      expect(reminder.medicamentos[0].nome).toBe('Losartana');
+      expect(reminder.medicamentos[0].quantidadePorDose).toBe(1);
+      expect(reminder.medicamentos[0].horarios).toEqual(['08:00', '20:00']);
+    });
+  });
+
+  describe('resolveReminderTimes', () => {
+    it('converts relative reminders to actual times and keeps a custom time', () => {
+      const now = new Date('2026-09-25T20:40:00');
+      const times = resolveReminderTimes(['agora', '15', '22:30'], now);
+
+      expect(times[0]).toBe('20:40');
+      expect(times[1]).toBe('20:55');
+      expect(times[2]).toBe('22:30');
+    });
+  });
+
+  describe('sanitizeStoredData', () => {
+    it('removes stale mock medication names and empty reminder data', () => {
+      const payload = {
+        medications: [
+          { id: 'm-1', nome: 'Paracetamol' },
+          { id: 'm-2', nome: 'Remédio do usuário' },
+        ],
+        treatments: [
+          { id: 't-1', nome: 'Lembrete: Losartana' },
+          { id: 't-2', nome: 'Rotina do usuário' },
+        ],
+        history: [{ id: 'h-1', medicationNome: 'Dipirona' }],
+      };
+
+      const cleaned = sanitizeStoredData(payload);
+
+      expect(cleaned.medications).toEqual([{ id: 'm-2', nome: 'Remédio do usuário' }]);
+      expect(cleaned.treatments).toEqual([{ id: 't-2', nome: 'Rotina do usuário' }]);
+      expect(cleaned.history).toEqual([]);
     });
   });
 });

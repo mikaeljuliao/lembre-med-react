@@ -1,7 +1,7 @@
 import React from 'react';
 import Modal from '../common/Modal';
 import Badge from '../common/Badge';
-import { Pill, BookOpenText, Calendar, Package, AlertCircle } from 'lucide-react';
+import { Pill, BookOpenText, Calendar } from 'lucide-react';
 import { OFFICIAL_MEDICINES } from '../../data/officialMedicines';
 
 export default function MedicationDetailModal({ isOpen, onClose, medication, onOpenOfficialInfo }) {
@@ -36,14 +36,6 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
           </div>
 
           <div className="bg-white p-3 rounded-xl border border-slate-200">
-            <span className="text-slate-400 block font-medium mb-0.5">Estoque Atual</span>
-            <span className="font-bold text-slate-900 text-sm flex items-center space-x-1">
-              <Package className="w-4 h-4 text-slate-400 mr-1" />
-              {medication.quantidadeEstoque} {medication.unidade || 'unidades'}
-            </span>
-          </div>
-
-          <div className="bg-white p-3 rounded-xl border border-slate-200">
             <span className="text-slate-400 block font-medium mb-0.5">Validade</span>
             <span className="font-bold text-slate-900 flex items-center space-x-1">
               <Calendar className="w-3.5 h-3.5 text-slate-400 mr-1" />
@@ -52,8 +44,8 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
           </div>
 
           <div className="bg-white p-3 rounded-xl border border-slate-200">
-            <span className="text-slate-400 block font-medium mb-0.5">Alerta Mínimo</span>
-            <span className="font-bold text-amber-700">{medication.alertaEstoqueMinimo || 5} unidades</span>
+            <span className="text-slate-400 block font-medium mb-0.5">Apresentação</span>
+            <span className="font-bold text-slate-900 text-sm">{medication.apresentacao || 'Medicamento'}</span>
           </div>
         </div>
 
@@ -95,11 +87,8 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
               </button>
             </div>
           ) : (
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-500 flex items-start space-x-2">
-              <AlertCircle className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-              <span>
-                Nenhum documento oficial especificamente vinculado a este nome exato. Você pode buscar o princípio ativo na aba de Informações.
-              </span>
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-500">
+              Nenhum documento oficial especificamente vinculado a este nome exato. Você pode buscar o princípio ativo na área de Saúde.
             </div>
           )}
         </div>

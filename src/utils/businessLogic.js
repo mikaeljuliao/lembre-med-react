@@ -1,3 +1,53 @@
+const KNOWN_MOCK_MEDICATIONS = new Set([
+  'paracetamol',
+  'losartana',
+  'amoxicilina',
+  'dipirona',
+  'omeprazol',
+  'ibuprofeno',
+]);
+
+function isUserMedicationItem(item) {
+  if (!item || typeof item !== 'object') return false;
+  const nome = String(item.nome || '').trim();
+  if (!nome) return false;
+  if (KNOWN_MOCK_MEDICATIONS.has(nome.toLowerCase())) return false;
+  return true;
+}
+
+function isUserTreatmentItem(item) {
+  if (!item || typeof item !== 'object') return false;
+  const nome = String(item.nome || '').trim();
+  if (!nome) return false;
+  if (KNOWN_MOCK_MEDICATIONS.has(nome.toLowerCase())) return false;
+  return true;
+}
+
+export function sanitizeStoredData(payload = {}) {
+  const medications = Array.isArray(payload.medications)
+    ? payload.medications.filter(isUserMedicationItem)
+    : [];
+
+  const treatments = Array.isArray(payload.treatments)
+    ? payload.treatments.filter(isUserTreatmentItem)
+    : [];
+
+  const history = Array.isArray(payload.history)
+    ? payload.history.filter((entry) => {
+        if (!entry || typeof entry !== 'object') return false;
+        const medicationNome = String(entry.medicationNome || '').trim();
+        if (!medicationNome) return false;
+        return !KNOWN_MOCK_MEDICATIONS.has(medicationNome.toLowerCase());
+      })
+    : [];
+
+  return {
+    medications,
+    treatments,
+    history,
+  };
+}
+
 export function calculateAdherence(occurrences = []) {
   if (!Array.isArray(occurrences) || occurrences.length === 0) {
     return {
@@ -107,4 +157,55 @@ export function generateDosesForDate(activeTreatments = [], dateStr = new Date()
   });
 
   return doses.sort((a, b) => a.horario.localeCompare(b.horario));
+}
+
+export function resolveReminderTimes(horarios = [], referenceDate = new Date()) {
+  if (!Array.isArray(horarios)) return [];
+
+  return horarios
+    .filter((time) => typeof time === 'string' && time.trim())
+    .map((time) => {
+      const value = time.trim();
+
+      if (value.toLowerCase() === 'agora') {
+        const minutes = referenceDate.getHours() * 60 + referenceDate.getMinutes();
+        const resolved = new Date(referenceDate);
+        resolved.setHours(0, 0, 0, 0);
+        resolved.setMinutes(minutes);
+        return `${String(resolved.getHours()).padStart(2, '0')}:${String(resolved.getMinutes()).padStart(2, '0')}`;
+      }
+
+      if (/^\d+$/.test(value)) {
+        const offsetMinutes = Number(value);
+        const resolved = new Date(referenceDate.getTime() + offsetMinutes * 60000);
+        return `${String(resolved.getHours()).padStart(2, '0')}:${String(resolved.getMinutes()).padStart(2, '0')}`;
+      }
+
+      return value;
+    });
+}
+
+export function buildQuickReminderTreatment(nome, quantidadePorDose = 1, horarios = ['08:00']) {
+  const cleanedName = String(nome || '').trim();
+  const safeQuantity = Number(quantidadePorDose) > 0 ? Number(quantidadePorDose) : 1;
+  const normalizedSchedules = Array.isArray(horarios) && horarios.length > 0 ? resolveReminderTimes(horarios).filter(Boolean) : ['08:00'];
+
+  return {
+    id: `treat-${Date.now()}`,
+    nome: cleanedName ? `Lembrete: ${cleanedName}` : 'Lembrete do remédio',
+    descricao: 'Lembrete simples para uso diário',
+    dataInicio: new Date().toISOString().split('T')[0],
+    dataFim: '',
+    status: 'active',
+    medicamentos: [
+      {
+        medicamentoId: `med-${Date.now()}`,
+        nome: cleanedName || 'Medicamento',
+        dosagem: `${safeQuantity} comprimido${safeQuantity > 1 ? 's' : ''}`,
+        quantidadePorDose: safeQuantity,
+        vezesPorDia: normalizedSchedules.length,
+        horarios: normalizedSchedules,
+      },
+    ],
+  };
 }

@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/common/Navbar';
 import BottomNav from './components/common/BottomNav';
 import Toast from './components/common/Toast';
+import Modal from './components/common/Modal';
 
 import InicioView from './components/dashboard/InicioView';
 import RemediosView from './components/remedios/RemediosView';
-import MinhaRotinaView from './components/rotina/MinhaRotinaView';
-import CuidadorView from './components/cuidador/CuidadorView';
+import HealthGuideView from './components/saude/HealthGuideView';
+import AjudaView from './components/ajuda/AjudaView';
 
-import MedicationFormModal from './components/medicamentos/MedicationFormModal';
 import MedicationDetailModal from './components/medicamentos/MedicationDetailModal';
+import QuickReminderModal from './components/medicamentos/QuickReminderModal';
 import TreatmentFormModal from './components/tratamentos/TreatmentFormModal';
 
 import {
@@ -25,7 +26,6 @@ import {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('inicio');
-  const [simpleMode, setSimpleMode] = useState(false);
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   );
@@ -37,14 +37,14 @@ export default function App() {
 
   const [toast, setToast] = useState(null);
 
-  const [isMedModalOpen, setIsMedModalOpen] = useState(false);
-  const [medicationToEdit, setMedicationToEdit] = useState(null);
+  const [isQuickReminderModalOpen, setIsQuickReminderModalOpen] = useState(false);
 
   const [isDetailMedOpen, setIsDetailMedOpen] = useState(false);
   const [selectedDetailMed, setSelectedDetailMed] = useState(null);
 
   const [isTreatmentModalOpen, setIsTreatmentModalOpen] = useState(false);
   const [treatmentToEdit, setTreatmentToEdit] = useState(null);
+  const [deleteRequest, setDeleteRequest] = useState(null);
 
   useEffect(() => {
     setMedications(getStoredMedications());
@@ -55,6 +55,10 @@ export default function App() {
   useEffect(() => {
     setDoses(getStoredDoses(selectedDate));
   }, [selectedDate, treatments]);
+
+  const refreshDoseState = (nextDate = selectedDate) => {
+    setDoses(getStoredDoses(nextDate));
+  };
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -71,24 +75,57 @@ export default function App() {
     showToast(exists ? `"${medData.nome}" atualizado.` : `"${medData.nome}" adicionado.`);
   };
 
+  const handleQuickReminderSave = (treatmentData) => {
+    const medConfig = treatmentData?.medicamentos?.[0];
+    const medName = medConfig?.nome || 'Medicamento';
+    const medicationId = medConfig?.medicamentoId || `med-${Date.now()}`;
+    const medRecord = {
+      id: medicationId,
+      nome: medName,
+      principioAtivo: '',
+      apresentacao: 'Comprimido',
+      concentracao: medConfig?.dosagem || '1 comprimido',
+      unidade: 'comprimidos',
+      quantidadeEstoque: 0,
+      alertaEstoqueMinimo: 5,
+      validade: '',
+      observacoes: 'Adicionado automaticamente ao criar um lembrete.',
+    };
+
+    const updatedMedications = [medRecord, ...medications.filter((med) => med.id !== medicationId)];
+    setMedications(updatedMedications);
+    saveStoredMedications(updatedMedications);
+
+    const today = new Date().toISOString().split('T')[0];
+    setSelectedDate(today);
+
+    const updatedTreatments = [treatmentData, ...treatments.filter((t) => t.id !== treatmentData.id)];
+    setTreatments(updatedTreatments);
+    saveStoredTreatments(updatedTreatments);
+
+    const nextDoses = getStoredDoses(today);
+    setDoses(nextDoses);
+    setIsQuickReminderModalOpen(false);
+    setActiveTab('inicio');
+    showToast(`${medName} adicionado e lembrete criado.`, 'success');
+  };
+
   const handleDeleteMedication = (medId) => {
     const med = medications.find((m) => m.id === medId);
     if (!med) return;
-    if (window.confirm(`Remover o medicamento "${med.nome}"?`)) {
-      const updated = medications.filter((m) => m.id !== medId);
-      setMedications(updated);
-      saveStoredMedications(updated);
-      showToast(`"${med.nome}" removido.`, 'info');
-    }
-  };
-
-  const handleUpdateStock = (medId, newTotal) => {
-    const updated = medications.map((m) =>
-      m.id === medId ? { ...m, quantidadeEstoque: newTotal } : m
-    );
-    setMedications(updated);
-    saveStoredMedications(updated);
-    showToast('Estoque atualizado.');
+    setDeleteRequest({
+      type: 'medication',
+      title: 'Remover medicamento',
+      message: `Deseja remover "${med.nome}"?`,
+      item: med,
+      onConfirm: () => {
+        const updated = medications.filter((m) => m.id !== medId);
+        setMedications(updated);
+        saveStoredMedications(updated);
+        showToast(`"${med.nome}" removido.`, 'info');
+        setDeleteRequest(null);
+      },
+    });
   };
 
   const handleSaveTreatment = (treatmentData) => {
@@ -98,18 +135,28 @@ export default function App() {
       : [treatmentData, ...treatments];
     setTreatments(updated);
     saveStoredTreatments(updated);
+    const today = new Date().toISOString().split('T')[0];
+    setSelectedDate(today);
+    refreshDoseState(today);
     showToast(exists ? `Rotina "${treatmentData.nome}" atualizada.` : `Rotina "${treatmentData.nome}" criada.`);
   };
 
   const handleDeleteTreatment = (treatmentId) => {
     const treat = treatments.find((t) => t.id === treatmentId);
     if (!treat) return;
-    if (window.confirm(`Remover a rotina "${treat.nome}"?`)) {
-      const updated = treatments.filter((t) => t.id !== treatmentId);
-      setTreatments(updated);
-      saveStoredTreatments(updated);
-      showToast(`Rotina "${treat.nome}" removida.`, 'info');
-    }
+    setDeleteRequest({
+      type: 'treatment',
+      title: 'Remover lembrete',
+      message: `Deseja remover "${treat.nome}"?`,
+      item: treat,
+      onConfirm: () => {
+        const updated = treatments.filter((t) => t.id !== treatmentId);
+        setTreatments(updated);
+        saveStoredTreatments(updated);
+        showToast(`Rotina "${treat.nome}" removida.`, 'info');
+        setDeleteRequest(null);
+      },
+    });
   };
 
   const handleToggleTreatmentStatus = (treatmentId, newStatus) => {
@@ -144,14 +191,6 @@ export default function App() {
         });
         setHistory(newHist);
 
-        if (isTaken) {
-          const med = medications.find(
-            (m) => String(m.id) === String(d.medicationId) || m.nome === d.medicationNome
-          );
-          if (med) {
-            handleUpdateStock(med.id, Math.max(0, med.quantidadeEstoque - (d.quantidade || 1)));
-          }
-        }
       }
 
       return updatedItem;
@@ -165,16 +204,6 @@ export default function App() {
     if (newStatus === 'pending') showToast('Dose restaurada para pendente.', 'info');
   };
 
-  const openAddMed = () => {
-    setMedicationToEdit(null);
-    setIsMedModalOpen(true);
-  };
-
-  const openEditMed = (med) => {
-    setMedicationToEdit(med);
-    setIsMedModalOpen(true);
-  };
-
   const openAddTreatment = () => {
     setTreatmentToEdit(null);
     setIsTreatmentModalOpen(true);
@@ -186,15 +215,13 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans ${simpleMode ? 'simple-mode' : ''}`}>
+    <div className="min-h-screen text-slate-900 flex flex-col font-sans">
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        simpleMode={simpleMode}
-        onToggleSimpleMode={() => setSimpleMode((v) => !v)}
       />
 
-      <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-5">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-5 sm:py-7">
         {activeTab === 'inicio' && (
           <InicioView
             doses={doses}
@@ -202,72 +229,42 @@ export default function App() {
             treatments={treatments}
             onToggleDoseStatus={handleToggleDoseStatus}
             onNavigate={setActiveTab}
-            simpleMode={simpleMode}
           />
         )}
 
         {activeTab === 'remedios' && (
           <RemediosView
             medications={medications}
-            onOpenAdd={openAddMed}
-            onEdit={openEditMed}
+            history={history}
+            onOpenAdd={() => setIsQuickReminderModalOpen(true)}
             onDelete={handleDeleteMedication}
             onViewDetails={(med) => {
               setSelectedDetailMed(med);
               setIsDetailMedOpen(true);
             }}
-            onNavigateOfficial={() => setActiveTab('cuidador')}
           />
         )}
 
-        {activeTab === 'rotina' && (
-          <MinhaRotinaView
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            doses={doses}
-            treatments={treatments}
-            onToggleDoseStatus={handleToggleDoseStatus}
-            onOpenAddTreatment={openAddTreatment}
-            onEditTreatment={openEditTreatment}
-            onDeleteTreatment={handleDeleteTreatment}
-            onToggleTreatmentStatus={handleToggleTreatmentStatus}
-          />
-        )}
-
-        {activeTab === 'cuidador' && (
-          <CuidadorView
-            medications={medications}
-            treatments={treatments}
-            history={history}
-            onOpenAddMed={openAddMed}
-            onEditMed={openEditMed}
-            onDeleteMed={handleDeleteMedication}
-            onViewMedDetails={(med) => {
-              setSelectedDetailMed(med);
-              setIsDetailMedOpen(true);
-            }}
-            onUpdateStock={handleUpdateStock}
-            onNavigateOfficial={() => {}}
-          />
-        )}
+        {activeTab === 'saude' && <HealthGuideView />}
+        {activeTab === 'ajuda' && <AjudaView />}
       </main>
 
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <Toast toast={toast} onClose={() => setToast(null)} />
 
-      <MedicationFormModal
-        isOpen={isMedModalOpen}
-        onClose={() => setIsMedModalOpen(false)}
-        onSave={handleSaveMedication}
-        medicationToEdit={medicationToEdit}
-      />
-
       <MedicationDetailModal
         isOpen={isDetailMedOpen}
         onClose={() => setIsDetailMedOpen(false)}
         medication={selectedDetailMed}
-        onOpenOfficialInfo={() => setActiveTab('cuidador')}
+        onOpenOfficialInfo={() => setActiveTab('saude')}
+      />
+
+      <QuickReminderModal
+        isOpen={isQuickReminderModalOpen}
+        onClose={() => setIsQuickReminderModalOpen(false)}
+        onSave={handleQuickReminderSave}
+        existingMedications={medications}
       />
 
       <TreatmentFormModal
@@ -277,6 +274,30 @@ export default function App() {
         treatmentToEdit={treatmentToEdit}
         availableMedications={medications}
       />
+
+      {deleteRequest && (
+        <Modal isOpen={!!deleteRequest} onClose={() => setDeleteRequest(null)} title={deleteRequest.title}>
+          <div className="space-y-5">
+            <p className="text-sm text-slate-600">{deleteRequest.message}</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setDeleteRequest(null)}
+                className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={deleteRequest.onConfirm}
+                className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white"
+              >
+                Remover
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
