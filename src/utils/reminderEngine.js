@@ -69,6 +69,23 @@ function createDateFromStoredDose(dose) {
   return createLocalDate(baseDate, dose?.horario || '00:00');
 }
 
+export function isDoseForActiveMedication(dose, medications = []) {
+  const medicationIds = new Set(
+    medications.map((medication) => String(medication?.id || ''))
+  );
+
+  if (dose?.medicationId && medicationIds.has(String(dose.medicationId))) {
+    return true;
+  }
+
+  const doseName = String(dose?.medicationNome || '').trim().toLowerCase();
+
+  return medications.some(
+    (medication) =>
+      String(medication?.nome || '').trim().toLowerCase() === doseName
+  );
+}
+
 export function getDoseTarget(dose) {
   if (dose?.snoozedUntil) {
     const snoozedTarget = new Date(dose.snoozedUntil);
