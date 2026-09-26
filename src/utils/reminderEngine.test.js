@@ -33,6 +33,34 @@ describe('reminderEngine', () => {
     expect(target.getHours()).toBe(14);
   });
 
+
+  it('keeps a fixed time in the current day when it is still the selected minute', () => {
+    const now = new Date(2026, 8, 26, 14, 0, 30);
+    const target = resolveNextScheduledAt('14:00', now);
+
+    expect(target.getDate()).toBe(26);
+    expect(target.getHours()).toBe(14);
+    expect(target.getMinutes()).toBe(0);
+  });
+
+  it('moves a relative reminder across midnight using the real timestamp', () => {
+    const now = new Date(2026, 8, 26, 23, 50, 0);
+    const target = resolveNextScheduledAt('15', now);
+
+    expect(target.getDate()).toBe(27);
+    expect(target.getHours()).toBe(0);
+    expect(target.getMinutes()).toBe(5);
+  });
+
+  it('keeps a selected evening time on the same day', () => {
+    const now = new Date(2026, 8, 26, 14, 35, 20);
+    const target = resolveNextScheduledAt('18:45', now);
+
+    expect(target.getDate()).toBe(26);
+    expect(target.getHours()).toBe(18);
+    expect(target.getMinutes()).toBe(45);
+  });
+
   it('moves a fixed time that already passed to the next day', () => {
     const now = new Date(2026, 8, 26, 14, 0, 30);
     const target = resolveNextScheduledAt('08:00', now);
