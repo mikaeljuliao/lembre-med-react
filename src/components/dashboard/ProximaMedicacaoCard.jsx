@@ -202,8 +202,13 @@ export default function ProximaMedicacaoCard({
 
     stopAlarmSound();
     announcedAlarmRef.current = null;
+    const currentIndex = todayPendingDoses.findIndex(
+      (dose) => dose.id === selectedDose.id
+    );
+    const nextDose = todayPendingDoses[currentIndex + 1];
+
     onToggleDoseStatus(selectedDose.id, 'taken');
-    setSelectedDoseId(null);
+    setSelectedDoseId(nextDose?.id || null);
   };
 
   const handleMute = () => {
