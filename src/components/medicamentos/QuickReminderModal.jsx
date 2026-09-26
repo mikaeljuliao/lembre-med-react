@@ -105,7 +105,7 @@ export default function QuickReminderModal({
 
   const filteredSuggestions = useMemo(() => {
     const term = nome.trim().toLowerCase();
-    if (!term) return suggestions.slice(0, 6);
+    if (!term) return [];
     return suggestions.filter((item) => item.nome.toLowerCase().includes(term)).slice(0, 6);
   }, [nome, suggestions]);
 
@@ -256,9 +256,11 @@ export default function QuickReminderModal({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={isEditing ? "Editar remédio" : "Adicionar remédio"}>
-      <div className="max-h-[78vh] space-y-6 overflow-y-auto pr-1">
-        <div>
-          <label htmlFor="nome-remedio" className="mb-2 block text-base font-black text-slate-900">
+      <div className="space-y-5">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+          <div className="mb-4">
+            <p className="text-xs font-black uppercase tracking-wider text-blue-600">1. Identificação</p>
+            <label htmlFor="nome-remedio" className="mt-1 block text-lg font-black text-slate-900">
             Qual remédio você quer cadastrar?
           </label>
           <div className="relative">
@@ -281,10 +283,11 @@ export default function QuickReminderModal({
               );
             })}
           </div>
-        </div>
+        </section>
 
-        <div>
-          <p className="mb-3 text-base font-black text-slate-900">Como você usa este remédio?</p>
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+          <p className="text-xs font-black uppercase tracking-wider text-blue-600">2. Forma e dose</p>
+          <p className="mt-1 mb-4 text-lg font-black text-slate-900">Como você usa este remédio?</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {PRESENTATIONS.map(([label]) => (
               <button key={label} type="button" onClick={() => handlePresentationChange(label)} className={`min-h-14 rounded-2xl border-2 px-3 text-sm font-black ${apresentacao === label ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`} aria-pressed={apresentacao === label}>{label}</button>
@@ -307,10 +310,11 @@ export default function QuickReminderModal({
             </div>
           </div>
           <p className="mt-2 text-sm font-semibold text-slate-500">Exemplo: 1 comprimido, 20 gotas, 5 mL ou 2 jatos.</p>
-        </div>
+        </section>
 
-        <div>
-          <p className="mb-3 text-base font-black text-slate-900">Quando você precisa usar?</p>
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+          <p className="text-xs font-black uppercase tracking-wider text-blue-600">3. Lembrete</p>
+          <p className="mt-1 mb-4 text-lg font-black text-slate-900">Quando você precisa usar?</p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <button type="button" onClick={() => setTipoUso('scheduled')} className={tipoUso === 'scheduled' ? 'min-h-16 rounded-2xl border-2 border-blue-600 bg-blue-50 px-4 text-left' : 'min-h-16 rounded-2xl border-2 border-slate-200 bg-white px-4 text-left'} aria-pressed={tipoUso === 'scheduled'}>
               <span className="block text-base font-black text-slate-900">Horários fixos</span>
@@ -406,12 +410,17 @@ export default function QuickReminderModal({
 
         </div>
 
-        <div>
-          <button type="button" onClick={() => setShowDetails((value) => !value)} className="flex min-h-12 w-full items-center justify-between rounded-2xl border-2 border-slate-200 bg-white px-4 text-left text-base font-black text-slate-800">
-            <span>Mais informações (opcional)</span>
+        </section>
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+          <button type="button" onClick={() => setShowDetails((value) => !value)} className="flex min-h-12 w-full items-center justify-between text-left">
+            <span>
+              <span className="block text-xs font-black uppercase tracking-wider text-slate-400">4. Opcional</span>
+              <span className="mt-1 block text-lg font-black text-slate-900">Mais informações</span>
+            </span>
             {showDetails ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </button>
-          {showDetails && <div className="mt-3 space-y-4 rounded-2xl border-2 border-slate-100 bg-slate-50 p-4">
+          {showDetails && <div className="mt-4 space-y-4 border-t border-slate-100 pt-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor="principio-ativo" className="mb-2 block text-sm font-black text-slate-700">Princípio ativo</label>
@@ -449,20 +458,20 @@ export default function QuickReminderModal({
               <input id="validade-remedio" type="date" value={validade} onChange={(event) => setValidade(event.target.value)} className="min-h-12 w-full rounded-xl border-2 border-slate-200 bg-white px-3 font-black outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
             </div>
           </div>}
-        </div>
+        </section>
 
         {isExistingMedication && <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
           <p className="text-sm font-bold leading-5 text-amber-800">Este remédio já está cadastrado. O novo horário será adicionado aos lembretes dele.</p>
         </div>}
 
-        <div className="rounded-2xl bg-slate-50 px-4 py-3">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 sm:px-5">
           <p className="text-sm font-bold text-slate-700">Resumo</p>
           <p className="mt-1 text-base font-black text-slate-900">{formatDose(quantidade, unidadeDose)}{tipoUso === 'scheduled' ? ' · ' + horarios.join(' · ') : ' · quando precisar'}</p>
           {orientacaoAlimentacao !== 'sem_orientacao' && <p className="mt-1 text-sm font-semibold text-slate-500">Orientação: {MEAL_OPTIONS.find(([value]) => value === orientacaoAlimentacao)?.[1]}</p>}
           {tipoUso === 'as_needed' && <p className="mt-1 text-sm font-semibold text-slate-500">Máximo: {limiteDosesDia} por dia · intervalo mínimo: {intervaloMinimoHoras}h</p>}
         </div>
 
-        <button type="button" onClick={handleSave} disabled={!isReady} className="flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 text-xl font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-200">
+        <button type="button" onClick={handleSave} disabled={!isReady} className="sticky bottom-0 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 text-xl font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-200">
           <Check className="h-6 w-6" strokeWidth={3} />
           {isEditing ? 'Salvar alterações' : isExistingMedication ? 'Adicionar horário' : 'Cadastrar remédio'}
         </button>
