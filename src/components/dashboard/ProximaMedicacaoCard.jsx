@@ -154,7 +154,6 @@ export default function ProximaMedicacaoCard({
   onToggleDoseStatus,
   onUpdateDose,
   onSnoozeDose,
-  onNavigate,
 }) {
   const [now, setNow] = useState(() => new Date());
   const [selectedDoseId, setSelectedDoseId] = useState(null);
