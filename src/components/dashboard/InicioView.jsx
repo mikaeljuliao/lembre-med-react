@@ -120,31 +120,66 @@ function FutureDaySummary({ futureDoses, medications, now }) {
   if (!nextDay) return null;
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-blue-200 bg-blue-50 shadow-sm">
-      <div className="flex items-start gap-4 px-5 py-5 sm:px-6">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-700 shadow-sm">
-          <CalendarDays className="h-6 w-6" />
-        </div>
+    <section className="overflow-hidden rounded-3xl border border-blue-200 bg-white shadow-sm">
+      <div className="border-b border-blue-100 bg-gradient-to-br from-blue-50 via-white to-white px-5 py-5 sm:px-6">
+        <div className="flex items-start gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
+            <CalendarDays className="h-7 w-7" />
+          </div>
 
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-black uppercase tracking-wider text-blue-700">
-            Depois de hoje
-          </p>
-          <h2 className="mt-1 text-xl font-black text-slate-900">
-            {nextDay.label} · {nextDay.count} dose{nextDay.count === 1 ? '' : 's'} programada{nextDay.count === 1 ? '' : 's'}
-          </h2>
-          <p className="mt-1 text-sm font-semibold leading-5 text-slate-600">
-            Essas doses não entram no controle de hoje. Elas já estão programadas para o próximo dia.
-          </p>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs font-black uppercase tracking-wider text-blue-700">
+                Depois de hoje
+              </p>
+              <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-black text-blue-700">
+                {nextDay.count} dose{nextDay.count === 1 ? '' : 's'}
+              </span>
+            </div>
 
-          <div className="mt-3 rounded-2xl bg-white px-4 py-3">
-            <p className="text-xs font-black uppercase tracking-wider text-slate-400">
-              Próxima dose
-            </p>
-            <p className="mt-1 text-base font-black text-slate-900">
-              {formatClockTime(nextDay.nextDose.target)} · {nextDay.nextDose.medicationNome}
+            <h2 className="mt-1 text-2xl font-black text-slate-900">
+              {nextDay.label}
+            </h2>
+
+            <p className="mt-1 text-sm font-semibold leading-5 text-slate-600">
+              Seu próximo dia com lembretes já está programado.
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="px-5 py-5 sm:px-6">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+                Primeiro lembrete
+              </p>
+              <p className="mt-1 text-2xl font-black tabular-nums text-slate-900">
+                {formatClockTime(nextDay.nextDose.target)}
+              </p>
+            </div>
+
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
+              <Clock3 className="h-5 w-5" />
+            </div>
+          </div>
+
+          <div className="mt-4 border-t border-slate-200 pt-4">
+            <p className="text-base font-black text-slate-900">
+              {nextDay.nextDose.medicationNome}
+            </p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-500">
+              {nextDay.nextDose.dosagem}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center gap-2 rounded-2xl bg-blue-50 px-4 py-3">
+          <CalendarDays className="h-5 w-5 shrink-0 text-blue-700" />
+          <p className="text-sm font-bold leading-5 text-blue-900">
+            As demais doses desse dia ficam programadas automaticamente.
+          </p>
         </div>
       </div>
     </section>
