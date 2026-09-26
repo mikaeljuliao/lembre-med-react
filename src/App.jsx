@@ -6,7 +6,7 @@ import Modal from './components/common/Modal';
 
 import InicioView from './components/dashboard/InicioView';
 import RemediosView from './components/remedios/RemediosView';
-import HealthGuideView from './components/saude/HealthGuideView';
+import SaudeView from './components/saude/SaudeView';
 import AjudaView from './components/ajuda/AjudaView';
 
 import MedicationDetailModal from './components/medicamentos/MedicationDetailModal';
@@ -245,7 +245,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'saude' && <HealthGuideView />}
+        {activeTab === 'saude' && <SaudeView />}
         {activeTab === 'ajuda' && <AjudaView />}
       </main>
 

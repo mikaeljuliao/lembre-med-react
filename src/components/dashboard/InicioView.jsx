@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, Plus, Stethoscope, ShieldCheck, Clock3 } from 'lucide-react';
+import { CalendarDays, Plus, Stethoscope, ShieldCheck, Clock3, Phone, Activity } from 'lucide-react';
 import ProximaMedicacaoCard from './ProximaMedicacaoCard';
 import DoseTomadaModal from './DoseTomadaModal';
 
@@ -67,15 +67,65 @@ export default function InicioView({
     setConfirmModal({ open: true, dose, nextDose });
   };
 
-  const takenCount = doses.filter((d) => d.status === 'taken').length;
-  const pendingCount = doses.filter((d) => d.status === 'pending').length;
+  const activeDoses = doses.filter((d) => d.status === 'pending');
+  const pendingCount = activeDoses.length;
   const today = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   const todayCapitalized = today.charAt(0).toUpperCase() + today.slice(1);
 
   const nextDose = useMemo(() => {
-    const pending = doses.filter((dose) => dose.status === 'pending');
-    return pending.sort((a, b) => a.horario.localeCompare(b.horario))[0] || null;
-  }, [doses]);
+    return activeDoses.sort((a, b) => a.horario.localeCompare(b.horario))[0] || null;
+  }, [activeDoses]);
+
+  const UtilityWidgets = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '24px' }}>
+      <button
+        onClick={() => onNavigate('saude')}
+        style={{
+          background: '#ffffff',
+          border: '2px solid #e2e8f0',
+          borderRadius: '20px',
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '8px',
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+        }}
+      >
+        <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '16px', color: '#16a34a' }}>
+          <Activity style={{ width: '28px', height: '28px' }} />
+        </div>
+        <span style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', textAlign: 'center', lineHeight: 1.2 }}>
+          Anotar<br/>Pressão
+        </span>
+      </button>
+
+      <a
+        href="tel:192"
+        style={{
+          background: '#ffffff',
+          border: '2px solid #e2e8f0',
+          borderRadius: '20px',
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '8px',
+          cursor: 'pointer',
+          textDecoration: 'none',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+        }}
+      >
+        <div style={{ background: '#fef2f2', padding: '12px', borderRadius: '16px', color: '#dc2626' }}>
+          <Phone style={{ width: '28px', height: '28px' }} />
+        </div>
+        <span style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', textAlign: 'center', lineHeight: 1.2 }}>
+          Chamar<br/>SAMU (192)
+        </span>
+      </a>
+    </div>
+  );
 
   if (simpleMode) {
     return (
@@ -86,32 +136,42 @@ export default function InicioView({
         </div>
 
         <ProximaMedicacaoCard
-          doses={doses}
+          doses={activeDoses}
           onToggleDoseStatus={onToggleDoseStatus}
           onDoseTaken={handleDoseTaken}
           simpleMode
         />
 
-        {doses.length > 0 && (
+        {activeDoses.length > 0 ? (
           <div className="bg-white rounded-3xl border-2 border-slate-200 p-6">
             <h2 className="text-2xl font-bold text-slate-800 mb-4">Hoje</h2>
             <div className="space-y-4">
-              {doses.map((dose) => (
+              {activeDoses.map((dose) => (
                 <div key={dose.id} className="flex items-center justify-between">
                   <div>
                     <p className="text-xl font-bold text-slate-900">{dose.medicationNome}</p>
                     <p className="text-lg text-slate-500">{dose.horario} · {dose.dosagem}</p>
                   </div>
-                  {dose.status === 'taken' ? (
-                    <span className="text-3xl">✅</span>
-                  ) : (
-                    <span className="text-3xl text-slate-300">⏳</span>
-                  )}
+                  <span className="text-3xl text-slate-300">⏳</span>
                 </div>
               ))}
             </div>
           </div>
+        ) : medications.length > 0 ? (
+          <div className="rounded-[2rem] border-2 border-dashed border-emerald-200 bg-emerald-50/50 p-8 text-center shadow-sm">
+            <p className="text-4xl mb-3">✅</p>
+            <h2 className="text-xl font-black text-slate-900">Tudo certo por hoje!</h2>
+            <p className="mt-2 text-sm text-slate-500">Você já tomou todos os seus remédios.</p>
+          </div>
+        ) : (
+          <div className="rounded-[2rem] border-2 border-dashed border-blue-200 bg-blue-50/50 p-8 text-center shadow-sm">
+            <p className="text-4xl mb-3">💊</p>
+            <h2 className="text-xl font-black text-slate-900">Nenhum remédio cadastrado.</h2>
+            <p className="mt-2 text-sm text-slate-500">Vá na aba "Remédios" para adicionar.</p>
+          </div>
         )}
+
+        <UtilityWidgets />
 
         <DoseTomadaModal
           isOpen={confirmModal.open}
@@ -125,86 +185,26 @@ export default function InicioView({
 
   return (
     <div className="space-y-6 pb-24 animate-fade-in">
-      <div className="rounded-[2rem] bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 p-5 text-white shadow-[0_20px_45px_rgba(37,99,235,0.25)]">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-blue-100 text-sm font-semibold">{todayCapitalized}</p>
-            <h1 className="mt-1 text-2xl font-black leading-tight">O que eu preciso fazer agora?</h1>
-          </div>
-          <div className="rounded-2xl bg-white/10 border border-white/20 px-3 py-2 text-right backdrop-blur-sm">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-blue-100">Hoje</p>
-            <p className="mt-1 text-lg font-black">{takenCount}/{Math.max(doses.length, 0)}</p>
-          </div>
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => onNavigate('remedios')}
-            className="rounded-2xl bg-white/10 border border-white/20 px-3 py-3 text-left"
-          >
-            <p className="text-[10px] uppercase tracking-[0.18em] text-blue-100">Meus remédios</p>
-            <p className="mt-1 text-xl font-black">{medications.length}</p>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onNavigate('saude')}
-            className="rounded-2xl bg-white/10 border border-white/20 px-3 py-3 text-left"
-          >
-            <p className="text-[10px] uppercase tracking-[0.18em] text-blue-100">Saúde</p>
-            <p className="mt-1 text-xl font-black">Informações</p>
-          </button>
-        </div>
+      {/* Simple Greeting */}
+      <div className="pt-2 pb-4">
+        <p className="text-slate-500 text-sm font-semibold">{todayCapitalized}</p>
+        <h1 className="mt-1 text-2xl font-black text-slate-900 leading-tight">O que você precisa fazer agora?</h1>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <button
-          type="button"
-          onClick={() => onNavigate('remedios')}
-          className="rounded-[1.5rem] border border-slate-200 bg-white p-4 text-left shadow-sm hover:shadow-md transition-shadow"
-        >
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
-            <Plus className="w-5 h-5" />
-          </span>
-          <p className="mt-4 text-base font-extrabold text-slate-900">Adicionar remédio</p>
-        </button>
 
-        <button
-          type="button"
-          onClick={() => onNavigate('saude')}
-          className="rounded-[1.5rem] border border-slate-200 bg-white p-4 text-left shadow-sm hover:shadow-md transition-shadow"
-        >
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
-            <Stethoscope className="w-5 h-5" />
-          </span>
-          <p className="mt-4 text-base font-extrabold text-slate-900">Saúde</p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onNavigate('ajuda')}
-          className="rounded-[1.5rem] border border-slate-200 bg-white p-4 text-left shadow-sm hover:shadow-md transition-shadow"
-        >
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-            <ShieldCheck className="w-5 h-5" />
-          </span>
-          <p className="mt-4 text-base font-extrabold text-slate-900">Ajuda</p>
-        </button>
-      </div>
 
       <ProximaMedicacaoCard
-        doses={doses}
+        doses={activeDoses}
         onToggleDoseStatus={onToggleDoseStatus}
         onDoseTaken={handleDoseTaken}
       />
 
-      {doses.length > 0 ? (
+      {activeDoses.length > 0 ? (
         <div className="rounded-[2rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <div>
               <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Hoje</p>
-              <h2 className="text-lg font-black text-slate-900">Lembretes do dia</h2>
+              <h2 className="text-lg font-black text-slate-900">Lembretes pendentes</h2>
             </div>
             <div className="flex items-center gap-2 rounded-full bg-blue-50 px-2.5 py-1.5 text-xs font-bold text-blue-700">
               <CalendarDays className="w-4 h-4" />
@@ -213,67 +213,65 @@ export default function InicioView({
           </div>
 
           <div className="divide-y divide-slate-100">
-            {doses.map((dose) => (
+            {activeDoses.map((dose) => (
               <div key={dose.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
                 <div className="flex items-center gap-3 min-w-0">
                   <span
                     className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-xs font-black ${
-                      dose.status === 'taken'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : dose.status === 'skipped'
-                          ? 'bg-slate-200 text-slate-600'
-                          : dose.status === 'pending' && nextDose?.id === dose.id
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-slate-100 text-slate-600'
+                      nextDose?.id === dose.id
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-slate-100 text-slate-600'
                     }`}
                   >
-                    {dose.status === 'taken' ? '✓' : dose.horario.split(':')[0]}
+                    {dose.horario.split(':')[0]}
                   </span>
 
                   <div className="min-w-0">
                     <p className="truncate text-sm font-extrabold text-slate-900">{dose.medicationNome}</p>
                     <p className="text-xs text-slate-500">{dose.horario} · {dose.dosagem}</p>
-                    {dose.status === 'pending' && (
-                      <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700">
-                        <Clock3 className="h-3 w-3" />
-                        {formatCountdownForDose(dose.horario)}
-                      </div>
-                    )}
+                    <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700">
+                      <Clock3 className="h-3 w-3" />
+                      {formatCountdownForDose(dose.horario)}
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {dose.status === 'taken' && <span className="text-sm font-bold text-emerald-600">Tomado</span>}
-                  {dose.status === 'skipped' && <span className="text-xs font-bold text-slate-500">Pulado</span>}
-                  {dose.status === 'pending' && (
-                    <button
-                      onClick={() => onToggleDoseStatus(dose.id, 'taken')}
-                      className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
-                      id={`btn-tomar-${dose.id}`}
-                    >
-                      Tomar
-                    </button>
-                  )}
+                  <button
+                    onClick={() => onToggleDoseStatus(dose.id, 'taken')}
+                    className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
+                    id={`btn-tomar-${dose.id}`}
+                  >
+                    Tomar
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </div>
+      ) : medications.length > 0 ? (
+        <div className="rounded-[2rem] border-2 border-dashed border-emerald-200 bg-emerald-50/50 p-8 text-center shadow-sm">
+          <p className="text-4xl mb-3">✅</p>
+          <h2 className="text-xl font-black text-slate-900">Tudo certo por hoje!</h2>
+          <p className="mt-2 text-sm text-slate-500">Você já tomou todos os seus remédios ou não tem lembretes ativos.</p>
+        </div>
       ) : (
-        <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white/80 p-8 text-center shadow-sm">
+        <div className="rounded-[2rem] border-2 border-dashed border-blue-200 bg-blue-50/50 p-8 text-center shadow-sm">
           <p className="text-4xl mb-3">💊</p>
-          <h2 className="text-xl font-black text-slate-900">Você ainda não adicionou nenhum medicamento.</h2>
-          <p className="mt-2 text-sm text-slate-500">Vamos adicionar o seu primeiro lembrete?</p>
+          <h2 className="text-xl font-black text-slate-900">Nenhum remédio cadastrado.</h2>
+          <p className="mt-2 text-sm text-slate-500">Vá na aba "Remédios" para adicionar.</p>
           <button
             type="button"
             onClick={() => onNavigate('remedios')}
             className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-extrabold text-white shadow-lg shadow-blue-200"
           >
             <Plus className="w-4 h-4" />
-            Adicionar medicamento
+            Ir para Remédios
           </button>
         </div>
       )}
+
+      <UtilityWidgets />
 
       <DoseTomadaModal
         isOpen={confirmModal.open}

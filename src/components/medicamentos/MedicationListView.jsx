@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { Pill, Search, Plus, Eye, Edit2, Trash2 } from 'lucide-react';
-import Badge from '../common/Badge';
-import EmptyState from '../common/EmptyState';
+import { Pill, Search, Plus, Eye, Trash2 } from 'lucide-react';
 
 export default function MedicationListView({
   medications = [],
@@ -11,104 +9,261 @@ export default function MedicationListView({
 }) {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filtered = medications.filter((m) =>
-    (m.nome || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (m.principioAtivo || '').toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = medications.filter(
+    (m) =>
+      (m.nome || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (m.principioAtivo || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="space-y-6 animate-fade-in pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-900 flex items-center space-x-2">
-            <Pill className="w-6 h-6 text-blue-600" />
-            <span>Meus Medicamentos</span>
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Adicione o remédio e o lembrete já é criado automaticamente.
-          </p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '48px' }} className="animate-fade-in">
+
+      {/* Header com botão único de adicionar */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%)',
+          borderRadius: '24px',
+          padding: '24px',
+          boxShadow: '0 10px 30px rgba(29,78,216,0.25)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '12px',
+              width: '44px',
+              height: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Pill style={{ width: '22px', height: '22px', color: '#ffffff' }} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#ffffff', margin: 0 }}>
+              Meus Remédios
+            </h2>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0 }}>
+              {medications.length === 0
+                ? 'Nenhum remédio cadastrado ainda'
+                : `${medications.length} remédio${medications.length !== 1 ? 's' : ''} cadastrado${medications.length !== 1 ? 's' : ''}`}
+            </p>
+          </div>
         </div>
 
         <button
           type="button"
           onClick={onOpenAdd}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs focus-ring transition-colors self-start sm:self-auto"
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            background: '#ffffff',
+            border: 'none',
+            borderRadius: '16px',
+            padding: '16px',
+            color: '#1d4ed8',
+            fontWeight: 900,
+            fontSize: '17px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          }}
         >
-          <Plus className="w-4 h-4" />
-          <span>Adicionar medicamento</span>
+          <Plus style={{ width: '22px', height: '22px' }} />
+          Adicionar medicamento
         </button>
       </div>
 
-      <div className="relative">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-        <input
-          type="text"
-          placeholder="Buscar por nome ou princípio ativo..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs focus-ring"
-        />
-      </div>
+      {/* Busca */}
+      {medications.length > 0 && (
+        <div style={{ position: 'relative' }}>
+          <Search
+            style={{
+              width: '18px',
+              height: '18px',
+              color: '#94a3b8',
+              position: 'absolute',
+              left: '14px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Buscar remédio..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%',
+              paddingLeft: '42px',
+              paddingRight: '16px',
+              paddingTop: '14px',
+              paddingBottom: '14px',
+              background: '#ffffff',
+              border: '2px solid #e2e8f0',
+              borderRadius: '16px',
+              fontSize: '15px',
+              color: '#0f172a',
+              boxSizing: 'border-box',
+              outline: 'none',
+              fontWeight: 500,
+            }}
+          />
+        </div>
+      )}
 
+      {/* Lista / Estado vazio */}
       {filtered.length === 0 ? (
-        <EmptyState
-          icon={Pill}
-          title="Nenhum medicamento encontrado"
-          description={
-            searchTerm
-              ? 'Tente ajustar os termos de pesquisa.'
-              : 'Você ainda não possui medicamentos cadastrados.'
-          }
-          actionLabel="Adicionar primeiro medicamento"
-          onAction={onOpenAdd}
-        />
+        <div
+          style={{
+            background: '#f8fafc',
+            border: '2px dashed #cbd5e1',
+            borderRadius: '20px',
+            padding: '40px 24px',
+            textAlign: 'center',
+          }}
+        >
+          <p style={{ fontSize: '40px', margin: '0 0 12px' }}>💊</p>
+          <p style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+            {searchTerm ? 'Nenhum resultado' : 'Nenhum remédio ainda'}
+          </p>
+          <p style={{ fontSize: '14px', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+            {searchTerm
+              ? 'Tente outro nome.'
+              : 'Toque em "Adicionar medicamento" acima para começar.'}
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((med) => {
-            return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {filtered.map((med) => (
+            <div
+              key={med.id}
+              onClick={() => onViewDetails(med)}
+              style={{
+                background: '#ffffff',
+                borderRadius: '24px',
+                border: '2px solid #e2e8f0',
+                padding: '20px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+                cursor: 'pointer',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)';
+                e.currentTarget.style.borderColor = '#cbd5e1';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.04)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}
+            >
+              {/* Icone grande */}
               <div
-                key={med.id}
-                className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+                style={{
+                  background: '#eff6ff',
+                  borderRadius: '20px',
+                  width: '64px',
+                  height: '64px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  border: '2px solid #bfdbfe',
+                }}
               >
-                <div>
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="text-base font-extrabold text-slate-900">{med.nome}</h3>
-                      <p className="text-xs text-slate-500">{med.principioAtivo || 'Sem princípio ativo'}</p>
-                    </div>
-                    <Badge variant="teal">{med.apresentacao || 'Medicamento'}</Badge>
-                  </div>
+                <Pill style={{ width: '32px', height: '32px', color: '#2563eb' }} />
+              </div>
 
-                  <div className="space-y-1.5 text-xs text-slate-600 mt-3 pt-3 border-t border-slate-100">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Concentração:</span>
-                      <span className="font-bold text-slate-800">{med.concentracao}</span>
-                    </div>
-                  </div>
-                </div>
+              {/* Informações */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3
+                  style={{
+                    fontSize: '22px',
+                    fontWeight: 900,
+                    color: '#0f172a',
+                    margin: '0 0 4px',
+                    lineHeight: 1.2,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {med.nome}
+                </h3>
 
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <button
-                    onClick={() => onViewDetails(med)}
-                    className="inline-flex items-center space-x-1 text-xs font-semibold text-blue-600 hover:text-blue-800 focus-ring"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Detalhes</span>
-                  </button>
-
-                  <div className="flex items-center space-x-1">
-                    <button
-                      onClick={() => onDelete(med.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-100 rounded-lg focus-ring"
-                      title="Excluir medicamento"
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+                  {med.concentracao && (
+                    <span
+                      style={{
+                        background: '#f1f5f9',
+                        color: '#475569',
+                        borderRadius: '8px',
+                        padding: '4px 10px',
+                        fontSize: '14px',
+                        fontWeight: 800,
+                        border: '1px solid #e2e8f0',
+                      }}
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                      {med.concentracao}
+                    </span>
+                  )}
+                  {med.apresentacao && (
+                    <span
+                      style={{
+                        background: '#f0fdf4',
+                        color: '#16a34a',
+                        borderRadius: '8px',
+                        padding: '4px 10px',
+                        fontSize: '14px',
+                        fontWeight: 800,
+                        border: '1px solid #bbf7d0',
+                      }}
+                    >
+                      {med.apresentacao}
+                    </span>
+                  )}
                 </div>
               </div>
-            );
-          })}
+
+              {/* Botão de excluir */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(med.id);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '14px',
+                  border: '2px solid #fecaca',
+                  background: '#fef2f2',
+                  color: '#dc2626',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#fef2f2'; }}
+                aria-label="Excluir remédio"
+              >
+                <Trash2 style={{ width: '20px', height: '20px' }} />
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>
