@@ -66,6 +66,8 @@ export default function QuickReminderModal({
   onClose,
   onSave,
   existingMedications = [],
+  initialMedication = null,
+  isEditing = false,
 }) {
   const [nome, setNome] = useState('');
   const [apresentacao, setApresentacao] = useState('Comprimido');
@@ -73,6 +75,8 @@ export default function QuickReminderModal({
   const [unidadeDose, setUnidadeDose] = useState('comprimido');
   const [tipoUso, setTipoUso] = useState('scheduled');
   const [horarios, setHorarios] = useState(['08:00']);
+  const [intervaloHoras, setIntervaloHoras] = useState('');
+  const [horarioInicial, setHorarioInicial] = useState('08:00');
   const [dataFim, setDataFim] = useState('');
   const [orientacaoAlimentacao, setOrientacaoAlimentacao] = useState('sem_orientacao');
   const [principioAtivo, setPrincipioAtivo] = useState('');
@@ -112,6 +116,8 @@ export default function QuickReminderModal({
     setUnidadeDose('comprimido');
     setTipoUso('scheduled');
     setHorarios(['08:00']);
+    setIntervaloHoras('');
+    setHorarioInicial('08:00');
     setDataFim('');
     setOrientacaoAlimentacao('sem_orientacao');
     setPrincipioAtivo('');
@@ -125,6 +131,11 @@ export default function QuickReminderModal({
     setValidade('');
     setShowDetails(false);
   };
+
+  React.useEffect(() => {
+    if (isOpen && initialMedication) handleSuggestionSelect({ nome: initialMedication.nome, medication: initialMedication });
+    if (isOpen && !initialMedication) reset();
+  }, [isOpen, initialMedication]);
 
   const handleClose = () => {
     reset();
@@ -150,6 +161,9 @@ export default function QuickReminderModal({
     setIntervaloMinimoHoras(medication.intervaloMinimoHoras || '');
     setLimiteDosesDia(medication.limiteDosesDia || '');
     setCondicaoUso(medication.condicaoUso || '');
+    setIntervaloHoras(medication.intervaloHoras || '');
+    setHorarioInicial(medication.horarioInicial || medication.horarios?.[0] || '08:00');
+    setHorarios(Array.isArray(medication.horarios) && medication.horarios.length ? medication.horarios : ['08:00']);
   };
 
   const handlePresentationChange = (value) => {
@@ -191,7 +205,7 @@ export default function QuickReminderModal({
     ? resolveNextScheduledAt(selectedSchedule, new Date())
     : null;
 
-  const isExistingMedication = existingMedications.some((medication) =>
+  const isExistingMedication = !isEditing && existingMedications.some((medication) =>
     isSameMedication(medication, {
       nome,
       apresentacao,
@@ -229,6 +243,9 @@ export default function QuickReminderModal({
       limiteDosesDia,
       condicaoUso,
       validade,
+      intervaloHoras,
+      horarioInicial,
+      medicamentoId: initialMedication?.id,
     });
     onSave(treatment);
     reset();
