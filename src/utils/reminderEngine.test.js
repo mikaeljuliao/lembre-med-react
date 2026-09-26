@@ -88,6 +88,25 @@ describe('reminderEngine', () => {
     ).toBe(false);
   });
 
+  it('keeps total, taken and pending counts from the same active dose set', async () => {
+    const { getDailyDoseSummary } = await import('./reminderEngine');
+
+    const medications = [{ id: 'm1', nome: 'Paracetamol' }];
+    const doses = [
+      { id: 'd1', medicationId: 'm1', status: 'taken' },
+      { id: 'd2', medicationId: 'm1', status: 'taken' },
+      { id: 'd3', medicationId: 'm1', status: 'pending' },
+      { id: 'orphan', medicationId: 'removed', status: 'pending' },
+    ];
+
+    expect(getDailyDoseSummary(doses, medications)).toEqual({
+      total: 3,
+      taken: 2,
+      pending: 1,
+      skipped: 0,
+    });
+  });
+
   it('keeps a selected evening time on the same day', () => {
     const now = new Date(2026, 8, 26, 14, 35, 20);
     const target = resolveNextScheduledAt('18:45', now);
