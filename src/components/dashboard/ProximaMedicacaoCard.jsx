@@ -11,6 +11,7 @@ import {
   formatCountdown,
   formatRemainingForUser,
   getCalendarLabel,
+  getDailyDoseSummary,
   getReminderDateDescription,
   getReminderState,
   isDoseForActiveMedication,
@@ -109,7 +110,8 @@ export default function ProximaMedicacaoCard({
 
   const visibleOtherTodayDoses = sortReminderStates(otherTodayDoses).slice(0, 4);
   const hiddenTodayCount = Math.max(0, otherTodayDoses.length - visibleOtherTodayDoses.length);
-  const takenCount = activeTodayDoses.filter((dose) => dose.status === 'taken').length;
+  const dailySummary = getDailyDoseSummary(doses, medications);
+  const takenCount = dailySummary.taken;
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -393,6 +395,14 @@ export default function ProximaMedicacaoCard({
             </p>
           </div>
 
+          {selectedDose.snoozedUntil && !selectedDose.isDue && (
+            <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+              <p className="text-sm font-bold text-white/90">
+                Lembrete adiado para {formatClockTime(new Date(selectedDose.snoozedUntil))}.
+              </p>
+            </div>
+          )}
+
           <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
             <p className="text-sm font-bold text-white/90">
               {selectedDose.isDue
@@ -448,11 +458,22 @@ export default function ProximaMedicacaoCard({
         </div>
       </div>
 
+      {todayPendingDoses.length > 0 && (
+        <div className="rounded-3xl border border-blue-100 bg-blue-50 px-4 py-3">
+          <p className="text-sm font-black text-blue-900">
+            {dailySummary.pending} dose{dailySummary.pending === 1 ? '' : 's'} pendente{dailySummary.pending === 1 ? '' : 's'} hoje.
+          </p>
+          <p className="mt-1 text-sm font-semibold text-blue-800">
+            {dailySummary.taken} de {dailySummary.total} doses já registradas.
+          </p>
+        </div>
+      )}
+
       {visibleOtherTodayDoses.length > 0 && (
         <div className="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
           <div className="px-4 pb-2 pt-3">
             <p className="text-xs font-black uppercase tracking-wider text-slate-400">
-              Outros lembretes de hoje
+              Outras doses pendentes de hoje
             </p>
           </div>
 
@@ -496,7 +517,7 @@ export default function ProximaMedicacaoCard({
 
       <div className="flex items-center justify-between px-1 text-sm">
         <span className="font-bold text-slate-500">
-          {takenCount} de {activeTodayDoses.length} doses registradas hoje
+          {dailySummary.taken} tomadas · {dailySummary.pending} pendente{dailySummary.pending === 1 ? '' : 's'} · {dailySummary.total} no total
         </span>
       </div>
     </section>
