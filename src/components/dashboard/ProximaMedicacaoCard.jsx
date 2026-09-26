@@ -144,7 +144,7 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
           Você não tem mais medicamentos para tomar agora.
         </p>
         <p className={`mt-2 font-semibold ${simpleMode ? 'text-lg' : 'text-sm'} text-emerald-200`}>
-          {takenCount} de {totalCount} remédio{totalCount !== 1 ? 's' : ''} tomado{takenCount !== 1 ? 's' : ''}
+          O próximo lembrete aparecerá aqui.
         </p>
       </div>
     );
