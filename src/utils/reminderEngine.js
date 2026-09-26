@@ -10,7 +10,7 @@ export function getLocalDateString(date = new Date()) {
 }
 
 export function parseClockTime(value) {
-  const match = String(value || '').trim().match(/^(\\d{2}):(\\d{2})(?::(\\d{2}))?$/);
+  const match = String(value || '').trim().match(/^(\d{2}):(\d{2})(?::(\d{2}))?$/);
   if (!match) return null;
   const hours = Number(match[1]);
   const minutes = Number(match[2]);
@@ -39,7 +39,7 @@ export function addMinutes(date, minutes) {
 export function resolveNextScheduledAt(selection, referenceDate = new Date()) {
   const value = String(selection || '').trim().toLowerCase();
   if (value === 'agora') return new Date(referenceDate);
-  if (/^\\d+$/.test(value)) return addMinutes(referenceDate, Number(value));
+  if (/^\d+$/.test(value)) return addMinutes(referenceDate, Number(value));
   const targetToday = createLocalDate(referenceDate, value);
   if (!targetToday) return null;
   const referenceMinute = new Date(referenceDate);
@@ -58,12 +58,12 @@ export function resolveReminderSelection(selection, referenceDate = new Date()) 
     scheduledAt,
     horario: formatClockTime(scheduledAt),
     dataInicio: getLocalDateString(scheduledAt),
-    tipo: /^\\d+$/.test(rawSelection) || rawSelection === 'agora' ? 'relative' : 'scheduled',
+    tipo: /^\d+$/.test(rawSelection) || rawSelection === 'agora' ? 'relative' : 'scheduled',
   };
 }
 
 function createDateFromStoredDose(dose) {
-  const parsedDate = String(dose?.data || '').match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+  const parsedDate = String(dose?.data || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!parsedDate) return null;
   const baseDate = new Date(Number(parsedDate[1]), Number(parsedDate[2]) - 1, Number(parsedDate[3]), 0, 0, 0, 0);
   return createLocalDate(baseDate, dose?.horario || '00:00');
