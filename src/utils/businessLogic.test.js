@@ -209,7 +209,9 @@ describe('businessLogic tests', () => {
       expect(treatment.medicamentos[0].concentracao).toBe('100 mg/5 mL');
       expect(treatment.medicamentos[0].viaAdministracao).toBe('Oral');
       expect(treatment.medicamentos[0].horarios).toEqual(['08:00', '20:00']);
-      expect(treatment.medicamentos[0].dosagem).toBe('5 mL');
+      expect(treatment.medicamentos[0].intervaloMinimoHoras).toBe(6);
+      expect(treatment.medicamentos[0].limiteDosesDia).toBe(4);
+      expect(treatment.medicamentos[0].condicaoUso).toBe('Se estiver com dor');
     });
 
     it('does not generate fixed doses for as-needed medication', () => {
