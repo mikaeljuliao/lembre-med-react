@@ -39,19 +39,6 @@ function buildSpeechText(dose) {
   return `Você deve tomar ${dose.dosagem} de ${dose.medicationNome} às ${dose.horario.replace(':', ' horas e ')} minutos.`;
 }
 
-function getRemainingMsForTime(horario, referenceDate = new Date()) {
-  const [hours, minutes] = String(horario || '00:00').split(':').map(Number);
-  const target = new Date(referenceDate);
-  target.setHours(Number(hours) || 0, Number(minutes) || 0, 0, 0);
-
-  if (target.getTime() < referenceDate.getTime()) {
-    target.setDate(target.getDate() + 1);
-  }
-
-  const remaining = target.getTime() - referenceDate.getTime();
-  return Math.max(0, remaining);
-}
-
 function formatCountdown(milliseconds) {
   const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
   const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
@@ -168,17 +155,30 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
     );
   }
 
-  const countdownMs = getRemainingMsForTime(selectedDose.horario, now);
-  const countdownText = formatCountdown(countdownMs);
+  const countdownText = formatCountdown(selectedDose.remainingMs);
+  const targetLabel = formatTargetLabel(selectedDose.horario, now);
 
   const handleTomar = () => {
     setAlarmActive(false);
-    onToggleDoseStatus(nextDose.id, 'taken');
-    if (onDoseTaken) onDoseTaken(nextDose, secondDose);
+    onToggleDoseStatus(selectedDose.id, 'taken');
+    const nextDose = upcomingDoses.find((dose) => dose.id !== selectedDose.id) || null;
+    if (onDoseTaken) onDoseTaken(selectedDose, nextDose);
   };
 
   const handleOuvir = () => {
     speakText(buildSpeechText(selectedDose));
+  };
+
+  const selectPrevious = () => {
+    if (upcomingDoses.length < 2) return;
+    const index = selectedIndex <= 0 ? upcomingDoses.length - 1 : selectedIndex - 1;
+    setSelectedDoseId(upcomingDoses[index].id);
+  };
+
+  const selectNext = () => {
+    if (upcomingDoses.length < 2) return;
+    const index = selectedIndex >= upcomingDoses.length - 1 ? 0 : selectedIndex + 1;
+    setSelectedDoseId(upcomingDoses[index].id);
   };
 
   if (simpleMode) {
@@ -268,7 +268,7 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
         </div>
 
         <div className={`mb-5 rounded-2xl border px-4 py-3 ${alarmActive ? 'border-red-200 bg-red-500/20' : 'border-blue-200 bg-blue-500/20'}`}>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-blue-100">{alarmActive ? 'Hora do remédio' : 'Restam'}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-blue-100">{alarmActive ? 'Está na hora' : 'Falta'}</p>
           <p className="text-3xl font-black tracking-tight mt-1">{countdownText}</p>
         </div>
 
