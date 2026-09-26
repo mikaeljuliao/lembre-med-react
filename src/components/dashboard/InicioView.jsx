@@ -1,7 +1,10 @@
 import React, { useMemo } from 'react';
 import { Check, Plus } from 'lucide-react';
 import ProximaMedicacaoCard from './ProximaMedicacaoCard';
-import { isDoseForActiveMedication } from '../../utils/reminderEngine';
+import {
+  getDailyDoseSummary,
+  isDoseForActiveMedication,
+} from '../../utils/reminderEngine';
 
 function formatToday() {
   const value = new Date().toLocaleDateString('pt-BR', {
@@ -48,6 +51,7 @@ export default function InicioView({
   );
 
   const hasMedications = medications.length > 0;
+  const dailySummary = getDailyDoseSummary(doses, medications);
 
   return (
     <div className="space-y-5 pb-24">
@@ -84,9 +88,18 @@ export default function InicioView({
       {takenDoses.length > 0 && (
         <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-100 px-5 py-4">
-            <h2 className="text-lg font-black text-slate-900">Tomados hoje</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-black text-slate-900">
+                Tomados hoje
+              </h2>
+              <span className="text-sm font-black text-emerald-700">
+                {dailySummary.taken}
+              </span>
+            </div>
             <p className="mt-1 text-sm font-medium text-slate-500">
-              O que você já registrou.
+              {dailySummary.pending > 0
+                ? dailySummary.pending + ' dose' + (dailySummary.pending === 1 ? '' : 's') + ' ainda precisa' + (dailySummary.pending === 1 ? '' : 'm') + ' ser registrada' + (dailySummary.pending === 1 ? '' : 's') + '.'
+                : 'Todas as doses de hoje já foram registradas.'}
             </p>
           </div>
 
