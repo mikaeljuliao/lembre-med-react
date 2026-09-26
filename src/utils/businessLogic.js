@@ -165,16 +165,65 @@ export function generateDosesForDate(
 
   activeTreatments.forEach((treatment) => {
     if (treatment.status !== 'active') return;
-
     if (treatment.dataInicio && dateStr < treatment.dataInicio) return;
     if (treatment.dataFim && dateStr > treatment.dataFim) return;
 
     (treatment.medicamentos || []).forEach((med) => {
       if (med.tipoUso === 'as_needed') return;
 
-      const times = Array.isArray(med.horarios) && med.horarios.length > 0
-        ? med.horarios
-        : ['08:00'];
+      const createDose = (horario, scheduledAt) => {
+        doses.push({
+          id: treatment.id + '-' + (med.medicamentoId || med.nome) + '-' + dateStr + '-' + horario,
+          treatmentId: treatment.id,
+          treatmentNome: treatment.nome,
+          medicationId: med.medicamentoId,
+          medicationNome: med.nome,
+          dosagem: med.dosagem || String(med.quantidadePorDose || 1) + ' ' + (med.unidadeDose || 'unidade'),
+          quantidade: med.quantidadePorDose || 1,
+          unidadeDose: med.unidadeDose || 'unidade',
+          principioAtivo: med.principioAtivo || '',
+          concentracao: med.concentracao || '',
+          apresentacao: med.apresentacao || 'Medicamento',
+          viaAdministracao: med.viaAdministracao || '',
+          orientacaoAlimentacao: med.orientacaoAlimentacao || 'sem_orientacao',
+          finalidade: med.finalidade || '',
+          observacoes: med.observacoes || '',
+          intervaloMinimoHoras: med.intervaloMinimoHoras || null,
+          limiteDosesDia: med.limiteDosesDia || null,
+          condicaoUso: med.condicaoUso || '',
+          intervaloHoras: med.intervaloHoras || null,
+          horario,
+          scheduledAt,
+          data: dateStr,
+          status: 'pending',
+          takenAt: null,
+          skipReason: null,
+          snoozedUntil: null,
+          alarmMuted: false,
+        });
+      };
+
+      if (med.tipoUso === 'interval') {
+        const intervaloHoras = Number(med.intervaloHoras);
+        const inicio = med.primeiroLembreteAt ? new Date(med.primeiroLembreteAt) : null;
+        if (!inicio || Number.isNaN(inicio.getTime()) || intervaloHoras <= 0) return;
+
+        const dayStart = new Date(dateStr + 'T00:00:00');
+        const dayEnd = new Date(dayStart);
+        dayEnd.setDate(dayEnd.getDate() + 1);
+
+        let current = new Date(inicio);
+        while (current < dayStart) {
+          current = new Date(current.getTime() + intervaloHoras * 60 * 60 * 1000);
+        }
+        while (current < dayEnd) {
+          if (current >= inicio) createDose(formatClockTime(current), current.toISOString());
+          current = new Date(current.getTime() + intervaloHoras * 60 * 60 * 1000);
+        }
+        return;
+      }
+
+      const times = Array.isArray(med.horarios) && med.horarios.length > 0 ? med.horarios : ['08:00'];
 
       times.forEach((horario) => {
         const scheduleFirstReminderAt =
@@ -183,7 +232,6 @@ export function generateDosesForDate(
 
         if (scheduleFirstReminderAt) {
           const scheduleFirstDate = getLocalDateString(new Date(scheduleFirstReminderAt));
-
           if (dateStr < scheduleFirstDate) return;
         }
 
@@ -195,33 +243,7 @@ export function generateDosesForDate(
           ? scheduleFirstReminderAt
           : getDoseScheduledAt(dateStr, horario);
 
-        doses.push({
-          id: `${treatment.id}-${med.medicamentoId || med.nome}-${dateStr}-${horario}`,
-          treatmentId: treatment.id,
-          treatmentNome: treatment.nome,
-          medicationId: med.medicamentoId,
-          medicationNome: med.nome,
-          dosagem:
-            med.dosagem ||
-            String(med.quantidadePorDose || 1) + ' ' + (med.unidadeDose || 'unidade'),
-          quantidade: med.quantidadePorDose || 1,
-          unidadeDose: med.unidadeDose || 'unidade',
-          principioAtivo: med.principioAtivo || '',
-          concentracao: med.concentracao || '',
-          apresentacao: med.apresentacao || 'Medicamento',
-          viaAdministracao: med.viaAdministracao || '',
-          orientacaoAlimentacao: med.orientacaoAlimentacao || 'sem_orientacao',
-          finalidade: med.finalidade || '',
-          observacoes: med.observacoes || '',
-          horario,
-          scheduledAt: firstReminderAt,
-          data: dateStr,
-          status: 'pending',
-          takenAt: null,
-          skipReason: null,
-          snoozedUntil: null,
-          alarmMuted: false,
-        });
+        createDose(horario, firstReminderAt);
       });
     });
   });
@@ -229,7 +251,6 @@ export function generateDosesForDate(
   return doses.sort((a, b) => {
     const first = new Date(a.scheduledAt).getTime();
     const second = new Date(b.scheduledAt).getTime();
-
     if (first !== second) return first - second;
     return String(a.medicationNome).localeCompare(String(b.medicationNome), 'pt-BR');
   });
