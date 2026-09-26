@@ -83,6 +83,7 @@ export default function QuickReminderModal({
   const [intervaloMinimoHoras, setIntervaloMinimoHoras] = useState('');
   const [limiteDosesDia, setLimiteDosesDia] = useState('');
   const [condicaoUso, setCondicaoUso] = useState('');
+  const [validade, setValidade] = useState('');
   const [showDetails, setShowDetails] = useState(false);
 
   const suggestions = useMemo(() => {
@@ -120,6 +121,7 @@ export default function QuickReminderModal({
     setIntervaloMinimoHoras('');
     setLimiteDosesDia('');
     setCondicaoUso('');
+    setValidade('');
     setShowDetails(false);
   };
 
@@ -131,6 +133,17 @@ export default function QuickReminderModal({
   const handlePresentationChange = (value) => {
     setApresentacao(value);
     setUnidadeDose(UNITS_BY_PRESENTATION[value]?.[0] || 'unidade');
+    const defaultRoutes = {
+      Comprimido: 'Oral',
+      Cápsula: 'Oral',
+      Gotas: 'Oral',
+      Líquido: 'Oral',
+      Spray: 'Nasal',
+      Inalador: 'Inalatória',
+      'Creme ou pomada': 'Tópica',
+      Outro: 'Outra',
+    };
+    setViaAdministracao(defaultRoutes[value] || 'Oral');
   };
 
   const updateHorario = (index, value) => {
@@ -193,6 +206,7 @@ export default function QuickReminderModal({
       intervaloMinimoHoras,
       limiteDosesDia,
       condicaoUso,
+      validade,
     });
     onSave(treatment);
     reset();
@@ -361,6 +375,10 @@ export default function QuickReminderModal({
             <div>
               <label htmlFor="observacoes" className="mb-2 block text-sm font-black text-slate-700">Observações</label>
               <textarea id="observacoes" value={observacoes} onChange={(event) => setObservacoes(event.target.value)} placeholder="Alguma orientação importante para lembrar" rows="3" className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-3 font-semibold outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
+            </div>
+            <div>
+              <label htmlFor="validade-remedio" className="mb-2 block text-sm font-black text-slate-700">Validade da embalagem</label>
+              <input id="validade-remedio" type="date" value={validade} onChange={(event) => setValidade(event.target.value)} className="min-h-12 w-full rounded-xl border-2 border-slate-200 bg-white px-3 font-black outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
             </div>
           </div>}
         </div>
