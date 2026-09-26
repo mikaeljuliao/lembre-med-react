@@ -106,10 +106,28 @@ export function getReminderState(dose, now = new Date()) {
   return { ...dose, target, remainingMs, isDue: remainingMs <= 0, isOverdue: remainingMs < 0 };
 }
 
-export function getDailyDoseSummary(doses = [], medications = []) {
-  const activeDoses = doses.filter((dose) =>
-    isDoseForActiveMedication(dose, medications)
-  );
+function getDoseCalendarDate(dose) {
+  const storedDate = String(dose?.data || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(storedDate)) return storedDate;
+
+  if (dose?.scheduledAt) {
+    const scheduledAt = new Date(dose.scheduledAt);
+    if (!Number.isNaN(scheduledAt.getTime())) {
+      return getLocalDateString(scheduledAt);
+    }
+  }
+
+  return null;
+}
+
+export function getDailyDoseSummary(doses = [], medications = [], referenceDate = new Date()) {
+  const today = getLocalDateString(referenceDate);
+  const activeDoses = doses.filter((dose) => {
+    if (!isDoseForActiveMedication(dose, medications)) return false;
+
+    const doseDate = getDoseCalendarDate(dose);
+    return doseDate === null || doseDate === today;
+  });
 
   return {
     total: activeDoses.length,
