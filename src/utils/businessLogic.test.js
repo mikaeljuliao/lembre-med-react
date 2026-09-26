@@ -196,6 +196,12 @@ describe('businessLogic tests', () => {
     });
   });
 
+  describe('normalizeMedicationName', () => {
+    it('normalizes casing and repeated spaces', () => {
+      expect(normalizeMedicationName('  Paracetamol   500mg ')).toBe('paracetamol 500mg');
+    });
+  });
+
   describe('sanitizeStoredData', () => {
     it('removes stale mock medication names and empty reminder data', () => {
       const payload = {
