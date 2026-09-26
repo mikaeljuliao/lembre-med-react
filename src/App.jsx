@@ -290,6 +290,7 @@ export default function App() {
   const handleSnoozeDose = (doseId, minutes = 10) => {
     const snoozedUntil = new Date(Date.now() + minutes * 60000).toISOString();
     handleUpdateDose(doseId, { snoozedUntil, alarmMuted: false });
+    showToast('Lembrete adiado por ' + minutes + ' minutos.', 'info');
   };
 
   return (
