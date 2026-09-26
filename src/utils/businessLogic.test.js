@@ -4,7 +4,9 @@ import {
   calculateStockProjection,
   generateDosesForDate,
   buildQuickReminderTreatment,
+  buildMedicationTreatment,
   resolveReminderTimes,
+  isSameMedication,
   sanitizeStoredData,
   normalizeMedicationName,
 } from './businessLogic';
@@ -182,6 +184,74 @@ describe('businessLogic tests', () => {
       expect(reminder.medicamentos[0].nome).toBe('Losartana');
       expect(reminder.medicamentos[0].quantidadePorDose).toBe(1);
       expect(reminder.medicamentos[0].horarios).toEqual(['08:00', '20:00']);
+    });
+  });
+
+  describe('expanded medication treatment', () => {
+    it('supports non-tablet doses and optional medication data', () => {
+      const treatment = buildMedicationTreatment({
+        nome: 'Xarope',
+        apresentacao: 'Líquido',
+        quantidadePorDose: 5,
+        unidadeDose: 'mL',
+        horarios: ['08:00', '20:00'],
+        principioAtivo: 'Substância',
+        concentracao: '100 mg/5 mL',
+        viaAdministracao: 'Oral',
+        finalidade: 'Tratamento',
+        observacoes: 'Agitar antes de usar',
+      });
+
+      expect(treatment.medicamentos[0].dosagem).toBe('5 mL');
+      expect(treatment.medicamentos[0].concentracao).toBe('100 mg/5 mL');
+      expect(treatment.medicamentos[0].viaAdministracao).toBe('Oral');
+      expect(treatment.medicamentos[0].horarios).toEqual(['08:00', '20:00']);
+    });
+
+    it('does not generate fixed doses for as-needed medication', () => {
+      const treatment = buildMedicationTreatment({
+        nome: 'Dipirona',
+        apresentacao: 'Gotas',
+        quantidadePorDose: 20,
+        unidadeDose: 'gota',
+        tipoUso: 'as_needed',
+      });
+
+      expect(treatment.medicamentos[0].tipoUso).toBe('as_needed');
+      expect(generateDosesForDate([treatment], '2026-09-26')).toEqual([]);
+    });
+
+    it('starts a multi-time treatment on the earliest actual reminder', () => {
+      const treatment = buildMedicationTreatment(
+        {
+          nome: 'Losartana',
+          horarios: ['08:00', '20:00'],
+        },
+        new Date(2026, 8, 26, 14, 0, 0)
+      );
+
+      expect(treatment.dataInicio).toBe('2026-09-26');
+      expect(treatment.medicamentos[0].primeirosLembretesAt['20:00']).toBe(
+        new Date(2026, 8, 26, 20, 0, 0).toISOString()
+      );
+    });
+  });
+
+  describe('medication identity', () => {
+    it('keeps different concentrations as different medications', () => {
+      expect(
+        isSameMedication(
+          { nome: 'Losartana', concentracao: '50 mg', apresentacao: 'Comprimido' },
+          { nome: 'Losartana', concentracao: '25 mg', apresentacao: 'Comprimido' }
+        )
+      ).toBe(false);
+
+      expect(
+        isSameMedication(
+          { nome: 'Losartana', concentracao: '50 mg', apresentacao: 'Comprimido' },
+          { nome: 'Losartana', concentracao: '50 mg', apresentacao: 'Comprimido' }
+        )
+      ).toBe(true);
     });
   });
 
