@@ -168,6 +168,13 @@ export function resolveReminderTimes(horarios = [], referenceDate = new Date()) 
     });
 }
 
+export function getLocalDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = padTime(date.getMonth() + 1);
+  const day = padTime(date.getDate());
+  return `${year}-${month}-${day}`;
+}
+
 export function getDoseScheduledAt(dateStr, horario) {
   const [hours = 0, minutes = 0, seconds = 0] = String(horario || '00:00')
     .split(':')
@@ -192,7 +199,7 @@ export function getDoseScheduledAt(dateStr, horario) {
 
 export function generateDosesForDate(
   activeTreatments = [],
-  dateStr = new Date().toISOString().split('T')[0]
+  dateStr = getLocalDateString()
 ) {
   const doses = [];
 
@@ -248,7 +255,7 @@ export function buildQuickReminderTreatment(nome, quantidadePorDose = 1, horario
     id: `treat-${Date.now()}`,
     nome: cleanedName ? `Lembrete: ${cleanedName}` : 'Lembrete do remédio',
     descricao: 'Lembrete simples para uso diário',
-    dataInicio: new Date().toISOString().split('T')[0],
+    dataInicio: getLocalDateString(),
     dataFim: '',
     status: 'active',
     medicamentos: [
