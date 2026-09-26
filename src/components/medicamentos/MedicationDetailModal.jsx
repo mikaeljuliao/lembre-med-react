@@ -78,6 +78,9 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
               <p className="text-base font-black text-slate-900">Quando precisar</p>
               <p className="mt-1 text-sm font-semibold text-slate-500">Este remédio não possui alarme fixo.</p>
               {medication.condicaoUso && <p className="mt-3 text-sm font-bold text-slate-800">Quando usar: {medication.condicaoUso}</p>}
+              <button type="button" onClick={() => onRegisterUse(medication)} className="mt-4 flex min-h-12 w-full items-center justify-center rounded-xl bg-amber-600 px-4 text-sm font-black text-white hover:bg-amber-700 focus:outline-none focus:ring-4 focus:ring-amber-200">
+                Registrar uso agora
+              </button>
               {(medication.intervaloMinimoHoras || medication.limiteDosesDia) && (
                 <p className="mt-1 text-sm font-semibold text-slate-600">
                   {medication.intervaloMinimoHoras ? 'Intervalo mínimo: ' + medication.intervaloMinimoHoras + 'h' : ''}
