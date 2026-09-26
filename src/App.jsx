@@ -91,60 +91,76 @@ export default function App() {
       )
     );
 
-    const selectedHorario = String(medConfig?.horarios?.[0] || '').trim();
-    const existingHorarios = existingTreatment?.medicamentos?.[0]?.horarios || [];
-    const nextHorarios = existingTreatment
-      ? [...new Set([
-          ...existingHorarios,
-          ...(selectedHorario ? [selectedHorario] : []),
-        ])].sort()
-      : medConfig?.horarios || [];
-
+    const incomingHorarios = Array.isArray(medConfig?.horarios) ? medConfig.horarios : [];
+    const existingMedicationConfig = existingTreatment?.medicamentos?.find(
+      (medication) =>
+        String(medication.medicamentoId || '') === String(existingMedication?.id || '') ||
+        normalizeMedicationName(medication.nome) === medicationKey
+    );
+    const existingHorarios = existingMedicationConfig?.horarios || [];
+    const nextHorarios = [...new Set([...existingHorarios, ...incomingHorarios])].sort();
     const nextPrimeirosLembretesAt = {
-      ...(existingTreatment?.medicamentos?.[0]?.primeirosLembretesAt || {}),
+      ...(existingMedicationConfig?.primeirosLembretesAt || {}),
     };
 
-    if (
-      selectedHorario &&
-      !existingHorarios.includes(selectedHorario) &&
-      medConfig?.primeirosLembretesAt?.[selectedHorario]
-    ) {
-      nextPrimeirosLembretesAt[selectedHorario] =
-        medConfig.primeirosLembretesAt[selectedHorario];
-    }
+    Object.entries(medConfig?.primeirosLembretesAt || {}).forEach(([horario, value]) => {
+      const currentValue = nextPrimeirosLembretesAt[horario];
+      if (!currentValue || new Date(value).getTime() < new Date(currentValue).getTime()) {
+        nextPrimeirosLembretesAt[horario] = value;
+      }
+    });
 
     const medicationId = existingMedication?.id || medConfig?.medicamentoId || 'med-' + Date.now();
     const treatmentId = existingTreatment?.id || treatmentData.id;
-
+    const sourceMedication = existingMedicationConfig || medConfig;
     const medRecord = {
       ...(existingMedication || {}),
       id: medicationId,
       nome: existingMedication?.nome || medName,
-      principioAtivo: existingMedication?.principioAtivo || '',
-      apresentacao: existingMedication?.apresentacao || 'Comprimido',
-      concentracao: existingMedication?.concentracao || '',
-      unidade: existingMedication?.unidade || 'comprimidos',
-      validade: existingMedication?.validade || '',
-      observacoes: existingMedication?.observacoes || '',
+      principioAtivo: medConfig?.principioAtivo || existingMedication?.principioAtivo || '',
+      apresentacao: medConfig?.apresentacao || existingMedication?.apresentacao || 'Medicamento',
+      concentracao: medConfig?.concentracao || existingMedication?.concentracao || '',
+      viaAdministracao: medConfig?.viaAdministracao || existingMedication?.viaAdministracao || '',
+      unidadeDose: medConfig?.unidadeDose || existingMedication?.unidadeDose || 'unidade',
+      quantidadePorDose: medConfig?.quantidadePorDose || existingMedication?.quantidadePorDose || 1,
+      validade: medConfig?.validade || existingMedication?.validade || '',
+      finalidade: medConfig?.finalidade || existingMedication?.finalidade || treatmentData?.finalidade || '',
+      orientacaoAlimentacao: medConfig?.orientacaoAlimentacao || existingMedication?.orientacaoAlimentacao || treatmentData?.orientacaoAlimentacao || 'sem_orientacao',
+      observacoes: medConfig?.observacoes || existingMedication?.observacoes || treatmentData?.observacoes || '',
       horarios: nextHorarios,
       primeirosLembretesAt: nextPrimeirosLembretesAt,
       quantidadePorDose: medConfig?.quantidadePorDose || existingMedication?.quantidadePorDose || 1,
+      tipoUso: medConfig?.tipoUso || existingMedication?.tipoUso || treatmentData?.tipoUso || 'scheduled',
       lembreteId: treatmentId,
     };
 
     const updatedTreatment = existingTreatment
       ? {
           ...existingTreatment,
-          medicamentos: existingTreatment.medicamentos.map((medication, index) =>
-            index === 0
+          tipoUso: medConfig?.tipoUso || existingTreatment.tipoUso || 'scheduled',
+          dataFim: treatmentData?.dataFim || existingTreatment.dataFim || '',
+          finalidade: medConfig?.finalidade || existingTreatment.finalidade || treatmentData?.finalidade || '',
+          orientacaoAlimentacao: medConfig?.orientacaoAlimentacao || existingTreatment.orientacaoAlimentacao || treatmentData?.orientacaoAlimentacao || 'sem_orientacao',
+          observacoes: medConfig?.observacoes || existingTreatment.observacoes || treatmentData?.observacoes || '',
+          medicamentos: existingTreatment.medicamentos.map((medication) =>
+            (String(medication.medicamentoId || '') === String(existingMedication?.id || '') || normalizeMedicationName(medication.nome) === medicationKey)
               ? {
                   ...medication,
                   medicamentoId: medicationId,
                   nome: existingMedication?.nome || medName,
+                  principioAtivo: medConfig?.principioAtivo || medication.principioAtivo || '',
+                  apresentacao: medConfig?.apresentacao || medication.apresentacao || 'Medicamento',
+                  concentracao: medConfig?.concentracao || medication.concentracao || '',
+                  viaAdministracao: medConfig?.viaAdministracao || medication.viaAdministracao || '',
+                  unidadeDose: medConfig?.unidadeDose || medication.unidadeDose || 'unidade',
                   quantidadePorDose: medConfig?.quantidadePorDose || medication.quantidadePorDose || 1,
-                  dosagem: String(medConfig?.quantidadePorDose || medication.quantidadePorDose || 1) + ' comprimido' + (Number(medConfig?.quantidadePorDose || medication.quantidadePorDose || 1) > 1 ? 's' : ''),
+                  dosagem: String(medConfig?.quantidadePorDose || medication.quantidadePorDose || 1) + ' ' + (medConfig?.unidadeDose || medication.unidadeDose || 'unidade'),
                   horarios: nextHorarios,
                   primeirosLembretesAt: nextPrimeirosLembretesAt,
+                  tipoUso: medConfig?.tipoUso || medication.tipoUso || 'scheduled',
+                  orientacaoAlimentacao: medConfig?.orientacaoAlimentacao || medication.orientacaoAlimentacao || 'sem_orientacao',
+                  finalidade: medConfig?.finalidade || medication.finalidade || '',
+                  observacoes: medConfig?.observacoes || medication.observacoes || '',
                 }
               : medication
           ),
@@ -179,12 +195,11 @@ export default function App() {
     setActiveTab('inicio');
     showToast(
       existingMedication
-        ? medName + ' já estava cadastrado. Novo horário adicionado ao lembrete.'
-        : medName + ' adicionado e lembrete criado.',
+        ? medName + ' já estava cadastrado. Dados e horários atualizados.'
+        : medName + ' cadastrado e lembrete configurado.',
       'success'
     );
   };
-
   const handleDeleteMedication = (medId) => {
     const med = medications.find((medication) => medication.id === medId);
     if (!med) return;
