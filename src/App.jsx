@@ -399,7 +399,10 @@ export default function App() {
           <RemediosView
             medications={medications}
             history={history}
-            onOpenAdd={() => setIsQuickReminderModalOpen(true)}
+            onOpenAdd={() => {
+              setSelectedDetailMed(null);
+              setIsQuickReminderModalOpen(true);
+            }}
             onDelete={handleDeleteMedication}
             onViewDetails={(medication) => {
               setSelectedDetailMed(medication);
@@ -416,6 +419,11 @@ export default function App() {
         isOpen={isDetailMedOpen}
         onClose={() => setIsDetailMedOpen(false)}
         medication={selectedDetailMed}
+        onEdit={(medication) => {
+          setIsDetailMedOpen(false);
+          setSelectedDetailMed(medication);
+          setIsQuickReminderModalOpen(true);
+        }}
         onOpenOfficialInfo={() => setActiveTab('saude')}
       />
       <QuickReminderModal
@@ -423,6 +431,8 @@ export default function App() {
         onClose={() => setIsQuickReminderModalOpen(false)}
         onSave={handleQuickReminderSave}
         existingMedications={medications}
+        initialMedication={selectedDetailMed}
+        isEditing={Boolean(selectedDetailMed && isQuickReminderModalOpen)}
       />
       {deleteRequest && (
         <Modal
