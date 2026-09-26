@@ -1,99 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AlarmClock,
   Check,
   ChevronRight,
   Clock3,
   Volume2,
   VolumeX,
 } from 'lucide-react';
+import {
+  buildReminderSpeech,
+  formatClockTime,
+  formatCountdown,
+  formatRemainingForUser,
+  getCalendarLabel,
+  getReminderDateDescription,
+  getReminderState,
+  sortReminderStates,
+} from '../../utils/reminderEngine';
 import { speakText, stopSpeaking } from '../../utils/speech';
-
-function getDoseTarget(dose) {
-  if (dose?.snoozedUntil) {
-    const snoozedTarget = new Date(dose.snoozedUntil);
-    if (!Number.isNaN(snoozedTarget.getTime())) return snoozedTarget;
-  }
-
-  if (dose?.scheduledAt) {
-    const scheduledTarget = new Date(dose.scheduledAt);
-    if (!Number.isNaN(scheduledTarget.getTime())) return scheduledTarget;
-  }
-
-  const [hours = 0, minutes = 0, seconds = 0] = String(dose?.horario || '00:00')
-    .split(':')
-    .map(Number);
-
-  const target = new Date();
-  target.setHours(
-    Number(hours) || 0,
-    Number(minutes) || 0,
-    Number(seconds) || 0,
-    0
-  );
-
-  return target;
-}
-
-function getDoseState(dose, now) {
-  const target = getDoseTarget(dose);
-  const remainingMs = target.getTime() - now.getTime();
-
-  return {
-    ...dose,
-    target,
-    remainingMs,
-    isDue: remainingMs <= 0,
-  };
-}
-
-function sortDoses(doses) {
-  return [...doses].sort((a, b) => {
-    if (a.remainingMs !== b.remainingMs) return a.remainingMs - b.remainingMs;
-
-    const nameDifference = String(a.medicationNome).localeCompare(
-      String(b.medicationNome)
-    );
-
-    if (nameDifference !== 0) return nameDifference;
-    return String(a.id).localeCompare(String(b.id));
-  });
-}
-
-function formatTime(date) {
-  return date.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function formatCountdown(milliseconds) {
-  const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
-  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-  const seconds = String(totalSeconds % 60).padStart(2, '0');
-
-  return `${hours}:${minutes}:${seconds}`;
-}
-
-function buildSpeechText(dose) {
-  return `Está na hora de tomar ${dose.dosagem} de ${dose.medicationNome}.`;
-}
-
-function getTargetDescription(dose, now) {
-  if (dose.isDue) {
-    return `Horário: ${formatTime(dose.target)}`;
-  }
-
-  const difference = dose.target.getTime() - now.getTime();
-  const minutes = Math.max(1, Math.ceil(difference / 60000));
-
-  if (minutes < 60) {
-    return `Em ${minutes} minuto${minutes !== 1 ? 's' : ''} · ${formatTime(dose.target)}`;
-  }
-
-  return `Hoje às ${formatTime(dose.target)}`;
-}
 
 function createAlarmTone(audioContext) {
   const oscillator = audioContext.createOscillator();
@@ -101,16 +24,16 @@ function createAlarmTone(audioContext) {
 
   oscillator.type = 'sine';
   oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
-  gainNode.gain.setValueAtTime(0.06, audioContext.currentTime);
+  gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
   gainNode.gain.exponentialRampToValueAtTime(
     0.001,
-    audioContext.currentTime + 0.5
+    audioContext.currentTime + 0.45
   );
 
   oscillator.connect(gainNode);
   gainNode.connect(audioContext.destination);
   oscillator.start();
-  oscillator.stop(audioContext.currentTime + 0.5);
+  oscillator.stop(audioContext.currentTime + 0.45);
 }
 
 export default function ProximaMedicacaoCard({
@@ -131,30 +54,30 @@ export default function ProximaMedicacaoCard({
     [doses]
   );
 
-  const dosesWithState = useMemo(
-    () => sortDoses(pendingDoses.map((dose) => getDoseState(dose, now))),
+  const reminderStates = useMemo(
+    () =>
+      sortReminderStates(
+        pendingDoses.map((dose) => getReminderState(dose, now))
+      ),
     [pendingDoses, now]
   );
 
-  const dueDoses = dosesWithState.filter((dose) => dose.isDue);
+  const dueDoses = useMemo(
+    () => reminderStates.filter((dose) => dose.isDue),
+    [reminderStates]
+  );
 
   const selectedDose =
     dueDoses[0] ||
-    dosesWithState.find((dose) => dose.id === selectedDoseId) ||
-    dosesWithState[0] ||
+    reminderStates.find((dose) => dose.id === selectedDoseId) ||
+    reminderStates[0] ||
     null;
 
   const selectedIndex = selectedDose
-    ? dosesWithState.findIndex((dose) => dose.id === selectedDose.id)
+    ? reminderStates.findIndex((dose) => dose.id === selectedDose.id)
     : -1;
 
-  const takenDoses = useMemo(
-    () => doses.filter((dose) => dose.status === 'taken'),
-    [doses]
-  );
-
-  const todayCount = doses.length;
-  const takenCount = takenDoses.length;
+  const takenCount = doses.filter((dose) => dose.status === 'taken').length;
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -165,15 +88,15 @@ export default function ProximaMedicacaoCard({
   }, []);
 
   useEffect(() => {
-    if (dosesWithState.length === 0) {
+    if (reminderStates.length === 0) {
       setSelectedDoseId(null);
       return;
     }
 
-    if (!dosesWithState.some((dose) => dose.id === selectedDoseId)) {
-      setSelectedDoseId(dosesWithState[0].id);
+    if (!reminderStates.some((dose) => dose.id === selectedDoseId)) {
+      setSelectedDoseId(reminderStates[0].id);
     }
-  }, [dosesWithState, selectedDoseId]);
+  }, [reminderStates, selectedDoseId]);
 
   useEffect(() => {
     if (!selectedDose?.isDue || selectedDose.alarmMuted) {
@@ -182,7 +105,10 @@ export default function ProximaMedicacaoCard({
         alarmIntervalRef.current = null;
       }
 
-      stopSpeaking();
+      if (!selectedDose?.isDue) {
+        stopSpeaking();
+      }
+
       return;
     }
 
@@ -199,7 +125,10 @@ export default function ProximaMedicacaoCard({
         audioContext.resume().catch(() => {});
       }
 
-      createAlarmTone(audioContext);
+      if (audioContext.state === 'running') {
+        createAlarmTone(audioContext);
+      }
+
       alarmIntervalRef.current = window.setInterval(() => {
         if (audioContext.state === 'suspended') {
           audioContext.resume().catch(() => {});
@@ -212,7 +141,7 @@ export default function ProximaMedicacaoCard({
     }
 
     if (announcedAlarmRef.current !== selectedDose.id) {
-      speakText(buildSpeechText(selectedDose));
+      speakText(buildReminderSpeech(selectedDose, now));
       announcedAlarmRef.current = selectedDose.id;
     }
 
@@ -221,10 +150,8 @@ export default function ProximaMedicacaoCard({
         window.clearInterval(alarmIntervalRef.current);
         alarmIntervalRef.current = null;
       }
-
-      stopSpeaking();
     };
-  }, [selectedDose?.id, selectedDose?.isDue, selectedDose?.alarmMuted]);
+  }, [selectedDose?.id, selectedDose?.isDue, selectedDose?.alarmMuted, now]);
 
   useEffect(() => {
     return () => {
@@ -240,16 +167,20 @@ export default function ProximaMedicacaoCard({
     };
   }, []);
 
-  const handleTake = () => {
-    if (!selectedDose) return;
-
-    stopSpeaking();
-
+  const stopAlarmSound = () => {
     if (alarmIntervalRef.current) {
       window.clearInterval(alarmIntervalRef.current);
       alarmIntervalRef.current = null;
     }
 
+    stopSpeaking();
+  };
+
+  const handleTake = () => {
+    if (!selectedDose) return;
+
+    stopAlarmSound();
+    announcedAlarmRef.current = null;
     onToggleDoseStatus(selectedDose.id, 'taken');
     setSelectedDoseId(null);
   };
@@ -257,38 +188,40 @@ export default function ProximaMedicacaoCard({
   const handleMute = () => {
     if (!selectedDose || !onUpdateDose) return;
 
-    stopSpeaking();
-
-    if (alarmIntervalRef.current) {
-      window.clearInterval(alarmIntervalRef.current);
-      alarmIntervalRef.current = null;
-    }
-
+    stopAlarmSound();
     onUpdateDose(selectedDose.id, { alarmMuted: true });
+  };
+
+  const handleEnableAlarm = () => {
+    if (!selectedDose || !onUpdateDose) return;
+
+    onUpdateDose(selectedDose.id, { alarmMuted: false });
   };
 
   const handleSnooze = () => {
     if (!selectedDose || !onSnoozeDose) return;
 
-    stopSpeaking();
-
-    if (alarmIntervalRef.current) {
-      window.clearInterval(alarmIntervalRef.current);
-      alarmIntervalRef.current = null;
-    }
-
+    stopAlarmSound();
     announcedAlarmRef.current = null;
     onSnoozeDose(selectedDose.id, 10);
   };
 
-  const handleEnableAlarm = () => {
-    if (!selectedDose || !onUpdateDose) return;
-    onUpdateDose(selectedDose.id, { alarmMuted: false });
-  };
-
-  const handleListen = () => {
+  const handleListen = async () => {
     if (!selectedDose) return;
-    speakText(buildSpeechText(selectedDose));
+
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+
+    if (AudioCtor) {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioCtor();
+      }
+
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume().catch(() => {});
+      }
+    }
+
+    speakText(buildReminderSpeech(selectedDose, new Date()));
   };
 
   if (medications.length === 0 && doses.length === 0) {
@@ -324,25 +257,25 @@ export default function ProximaMedicacaoCard({
   }
 
   const alarmActive = selectedDose.isDue && !selectedDose.alarmMuted;
-  const cardClass = alarmActive
-    ? 'bg-red-600'
-    : selectedDose.isDue
-      ? 'bg-red-500'
-      : 'bg-blue-600';
+  const cardClass = selectedDose.isDue ? 'bg-red-600' : 'bg-blue-600';
+  const calendarLabel = getCalendarLabel(selectedDose.target, now);
+  const targetDescription = getReminderDateDescription(selectedDose.target, now);
 
   return (
     <section className="space-y-4">
       <div className={`overflow-hidden rounded-3xl text-white shadow-lg ${cardClass}`}>
         <div className="p-6 sm:p-8">
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-extrabold uppercase tracking-wider text-white/75">
                 {selectedDose.isDue ? 'Está na hora' : 'Próximo remédio'}
               </p>
-              <div className="mt-2 flex items-center gap-2">
-                <Clock3 className="h-5 w-5 shrink-0 text-white/80" />
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="text-2xl font-black">
-                  {formatTime(selectedDose.target)}
+                  Alarme às {formatClockTime(selectedDose.target)}
+                </span>
+                <span className="text-sm font-bold text-white/75">
+                  {calendarLabel}
                 </span>
               </div>
             </div>
@@ -351,7 +284,7 @@ export default function ProximaMedicacaoCard({
               type="button"
               onClick={handleListen}
               className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-sm font-extrabold text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
-              aria-label={`Ouvir lembrete de ${selectedDose.medicationNome}`}
+              aria-label={`Ouvir informações do lembrete de ${selectedDose.medicationNome}`}
             >
               <Volume2 className="h-5 w-5" />
               <span>Ouvir</span>
@@ -367,15 +300,29 @@ export default function ProximaMedicacaoCard({
             </p>
           </div>
 
-          <div className="mt-7 rounded-2xl bg-white/10 px-5 py-4">
+          <div className="mt-6 rounded-2xl bg-white/10 px-5 py-4">
             <p className="text-xs font-extrabold uppercase tracking-wider text-white/70">
-              {selectedDose.isDue ? 'Agora' : 'Falta'}
+              {selectedDose.isDue ? 'Agora' : 'Tempo restante'}
             </p>
             <p className="mt-1 text-3xl font-black tabular-nums sm:text-4xl">
-              {selectedDose.isDue ? '00:00:00' : formatCountdown(selectedDose.remainingMs)}
+              {selectedDose.isDue
+                ? '00:00:00'
+                : formatCountdown(selectedDose.remainingMs)}
             </p>
             <p className="mt-2 text-sm font-bold text-white/80">
-              {getTargetDescription(selectedDose, now)}
+              {selectedDose.isDue
+                ? `O alarme deveria tocar às ${formatClockTime(selectedDose.target)}.`
+                : `${formatRemainingForUser(selectedDose.remainingMs)} · ${targetDescription}`}
+            </p>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+            <p className="text-sm font-bold text-white/90">
+              {selectedDose.isDue
+                ? alarmActive
+                  ? 'O lembrete está ativo.'
+                  : 'O som está silenciado. O lembrete continua pendente.'
+                : `O próximo alarme será às ${formatClockTime(selectedDose.target)}.`}
             </p>
           </div>
 
@@ -398,6 +345,7 @@ export default function ProximaMedicacaoCard({
                 >
                   Adiar 10 min
                 </button>
+
                 {selectedDose.alarmMuted ? (
                   <button
                     type="button"
@@ -419,26 +367,20 @@ export default function ProximaMedicacaoCard({
                 )}
               </div>
             )}
-
-            {selectedDose.isDue && selectedDose.alarmMuted && (
-              <p className="rounded-xl bg-white/10 px-3 py-2 text-center text-sm font-bold text-white/90">
-                Alarme silenciado. O lembrete continua pendente.
-              </p>
-            )}
           </div>
         </div>
       </div>
 
-      {dosesWithState.length > 1 && (
+      {reminderStates.length > 1 && (
         <div className="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
           <div className="px-4 pb-2 pt-3">
             <p className="text-xs font-black uppercase tracking-wider text-slate-400">
-              Próximos remédios
+              Próximos lembretes
             </p>
           </div>
 
           <div className="space-y-1">
-            {dosesWithState.slice(0, 5).map((dose, index) => {
+            {reminderStates.slice(0, 5).map((dose, index) => {
               const selected = dose.id === selectedDose.id;
 
               return (
@@ -468,7 +410,7 @@ export default function ProximaMedicacaoCard({
                       {dose.medicationNome}
                     </span>
                     <span className="mt-0.5 block text-sm font-semibold text-slate-500">
-                      {formatTime(dose.target)} · {dose.dosagem}
+                      Alarme às {formatClockTime(dose.target)} · {formatRemainingForUser(dose.remainingMs)}
                     </span>
                   </span>
 
@@ -482,10 +424,10 @@ export default function ProximaMedicacaoCard({
 
       <div className="flex items-center justify-between px-1 text-sm">
         <span className="font-bold text-slate-500">
-          {takenCount} de {todayCount} tomados hoje
+          {takenCount} de {doses.length} tomados hoje
         </span>
         <span className="font-bold text-slate-400">
-          {selectedIndex + 1} de {dosesWithState.length}
+          {selectedIndex + 1} de {reminderStates.length}
         </span>
       </div>
     </section>
