@@ -117,8 +117,8 @@ function FutureReminderSchedule({ doses = [], medications = [], now, excludeId =
                     </p>
                   </div>
 
-                  <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-black text-amber-800">
-                    Pendente
+                  <span className="shrink-0 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-black text-blue-800">
+                    Programado
                   </span>
                 </div>
               ))}
