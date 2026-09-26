@@ -74,8 +74,8 @@ export function isDoseForActiveMedication(dose, medications = []) {
     medications.map((medication) => String(medication?.id || ''))
   );
 
-  if (dose?.medicationId && medicationIds.has(String(dose.medicationId))) {
-    return true;
+  if (dose?.medicationId) {
+    return medicationIds.has(String(dose.medicationId));
   }
 
   const doseName = String(dose?.medicationNome || '').trim().toLowerCase();
