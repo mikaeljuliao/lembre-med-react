@@ -38,6 +38,7 @@ function createAlarmTone(audioContext) {
 
 export default function ProximaMedicacaoCard({
   doses = [],
+  futureDoses = [],
   medications = [],
   onToggleDoseStatus,
   onUpdateDose,
@@ -49,10 +50,12 @@ export default function ProximaMedicacaoCard({
   const alarmIntervalRef = useRef(null);
   const announcedAlarmRef = useRef(null);
 
-  const pendingDoses = useMemo(
-    () => doses.filter((dose) => dose.status === 'pending'),
-    [doses]
-  );
+  const pendingDoses = useMemo(() => {
+    const todayPending = doses.filter((dose) => dose.status === 'pending');
+    const futurePending = futureDoses.filter((dose) => dose.status === 'pending');
+
+    return [...todayPending, ...futurePending];
+  }, [doses, futureDoses]);
 
   const reminderStates = useMemo(
     () =>
