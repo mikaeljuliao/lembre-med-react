@@ -82,32 +82,37 @@ export default function QuickReminderModal({ isOpen, onClose, onSave, existingMe
   const [horarios, setHorarios] = useState(['agora']);
   const [step, setStep] = useState(1);
   const [selectedQuickTime, setSelectedQuickTime] = useState('agora');
-  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Sugestões: medicamentos já cadastrados + lista comum
   const allSuggestions = useMemo(() => {
-    const existingNames = (existingMedications || []).map((m) => m.nome).filter(Boolean);
-    const commonNames = COMMON_MEDICATIONS.map((m) => ({ nome: m.nome, categoria: m.categoria, isExisting: false }));
-    const existingItems = existingNames.map((n) => ({ nome: n, categoria: 'Meus remédios', isExisting: true }));
-    // Existing first, then common (deduplicado)
-    const merged = [...existingItems];
-    for (const c of commonNames) {
-      if (!merged.some((e) => e.nome.toLowerCase() === c.nome.toLowerCase())) {
-        merged.push(c);
-      }
+    const existingItems = [];
+    const existingNames = new Set();
+
+    for (const medication of existingMedications || []) {
+      const name = String(medication?.nome || '').trim();
+      const key = name.toLowerCase();
+
+      if (!name || existingNames.has(key)) continue;
+
+      existingNames.add(key);
+      existingItems.push({ nome: name, categoria: 'Meus remédios', isExisting: true });
     }
-    return merged;
+
+    const commonNames = COMMON_MEDICATIONS
+      .filter((medication) => !existingNames.has(medication.nome.toLowerCase()))
+      .map((medication) => ({ ...medication, isExisting: false }));
+
+    return [...existingItems, ...commonNames];
   }, [existingMedications]);
 
   const filteredSuggestions = useMemo(() => {
     const term = nome.trim().toLowerCase();
-    if (!term) return allSuggestions.slice(0, 8);
-    return allSuggestions.filter((item) => item.nome.toLowerCase().includes(term)).slice(0, 8);
+    if (!term) return allSuggestions.slice(0, 6);
+    return allSuggestions.filter((item) => item.nome.toLowerCase().includes(term)).slice(0, 6);
   }, [nome, allSuggestions]);
 
   const handleSelectSuggestion = (item) => {
     setNome(item.nome);
-    setShowSuggestions(false);
   };
 
   const handleAddTime = () => {
@@ -138,7 +143,6 @@ export default function QuickReminderModal({ isOpen, onClose, onSave, existingMe
     setHorarios(['agora']);
     setSelectedQuickTime('agora');
     setStep(1);
-    setShowSuggestions(false);
   };
 
   const handleClose = () => {
@@ -147,7 +151,6 @@ export default function QuickReminderModal({ isOpen, onClose, onSave, existingMe
     setHorarios(['agora']);
     setSelectedQuickTime('agora');
     setStep(1);
-    setShowSuggestions(false);
     onClose();
   };
 
@@ -208,124 +211,126 @@ export default function QuickReminderModal({ isOpen, onClose, onSave, existingMe
           ))}
         </div>
 
-        {/* STEP 1 — Nome */}
-        {step === 1 && (
-          <div>
-            <p style={labelStyle}>Qual remédio você vai tomar?</p>
+        <div>
+          <p style={{ ...labelStyle, fontSize: '18px', marginBottom: '12px' }}>
+            Qual remédio você quer lembrar?
+          </p>
 
-            <div style={{ position: 'relative' }}>
-              <input
-                type="text"
-                value={nome}
-                onChange={(e) => {
-                  setNome(e.target.value);
-                  setShowSuggestions(true);
+          <input
+            type="text"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="Digite o nome do remédio"
+            style={{
+              ...fieldStyle,
+              fontSize: '18px',
+              minHeight: '56px',
+            }}
+            autoFocus
+            aria-label="Nome do medicamento"
+          />
+
+          <div style={{ marginTop: '18px' }}>
+            <p
+              style={{
+                fontSize: '14px',
+                fontWeight: 800,
+                color: '#64748b',
+                margin: '0 0 10px',
+              }}
+            >
+              {nome.trim() ? 'Resultados' : 'Exemplos de medicamentos'}
+            </p>
+
+            {filteredSuggestions.length > 0 ? (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: '8px',
                 }}
-                onFocus={() => setShowSuggestions(true)}
-                placeholder="Digite o nome do remédio..."
-                style={fieldStyle}
-                autoFocus
-              />
+              >
+                {filteredSuggestions.map((item, i) => {
+                  const selected = nome.trim().toLowerCase() === item.nome.toLowerCase();
 
-              {/* Sugestões */}
-              {showSuggestions && filteredSuggestions.length > 0 && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    zIndex: 50,
-                    background: '#ffffff',
-                    border: '2px solid #cbd5e1',
-                    borderRadius: '20px',
-                    marginTop: '8px',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-                    maxHeight: '320px',
-                    overflowY: 'auto',
-                    padding: '8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px',
-                  }}
-                >
-                  {filteredSuggestions.map((item, i) => (
+                  return (
                     <button
                       key={`${item.nome}-${i}`}
                       type="button"
                       onClick={() => handleSelectSuggestion(item)}
+                      aria-pressed={selected}
                       style={{
-                        width: '100%',
-                        padding: '12px',
+                        minHeight: '52px',
+                        padding: '9px 10px',
                         textAlign: 'left',
-                        background: item.isExisting ? '#eff6ff' : '#ffffff',
-                        border: '2px solid transparent',
-                        borderRadius: '16px',
+                        background: selected ? '#eff6ff' : '#f8fafc',
+                        border: `2px solid ${selected ? '#1d4ed8' : '#e2e8f0'}`,
+                        borderRadius: '14px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '14px',
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#f8fafc';
-                        e.currentTarget.style.borderColor = '#e2e8f0';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = item.isExisting ? '#eff6ff' : '#ffffff';
-                        e.currentTarget.style.borderColor = 'transparent';
+                        gap: '9px',
+                        color: '#0f172a',
                       }}
                     >
-                      <div
+                      <span
+                        aria-hidden="true"
                         style={{
-                          background: item.isExisting ? '#dbeafe' : '#f1f5f9',
-                          borderRadius: '12px',
-                          width: '40px',
-                          height: '40px',
+                          width: '28px',
+                          height: '28px',
+                          borderRadius: '9px',
+                          background: selected ? '#dbeafe' : '#e2e8f0',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0,
+                          fontSize: '14px',
                         }}
                       >
-                        <span style={{ fontSize: '20px' }}>💊</span>
-                      </div>
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', marginBottom: '2px' }}>
-                          {item.nome}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '13px',
-                            fontWeight: 700,
-                            color: item.isExisting ? '#1d4ed8' : '#64748b',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                          }}
-                        >
-                          {item.isExisting ? '★ Já uso' : item.categoria}
-                        </span>
-                      </div>
+                        💊
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '13px',
+                          fontWeight: 800,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {item.nome}
+                      </span>
                     </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <p style={{ fontSize: '13px', color: '#94a3b8', margin: '8px 0 0', fontWeight: 500 }}>
-              Ex: Losartana 50mg, Paracetamol 500mg, Omeprazol 20mg
-            </p>
-
-            <button
-              type="button"
-              onClick={() => { setStep(2); setShowSuggestions(false); }}
-              disabled={!nome.trim()}
-              style={stepButtonStyle(!!nome.trim())}
-            >
-              Continuar →
-            </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div
+                style={{
+                  padding: '14px',
+                  borderRadius: '14px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  color: '#64748b',
+                  fontSize: '14px',
+                  lineHeight: 1.4,
+                }}
+              >
+                Nenhum exemplo encontrado. Você pode continuar com o nome digitado.
+              </div>
+            )}
           </div>
-        )}
+
+          <button
+            type="button"
+            onClick={() => setStep(2)}
+            disabled={!nome.trim()}
+            style={{
+              ...stepButtonStyle(!!nome.trim()),
+              marginTop: '18px',
+            }}
+          >
+            Continuar →
+          </button>
+        </div>
 
         {/* STEP 2 — Quantidade */}
         {step === 2 && (

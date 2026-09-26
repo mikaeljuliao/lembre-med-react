@@ -23,6 +23,7 @@ import {
   getStoredHistory,
   addHistoryEntry,
 } from './utils/storage';
+import { generateDosesForDate } from './utils/businessLogic';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('inicio');
@@ -84,12 +85,13 @@ export default function App() {
       nome: medName,
       principioAtivo: '',
       apresentacao: 'Comprimido',
-      concentracao: medConfig?.dosagem || '1 comprimido',
+      concentracao: '',
       unidade: 'comprimidos',
-      quantidadeEstoque: 0,
-      alertaEstoqueMinimo: 5,
       validade: '',
-      observacoes: 'Adicionado automaticamente ao criar um lembrete.',
+      observacoes: '',
+      horarios: medConfig?.horarios || [],
+      quantidadePorDose: medConfig?.quantidadePorDose || 1,
+      lembreteId: treatmentData.id,
     };
 
     const updatedMedications = [medRecord, ...medications.filter((med) => med.id !== medicationId)];
@@ -103,7 +105,8 @@ export default function App() {
     setTreatments(updatedTreatments);
     saveStoredTreatments(updatedTreatments);
 
-    const nextDoses = getStoredDoses(today);
+    const nextDoses = generateDosesForDate(updatedTreatments, today);
+    saveStoredDosesForDate(today, nextDoses);
     setDoses(nextDoses);
     setIsQuickReminderModalOpen(false);
     setActiveTab('inicio');
