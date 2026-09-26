@@ -126,37 +126,16 @@ export function calculateStockProjection(medication, activeTreatments = []) {
   };
 }
 
-export function generateDosesForDate(activeTreatments = [], dateStr = new Date().toISOString().split('T')[0]) {
-  const doses = [];
+function padTime(value) {
+  return String(value).padStart(2, '0');
+}
 
-  activeTreatments.forEach((treatment) => {
-    if (treatment.status !== 'active') return;
-
-    if (treatment.dataInicio && dateStr < treatment.dataInicio) return;
-    if (treatment.dataFim && dateStr > treatment.dataFim) return;
-
-    (treatment.medicamentos || []).forEach((med) => {
-      const times = med.horarios || ['08:00'];
-      times.forEach((horario) => {
-        doses.push({
-          id: `${treatment.id}-${med.medicamentoId || med.nome}-${dateStr}-${horario}`,
-          treatmentId: treatment.id,
-          treatmentNome: treatment.nome,
-          medicationId: med.medicamentoId,
-          medicationNome: med.nome,
-          dosagem: med.dosagem || '1 unidade',
-          quantidade: med.quantidadePorDose || 1,
-          horario,
-          data: dateStr,
-          status: 'pending',
-          takenAt: null,
-          skipReason: null,
-        });
-      });
-    });
-  });
-
-  return doses.sort((a, b) => a.horario.localeCompare(b.horario));
+function formatScheduleTime(date) {
+  return [
+    padTime(date.getHours()),
+    padTime(date.getMinutes()),
+    padTime(date.getSeconds()),
+  ].join(':');
 }
 
 export function resolveReminderTimes(horarios = [], referenceDate = new Date()) {
@@ -168,27 +147,102 @@ export function resolveReminderTimes(horarios = [], referenceDate = new Date()) 
       const value = time.trim();
 
       if (value.toLowerCase() === 'agora') {
-        const minutes = referenceDate.getHours() * 60 + referenceDate.getMinutes();
-        const resolved = new Date(referenceDate);
-        resolved.setHours(0, 0, 0, 0);
-        resolved.setMinutes(minutes);
-        return `${String(resolved.getHours()).padStart(2, '0')}:${String(resolved.getMinutes()).padStart(2, '0')}`;
+        return formatScheduleTime(referenceDate);
       }
 
       if (/^\d+$/.test(value)) {
         const offsetMinutes = Number(value);
         const resolved = new Date(referenceDate.getTime() + offsetMinutes * 60000);
-        return `${String(resolved.getHours()).padStart(2, '0')}:${String(resolved.getMinutes()).padStart(2, '0')}`;
+        return formatScheduleTime(resolved);
+      }
+
+      if (/^\d{2}:\d{2}$/.test(value)) {
+        return `${value}:00`;
+      }
+
+      if (/^\d{2}:\d{2}:\d{2}$/.test(value)) {
+        return value;
       }
 
       return value;
     });
 }
 
+export function getDoseScheduledAt(dateStr, horario) {
+  const [hours = 0, minutes = 0, seconds = 0] = String(horario || '00:00')
+    .split(':')
+    .map(Number);
+
+  const [year, month, day] = String(dateStr)
+    .split('-')
+    .map(Number);
+
+  const target = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hours) || 0,
+    Number(minutes) || 0,
+    Number(seconds) || 0,
+    0
+  );
+
+  return target.toISOString();
+}
+
+export function generateDosesForDate(
+  activeTreatments = [],
+  dateStr = new Date().toISOString().split('T')[0]
+) {
+  const doses = [];
+
+  activeTreatments.forEach((treatment) => {
+    if (treatment.status !== 'active') return;
+
+    if (treatment.dataInicio && dateStr < treatment.dataInicio) return;
+    if (treatment.dataFim && dateStr > treatment.dataFim) return;
+
+    (treatment.medicamentos || []).forEach((med) => {
+      const times = med.horarios || ['08:00'];
+
+      times.forEach((horario) => {
+        doses.push({
+          id: `${treatment.id}-${med.medicamentoId || med.nome}-${dateStr}-${horario}`,
+          treatmentId: treatment.id,
+          treatmentNome: treatment.nome,
+          medicationId: med.medicamentoId,
+          medicationNome: med.nome,
+          dosagem: med.dosagem || '1 unidade',
+          quantidade: med.quantidadePorDose || 1,
+          horario,
+          scheduledAt: getDoseScheduledAt(dateStr, horario),
+          data: dateStr,
+          status: 'pending',
+          takenAt: null,
+          skipReason: null,
+          snoozedUntil: null,
+          alarmMuted: false,
+        });
+      });
+    });
+  });
+
+  return doses.sort((a, b) => {
+    const first = new Date(a.scheduledAt).getTime();
+    const second = new Date(b.scheduledAt).getTime();
+
+    if (first !== second) return first - second;
+    return String(a.medicationNome).localeCompare(String(b.medicationNome));
+  });
+}
+
 export function buildQuickReminderTreatment(nome, quantidadePorDose = 1, horarios = ['08:00']) {
   const cleanedName = String(nome || '').trim();
   const safeQuantity = Number(quantidadePorDose) > 0 ? Number(quantidadePorDose) : 1;
-  const normalizedSchedules = Array.isArray(horarios) && horarios.length > 0 ? resolveReminderTimes(horarios).filter(Boolean) : ['08:00'];
+  const normalizedSchedules =
+    Array.isArray(horarios) && horarios.length > 0
+      ? resolveReminderTimes(horarios).filter(Boolean)
+      : ['08:00:00'];
 
   return {
     id: `treat-${Date.now()}`,
