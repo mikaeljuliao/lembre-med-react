@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
+  ChevronLeft,
   ChevronRight,
-  Clock3,
-  ListChecks,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -111,26 +110,23 @@ export default function ProximaMedicacaoCard({
     );
 
     if (!selectedStillPending) {
-      const dueDose = todayPendingDoses.find((dose) => dose.isDue);
-      setSelectedDoseId((dueDose || todayPendingDoses[0]).id);
-      return;
-    }
-
-    const dueDose = todayPendingDoses.find((dose) => dose.isDue);
-
-    if (dueDose && dueDose.id !== selectedDoseId) {
-      setSelectedDoseId(dueDose.id);
+      setSelectedDoseId(todayPendingDoses[0].id);
     }
   }, [todayPendingDoses, selectedDoseId]);
 
+  const dueDose = useMemo(
+    () => todayPendingDoses.find((dose) => dose.isDue) || null,
+    [todayPendingDoses]
+  );
+
   useEffect(() => {
-    if (!selectedDose?.isDue || selectedDose.alarmMuted) {
+    if (!dueDose || dueDose.alarmMuted) {
       if (alarmIntervalRef.current) {
         window.clearInterval(alarmIntervalRef.current);
         alarmIntervalRef.current = null;
       }
 
-      if (!selectedDose?.isDue) {
+      if (!dueDose) {
         stopSpeaking();
       }
 
@@ -165,9 +161,9 @@ export default function ProximaMedicacaoCard({
       }, 2500);
     }
 
-    if (announcedAlarmRef.current !== selectedDose.id) {
-      speakText(buildReminderSpeech(selectedDose, new Date()));
-      announcedAlarmRef.current = selectedDose.id;
+    if (announcedAlarmRef.current !== dueDose.id) {
+      speakText(buildReminderSpeech(dueDose, new Date()));
+      announcedAlarmRef.current = dueDose.id;
     }
 
     return () => {
@@ -176,7 +172,7 @@ export default function ProximaMedicacaoCard({
         alarmIntervalRef.current = null;
       }
     };
-  }, [selectedDose?.id, selectedDose?.isDue, selectedDose?.alarmMuted]);
+  }, [dueDose?.id, dueDose?.isDue, dueDose?.alarmMuted]);
 
   useEffect(() => {
     return () => {
@@ -335,10 +331,26 @@ export default function ProximaMedicacaoCard({
     );
   }
 
-  const selectableDoses = todayPendingDoses;
+  const selectedDoseIndex = todayPendingDoses.findIndex(
+    (dose) => dose.id === selectedDose.id
+  );
+  const isShowingNearestDose = selectedDoseIndex === 0;
+  const hasPreviousDose = selectedDoseIndex > 0;
+  const hasNextDose = selectedDoseIndex >= 0 && selectedDoseIndex < todayPendingDoses.length - 1;
 
-  const handleSelectDose = (doseId) => {
-    setSelectedDoseId(doseId);
+  const handlePreviousDose = () => {
+    if (!hasPreviousDose) return;
+    setSelectedDoseId(todayPendingDoses[selectedDoseIndex - 1].id);
+  };
+
+  const handleNextDose = () => {
+    if (!hasNextDose) return;
+    setSelectedDoseId(todayPendingDoses[selectedDoseIndex + 1].id);
+  };
+
+  const handleReturnToNearestDose = () => {
+    if (!todayPendingDoses[0]) return;
+    setSelectedDoseId(todayPendingDoses[0].id);
   };
 
   const alarmActive = selectedDose.isDue && !selectedDose.alarmMuted;
@@ -419,81 +431,63 @@ export default function ProximaMedicacaoCard({
             </p>
           </div>
 
-          {selectableDoses.length > 1 && (
+          {todayPendingDoses.length > 1 && (
             <div className="mt-5 rounded-2xl border border-white/15 bg-white/10 p-3">
-              <div className="flex items-center gap-2 px-1 pb-2">
-                <ListChecks className="h-5 w-5 text-white/80" />
-                <p className="text-sm font-black text-white">
-                  Outras doses pendentes hoje
-                </p>
+              <div className="flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={handlePreviousDose}
+                  disabled={!hasPreviousDose}
+                  className="flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-35 focus:outline-none focus:ring-2 focus:ring-white"
+                  aria-label="Ver dose pendente anterior"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+
+                <div className="min-w-0 text-center">
+                  <p className="text-xs font-black uppercase tracking-wider text-white/65">
+                    Doses pendentes hoje
+                  </p>
+                  <p className="mt-0.5 text-sm font-black text-white">
+                    {selectedDoseIndex + 1} de {todayPendingDoses.length}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleNextDose}
+                  disabled={!hasNextDose}
+                  className="flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-35 focus:outline-none focus:ring-2 focus:ring-white"
+                  aria-label="Ver próxima dose pendente"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
               </div>
 
-              <div className="space-y-2">
-                {selectableDoses.map((dose) => {
-                  const isSelected = dose.id === selectedDose.id;
-
-                  return (
-                    <button
-                      key={dose.id}
-                      type="button"
-                      onClick={() => handleSelectDose(dose.id)}
-                      className={
-                        'flex min-h-14 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition focus:outline-none focus:ring-2 focus:ring-white ' +
-                        (isSelected
-                          ? 'bg-white text-slate-900 shadow-sm'
-                          : 'bg-white/10 text-white hover:bg-white/15')
-                      }
-                      aria-pressed={isSelected}
-                    >
-                      <div
-                        className={
-                          'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ' +
-                          (isSelected
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-white/10 text-white')
-                        }
-                      >
-                        <Clock3 className="h-5 w-5" />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-base font-black tabular-nums">
-                            {formatClockTime(dose.target)}
-                          </span>
-                          {dose.isDue && (
-                            <span
-                              className={
-                                'rounded-full px-2 py-0.5 text-[10px] font-black uppercase ' +
-                                (isSelected
-                                  ? 'bg-red-100 text-red-700'
-                                  : 'bg-white/15 text-white')
-                              }
-                            >
-                              Agora
-                            </span>
-                          )}
-                        </div>
-                        <p
-                          className={
-                            'truncate text-sm font-bold ' +
-                            (isSelected ? 'text-slate-600' : 'text-white/75')
-                          }
-                        >
-                          {dose.medicationNome} · {dose.dosagem}
-                        </p>
-                      </div>
-
-                      <ChevronRight
-                        className={
-                          'h-5 w-5 shrink-0 ' +
-                          (isSelected ? 'text-blue-600' : 'text-white/60')
-                        }
-                      />
-                    </button>
-                  );
-                })}
+              <div className="mt-3 flex items-center justify-center gap-2">
+                {todayPendingDoses.map((dose, index) => (
+                  <span
+                    key={dose.id}
+                    className={
+                      'h-1.5 rounded-full transition-all ' +
+                      (index === selectedDoseIndex
+                        ? 'w-7 bg-white'
+                        : 'w-2 bg-white/30')
+                    }
+                    aria-hidden="true"
+                  />
+                ))}
               </div>
+
+              {!isShowingNearestDose && (
+                <button
+                  type="button"
+                  onClick={handleReturnToNearestDose}
+                  className="mt-3 flex min-h-10 w-full items-center justify-center rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-black text-white transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white"
+                >
+                  Voltar para a próxima dose
+                </button>
+              )}
             </div>
           )}
 
