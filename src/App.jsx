@@ -132,11 +132,13 @@ export default function App() {
         const normalizedName = String(med.nome || '').trim().toLowerCase();
         const updatedTreatments = treatments
           .map((treatment) => {
-            const remainingMedications = (treatment.medicamentos || []).filter(
-              (medication) =>
-                String(medication.medicamentoId) !== String(medId) &&
-                String(medication.nome || '').trim().toLowerCase() !== normalizedName
-            );
+            const remainingMedications = (treatment.medicamentos || []).filter((medication) => {
+              const hasMedicationId = medication?.medicamentoId !== undefined && medication?.medicamentoId !== null;
+              const matchesId = String(medication?.medicamentoId) === String(medId);
+              const matchesName = String(medication?.nome || '').trim().toLowerCase() === normalizedName;
+
+              return hasMedicationId ? !matchesId : !matchesName;
+            });
 
             return remainingMedications.length > 0
               ? { ...treatment, medicamentos: remainingMedications }
