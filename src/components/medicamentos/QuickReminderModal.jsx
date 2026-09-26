@@ -106,6 +106,11 @@ export default function QuickReminderModal({
   };
 
   const isReady = Boolean(nome.trim() && (horario !== 'custom' || customTime));
+  const isExistingMedication = existingMedications.some(
+    (medication) =>
+      String(medication?.nome || '').trim().toLowerCase() ===
+      nome.trim().toLowerCase()
+  );
   const selectedSchedule = horario === 'custom' ? customTime : horario;
   const previewTarget = selectedSchedule
     ? resolveNextScheduledAt(selectedSchedule, new Date())
@@ -269,6 +274,14 @@ export default function QuickReminderModal({
             </button>
           </div>
 
+          {isExistingMedication && (
+            <div className="mt-3 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
+              <p className="text-sm font-bold leading-5 text-amber-800">
+                Este remédio já está cadastrado. O novo horário será adicionado aos lembretes dele.
+              </p>
+            </div>
+          )}
+
           {previewTarget && (
             <div className="mt-3 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4">
               <p className="text-xs font-black uppercase tracking-wider text-blue-500">
@@ -317,7 +330,7 @@ export default function QuickReminderModal({
           className="flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 text-xl font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-200"
         >
           <Check className="h-6 w-6" strokeWidth={3} />
-          Criar lembrete
+          {isExistingMedication ? 'Adicionar horário' : 'Criar lembrete'}
         </button>
       </div>
     </Modal>
