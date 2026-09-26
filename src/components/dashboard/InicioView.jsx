@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Check, Plus } from 'lucide-react';
 import ProximaMedicacaoCard from './ProximaMedicacaoCard';
+import { isDoseForActiveMedication } from '../../utils/reminderEngine';
 
 function formatToday() {
   const value = new Date().toLocaleDateString('pt-BR', {
@@ -41,14 +42,7 @@ export default function InicioView({
     () =>
       [...doses]
         .filter((dose) => dose.status === 'taken')
-        .filter((dose) =>
-          medications.some(
-            (medication) =>
-              String(medication.id) === String(dose.medicationId) ||
-              String(medication.nome || '').trim().toLowerCase() ===
-                String(dose.medicationNome || '').trim().toLowerCase()
-          )
-        )
+.filter((dose) => isDoseForActiveMedication(dose, medications))
         .sort((a, b) => getDoseTime(b) - getDoseTime(a)),
     [doses, medications]
   );
