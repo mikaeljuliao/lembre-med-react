@@ -1,4 +1,9 @@
-import { generateDosesForDate, getDoseScheduledAt, sanitizeStoredData } from './businessLogic';
+import {
+  generateDosesForDate,
+  getDoseScheduledAt,
+  normalizeMedicationName,
+  sanitizeStoredData,
+} from './businessLogic';
 import { getLocalDateString } from './reminderEngine';
 
 const STORAGE_KEYS = {
@@ -15,6 +20,99 @@ const LEGACY_MOCK_IDS = new Set(['med-1', 'med-2', 'med-3', 'med-4', 'treat-1', 
 
 function isLegacyMock(item) {
   return Boolean(item?.id && LEGACY_MOCK_IDS.has(String(item.id)));
+}
+
+function deduplicateMedications(medications) {
+  const seen = new Set();
+
+  return medications.filter((medication) => {
+    const key = normalizeMedicationName(medication?.nome);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function getTreatmentMedicationKey(treatment) {
+  const medication = treatment?.medicamentos?.[0];
+  if (!medication) return '';
+
+  const medicationId = String(medication.medicamentoId || '').trim();
+  if (medicationId) return 'id:' + medicationId;
+
+  const medicationName = normalizeMedicationName(medication.nome);
+  return medicationName ? 'name:' + medicationName : '';
+}
+
+function mergeDuplicateTreatments(treatments, medications) {
+  const canonicalMedicationIds = new Map(
+    medications.map((medication) => [
+      normalizeMedicationName(medication.nome),
+      String(medication.id),
+    ])
+  );
+  const grouped = new Map();
+
+  treatments.forEach((treatment) => {
+    const medication = treatment?.medicamentos?.[0];
+    const nameKey = normalizeMedicationName(medication?.nome);
+    if (!medication || !nameKey) return;
+
+    const canonicalId =
+      canonicalMedicationIds.get(nameKey) || medication.medicamentoId;
+    const key = canonicalId
+      ? 'id:' + String(canonicalId)
+      : 'name:' + nameKey;
+    const existing = grouped.get(key);
+
+    if (!existing) {
+      grouped.set(key, {
+        ...treatment,
+        medicamentos: [
+          {
+            ...medication,
+            medicamentoId: canonicalId || medication.medicamentoId,
+            horarios: Array.isArray(medication.horarios)
+              ? [...new Set(medication.horarios)]
+              : [],
+          },
+        ],
+      });
+      return;
+    }
+
+    const existingMedication = existing.medicamentos[0];
+    const horarios = [
+      ...(existingMedication.horarios || []),
+      ...(Array.isArray(medication.horarios) ? medication.horarios : []),
+    ];
+
+    existingMedication.horarios = [...new Set(horarios)].sort();
+    existingMedication.medicamentoId =
+      canonicalId || existingMedication.medicamentoId;
+
+    const dates = [existing.dataInicio, treatment.dataInicio]
+      .filter(Boolean)
+      .sort();
+
+    if (dates.length > 0) existing.dataInicio = dates[0];
+
+    const reminderTimes = [
+      existingMedication.primeiroLembreteAt,
+      medication.primeiroLembreteAt,
+    ]
+      .filter(Boolean)
+      .map((value) => new Date(value))
+      .filter((value) => !Number.isNaN(value.getTime()))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    if (reminderTimes.length > 0) {
+      existingMedication.primeiroLembreteAt =
+        reminderTimes[0].toISOString();
+    }
+  });
+
+  return [...grouped.values()];
 }
 
 function normalizeDose(dose, dateStr) {
@@ -43,7 +141,9 @@ export function getStoredMedications() {
   }
   try {
     const parsed = JSON.parse(data);
-    const cleaned = sanitizeStoredData({ medications: parsed }).medications.filter((medication) => !isLegacyMock(medication));
+    const cleaned = deduplicateMedications(
+      sanitizeStoredData({ medications: parsed }).medications.filter((medication) => !isLegacyMock(medication))
+    );
     if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) localStorage.setItem(STORAGE_KEYS.MEDICATIONS, JSON.stringify(cleaned));
     return cleaned;
   } catch {
@@ -63,7 +163,10 @@ export function getStoredTreatments() {
   }
   try {
     const parsed = JSON.parse(data);
-    const cleaned = sanitizeStoredData({ treatments: parsed }).treatments.filter((treatment) => !isLegacyMock(treatment));
+    const cleaned = mergeDuplicateTreatments(
+      sanitizeStoredData({ treatments: parsed }).treatments.filter((treatment) => !isLegacyMock(treatment)),
+      getStoredMedications()
+    );
     if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) localStorage.setItem(STORAGE_KEYS.TREATMENTS, JSON.stringify(cleaned));
     return cleaned;
   } catch {
