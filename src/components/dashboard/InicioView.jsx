@@ -41,8 +41,16 @@ export default function InicioView({
     () =>
       [...doses]
         .filter((dose) => dose.status === 'taken')
+        .filter((dose) =>
+          medications.some(
+            (medication) =>
+              String(medication.id) === String(dose.medicationId) ||
+              String(medication.nome || '').trim().toLowerCase() ===
+                String(dose.medicationNome || '').trim().toLowerCase()
+          )
+        )
         .sort((a, b) => getDoseTime(b) - getDoseTime(a)),
-    [doses]
+    [doses, medications]
   );
 
   const hasMedications = medications.length > 0;
@@ -76,6 +84,7 @@ export default function InicioView({
         onToggleDoseStatus={onToggleDoseStatus}
         onUpdateDose={onUpdateDose}
         onSnoozeDose={onSnoozeDose}
+        onNavigate={onNavigate}
       />
 
       {takenDoses.length > 0 && (
