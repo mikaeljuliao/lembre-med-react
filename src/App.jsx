@@ -23,7 +23,7 @@ import {
   getStoredHistory,
   addHistoryEntry,
 } from './utils/storage';
-import { generateDosesForDate } from './utils/businessLogic';
+import { generateDosesForDate, getLocalDateString } from './utils/businessLogic';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('inicio');
@@ -98,7 +98,7 @@ export default function App() {
     setMedications(updatedMedications);
     saveStoredMedications(updatedMedications);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     setSelectedDate(today);
 
     const updatedTreatments = [treatmentData, ...treatments.filter((t) => t.id !== treatmentData.id)];
@@ -138,7 +138,7 @@ export default function App() {
       : [treatmentData, ...treatments];
     setTreatments(updated);
     saveStoredTreatments(updated);
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     setSelectedDate(today);
     refreshDoseState(today);
     showToast(exists ? `Rotina "${treatmentData.nome}" atualizada.` : `Rotina "${treatmentData.nome}" criada.`);
@@ -180,6 +180,8 @@ export default function App() {
         ...d,
         status: newStatus,
         takenAt: isTaken ? new Date().toISOString() : null,
+        snoozedUntil: null,
+        alarmMuted: false,
       };
 
       if (isTaken || newStatus === 'skipped') {
@@ -207,6 +209,23 @@ export default function App() {
     if (newStatus === 'pending') showToast('Dose restaurada para pendente.', 'info');
   };
 
+  const handleUpdateDose = (doseId, changes) => {
+    const updatedDoses = doses.map((dose) =>
+      dose.id === doseId ? { ...dose, ...changes } : dose
+    );
+
+    setDoses(updatedDoses);
+    saveStoredDosesForDate(selectedDate, updatedDoses);
+  };
+
+  const handleSnoozeDose = (doseId, minutes = 10) => {
+    const snoozedUntil = new Date(Date.now() + minutes * 60000).toISOString();
+    handleUpdateDose(doseId, {
+      snoozedUntil,
+      alarmMuted: false,
+    });
+  };
+
   const openAddTreatment = () => {
     setTreatmentToEdit(null);
     setIsTreatmentModalOpen(true);
@@ -229,8 +248,9 @@ export default function App() {
           <InicioView
             doses={doses}
             medications={medications}
-            treatments={treatments}
             onToggleDoseStatus={handleToggleDoseStatus}
+            onUpdateDose={handleUpdateDose}
+            onSnoozeDose={handleSnoozeDose}
             onNavigate={setActiveTab}
           />
         )}
