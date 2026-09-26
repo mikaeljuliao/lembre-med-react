@@ -137,11 +137,13 @@ export default function MedicationListView({
                         <Clock3 className="h-4 w-4" />
                         {isAsNeeded
                           ? 'Quando precisar'
-                          : horarios.length > 0
-                            ? horarios.join(' · ')
-                            : 'Horário não informado'}
+                          : medication.tipoUso === 'interval'
+                            ? 'A cada ' + medication.intervaloHoras + 'h · inicia ' + (medication.horarioInicial || horarios[0] || '--:--')
+                            : horarios.length > 0
+                              ? horarios.join(' · ')
+                              : 'Horário não informado'}
                       </span>
-                      {!isAsNeeded && (
+                      {!isAsNeeded && medication.tipoUso !== 'interval' && (
                         <span className="text-slate-500">
                           {horarios.length} {horarios.length === 1 ? 'horário por dia' : 'horários por dia'}
                         </span>
