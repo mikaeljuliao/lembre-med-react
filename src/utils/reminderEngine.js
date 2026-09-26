@@ -106,6 +106,19 @@ export function getReminderState(dose, now = new Date()) {
   return { ...dose, target, remainingMs, isDue: remainingMs <= 0, isOverdue: remainingMs < 0 };
 }
 
+export function getDailyDoseSummary(doses = [], medications = []) {
+  const activeDoses = doses.filter((dose) =>
+    isDoseForActiveMedication(dose, medications)
+  );
+
+  return {
+    total: activeDoses.length,
+    taken: activeDoses.filter((dose) => dose.status === 'taken').length,
+    pending: activeDoses.filter((dose) => dose.status === 'pending').length,
+    skipped: activeDoses.filter((dose) => dose.status === 'skipped').length,
+  };
+}
+
 export function sortReminderStates(doses) {
   return [...doses].sort((a, b) => {
     if (a.remainingMs !== b.remainingMs) return a.remainingMs - b.remainingMs;
