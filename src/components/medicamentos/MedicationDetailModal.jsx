@@ -68,7 +68,7 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
             <div className="grid grid-cols-2 gap-2">
               {medication.horarios.map((horario) => (
                 <div key={horario} className="rounded-xl bg-white border border-blue-100 px-3 py-3 text-center">
-                  <span className="block text-xl font-black text-blue-700">{horario}</span>
+                  <span className="block text-xl font-black text-blue-700">{String(horario).slice(0, 5)}</span>
                   <span className="text-xs font-semibold text-slate-500">
                     {medication.quantidadePorDose || 1} {Number(medication.quantidadePorDose) === 1 ? 'unidade' : 'unidades'}
                   </span>
