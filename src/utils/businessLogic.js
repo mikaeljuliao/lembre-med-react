@@ -3,9 +3,13 @@ import {
   resolveReminderSelection,
 } from './reminderEngine';
 
+export function normalizeMedicationName(value) {
+  return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
 function isUserMedicationItem(item) {
   if (!item || typeof item !== 'object') return false;
-  return Boolean(String(item.nome || '').trim());
+  return Boolean(normalizeMedicationName(item.nome));
 }
 
 function isUserTreatmentItem(item) {
