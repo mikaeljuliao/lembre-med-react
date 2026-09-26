@@ -398,6 +398,7 @@ export default function App() {
     if (previousStatus !== newStatus && (isTaken || newStatus === 'skipped')) {
       const newHist = addHistoryEntry({
         doseId: currentDose.id,
+        medicationId: currentDose.medicationId,
         data: currentDose.data,
         horario: currentDose.horario,
         scheduledAt: currentDose.scheduledAt,
