@@ -159,13 +159,22 @@ export function generateDosesForDate(
       const times = med.horarios || ['08:00'];
 
       times.forEach((horario) => {
+        const scheduleFirstReminderAt =
+          med.primeirosLembretesAt?.[horario] ||
+          (med.primeiroLembreteHorario === horario ? med.primeiroLembreteAt : null);
+
+        if (scheduleFirstReminderAt) {
+          const scheduleFirstDate = getLocalDateString(new Date(scheduleFirstReminderAt));
+
+          if (dateStr < scheduleFirstDate) return;
+        }
+
         const isFirstReminder =
-          med.primeiroLembreteAt &&
-          getLocalDateString(new Date(med.primeiroLembreteAt)) === dateStr &&
-          (!med.primeiroLembreteHorario || med.primeiroLembreteHorario === horario);
+          scheduleFirstReminderAt &&
+          getLocalDateString(new Date(scheduleFirstReminderAt)) === dateStr;
 
         const firstReminderAt = isFirstReminder
-          ? med.primeiroLembreteAt
+          ? scheduleFirstReminderAt
           : getDoseScheduledAt(dateStr, horario);
 
         doses.push({
@@ -230,6 +239,9 @@ export function buildQuickReminderTreatment(
         horarios: [reminder.horario],
         primeiroLembreteAt: reminder.scheduledAt.toISOString(),
         primeiroLembreteHorario: reminder.horario,
+        primeirosLembretesAt: {
+          [reminder.horario]: reminder.scheduledAt.toISOString(),
+        },
         tipoLembrete: reminder.tipo,
       },
     ],
