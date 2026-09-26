@@ -1,6 +1,30 @@
+import {
+  getLocalDateString,
+  resolveReminderSelection,
+  formatClockTime,
+} from './reminderEngine';
+
+export function normalizeMedicationName(value) {
+  return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+export function isSameMedication(first, second) {
+  if (normalizeMedicationName(first?.nome) !== normalizeMedicationName(second?.nome)) {
+    return false;
+  }
+
+  const fields = ['concentracao', 'apresentacao', 'viaAdministracao', 'principioAtivo'];
+
+  return fields.every((field) => {
+    const firstValue = normalizeMedicationName(first?.[field]);
+    const secondValue = normalizeMedicationName(second?.[field]);
+    return !firstValue || !secondValue || firstValue === secondValue;
+  });
+}
+
 function isUserMedicationItem(item) {
   if (!item || typeof item !== 'object') return false;
-  return Boolean(String(item.nome || '').trim());
+  return Boolean(normalizeMedicationName(item.nome));
 }
 
 function isUserTreatmentItem(item) {
@@ -109,75 +133,29 @@ export function calculateStockProjection(medication, activeTreatments = []) {
   };
 }
 
-function padTime(value) {
-  return String(value).padStart(2, '0');
-}
-
-function formatScheduleTime(date) {
-  return [
-    padTime(date.getHours()),
-    padTime(date.getMinutes()),
-    padTime(date.getSeconds()),
-  ].join(':');
-}
-
 export function resolveReminderTimes(horarios = [], referenceDate = new Date()) {
   if (!Array.isArray(horarios)) return [];
 
   return horarios
-    .filter((time) => typeof time === 'string' && time.trim())
-    .map((time) => {
-      const value = time.trim();
-
-      if (value.toLowerCase() === 'agora') {
-        return formatScheduleTime(referenceDate);
-      }
-
-      if (/^\d+$/.test(value)) {
-        const offsetMinutes = Number(value);
-        const resolved = new Date(referenceDate.getTime() + offsetMinutes * 60000);
-        return formatScheduleTime(resolved);
-      }
-
-      if (/^\d{2}:\d{2}$/.test(value)) {
-        return `${value}:00`;
-      }
-
-      if (/^\d{2}:\d{2}:\d{2}$/.test(value)) {
-        return value;
-      }
-
-      return value;
-    });
-}
-
-export function getLocalDateString(date = new Date()) {
-  const year = date.getFullYear();
-  const month = padTime(date.getMonth() + 1);
-  const day = padTime(date.getDate());
-  return `${year}-${month}-${day}`;
+    .map((time) => resolveReminderSelection(time, referenceDate))
+    .filter(Boolean)
+    .map((selection) => selection.horario);
 }
 
 export function getDoseScheduledAt(dateStr, horario) {
-  const [hours = 0, minutes = 0, seconds = 0] = String(horario || '00:00')
-    .split(':')
-    .map(Number);
-
-  const [year, month, day] = String(dateStr)
-    .split('-')
-    .map(Number);
-
-  const target = new Date(
+  const [year, month, day] = String(dateStr).split('-').map(Number);
+  const parsed = String(horario || '00:00:00').split(':').map(Number);
+  const date = new Date(
     Number(year),
     Number(month) - 1,
     Number(day),
-    Number(hours) || 0,
-    Number(minutes) || 0,
-    Number(seconds) || 0,
+    Number(parsed[0]) || 0,
+    Number(parsed[1]) || 0,
+    Number(parsed[2]) || 0,
     0
   );
 
-  return target.toISOString();
+  return date.toISOString();
 }
 
 export function generateDosesForDate(
@@ -188,24 +166,35 @@ export function generateDosesForDate(
 
   activeTreatments.forEach((treatment) => {
     if (treatment.status !== 'active') return;
-
     if (treatment.dataInicio && dateStr < treatment.dataInicio) return;
     if (treatment.dataFim && dateStr > treatment.dataFim) return;
 
     (treatment.medicamentos || []).forEach((med) => {
-      const times = med.horarios || ['08:00'];
+      if (med.tipoUso === 'as_needed') return;
 
-      times.forEach((horario) => {
+      const createDose = (horario, scheduledAt) => {
         doses.push({
-          id: `${treatment.id}-${med.medicamentoId || med.nome}-${dateStr}-${horario}`,
+          id: treatment.id + '-' + (med.medicamentoId || med.nome) + '-' + dateStr + '-' + horario,
           treatmentId: treatment.id,
           treatmentNome: treatment.nome,
           medicationId: med.medicamentoId,
           medicationNome: med.nome,
-          dosagem: med.dosagem || '1 unidade',
+          dosagem: med.dosagem || String(med.quantidadePorDose || 1) + ' ' + (med.unidadeDose || 'unidade'),
           quantidade: med.quantidadePorDose || 1,
+          unidadeDose: med.unidadeDose || 'unidade',
+          principioAtivo: med.principioAtivo || '',
+          concentracao: med.concentracao || '',
+          apresentacao: med.apresentacao || 'Medicamento',
+          viaAdministracao: med.viaAdministracao || '',
+          orientacaoAlimentacao: med.orientacaoAlimentacao || 'sem_orientacao',
+          finalidade: med.finalidade || '',
+          observacoes: med.observacoes || '',
+          intervaloMinimoHoras: med.intervaloMinimoHoras || null,
+          limiteDosesDia: med.limiteDosesDia || null,
+          condicaoUso: med.condicaoUso || '',
+          intervaloHoras: med.intervaloHoras || null,
           horario,
-          scheduledAt: getDoseScheduledAt(dateStr, horario),
+          scheduledAt,
           data: dateStr,
           status: 'pending',
           takenAt: null,
@@ -213,6 +202,49 @@ export function generateDosesForDate(
           snoozedUntil: null,
           alarmMuted: false,
         });
+      };
+
+      if (med.tipoUso === 'interval') {
+        const intervaloHoras = Number(med.intervaloHoras);
+        const inicio = med.primeiroLembreteAt ? new Date(med.primeiroLembreteAt) : null;
+        if (!inicio || Number.isNaN(inicio.getTime()) || intervaloHoras <= 0) return;
+
+        const dayStart = new Date(dateStr + 'T00:00:00');
+        const dayEnd = new Date(dayStart);
+        dayEnd.setDate(dayEnd.getDate() + 1);
+
+        let current = new Date(inicio);
+        while (current < dayStart) {
+          current = new Date(current.getTime() + intervaloHoras * 60 * 60 * 1000);
+        }
+        while (current < dayEnd) {
+          if (current >= inicio) createDose(formatClockTime(current), current.toISOString());
+          current = new Date(current.getTime() + intervaloHoras * 60 * 60 * 1000);
+        }
+        return;
+      }
+
+      const times = Array.isArray(med.horarios) && med.horarios.length > 0 ? med.horarios : ['08:00'];
+
+      times.forEach((horario) => {
+        const scheduleFirstReminderAt =
+          med.primeirosLembretesAt?.[horario] ||
+          (med.primeiroLembreteHorario === horario ? med.primeiroLembreteAt : null);
+
+        if (scheduleFirstReminderAt) {
+          const scheduleFirstDate = getLocalDateString(new Date(scheduleFirstReminderAt));
+          if (dateStr < scheduleFirstDate) return;
+        }
+
+        const isFirstReminder =
+          scheduleFirstReminderAt &&
+          getLocalDateString(new Date(scheduleFirstReminderAt)) === dateStr;
+
+        const firstReminderAt = isFirstReminder
+          ? scheduleFirstReminderAt
+          : getDoseScheduledAt(dateStr, horario);
+
+        createDose(horario, firstReminderAt);
       });
     });
   });
@@ -220,36 +252,105 @@ export function generateDosesForDate(
   return doses.sort((a, b) => {
     const first = new Date(a.scheduledAt).getTime();
     const second = new Date(b.scheduledAt).getTime();
-
     if (first !== second) return first - second;
-    return String(a.medicationNome).localeCompare(String(b.medicationNome));
+    return String(a.medicationNome).localeCompare(String(b.medicationNome), 'pt-BR');
   });
 }
 
-export function buildQuickReminderTreatment(nome, quantidadePorDose = 1, horarios = ['08:00']) {
-  const cleanedName = String(nome || '').trim();
-  const safeQuantity = Number(quantidadePorDose) > 0 ? Number(quantidadePorDose) : 1;
-  const normalizedSchedules =
-    Array.isArray(horarios) && horarios.length > 0
-      ? resolveReminderTimes(horarios).filter(Boolean)
-      : ['08:00:00'];
+export function buildMedicationTreatment(
+  data = {},
+  referenceDate = new Date()
+) {
+  const cleanedName = String(data.nome || '').trim();
+  const safeQuantity =
+    Number(data.quantidadePorDose) > 0 ? Number(data.quantidadePorDose) : 1;
+  const unidadeDose = String(data.unidadeDose || 'unidade').trim() || 'unidade';
+  const tipoUso = ['scheduled', 'interval', 'as_needed'].includes(data.tipoUso) ? data.tipoUso : 'scheduled';
+  const horarios = tipoUso === 'scheduled'
+    ? [...new Set((Array.isArray(data.horarios) ? data.horarios : []).filter(Boolean))]
+    : tipoUso === 'interval'
+      ? [String(data.horarioInicial || data.horarios?.[0] || '08:00')]
+      : [];
+
+  const selections = horarios
+    .map((horario) => resolveReminderSelection(horario, referenceDate))
+    .filter(Boolean)
+    .sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
+  const firstSelection = selections[0] || null;
+  const fallback = resolveReminderSelection('08:00', referenceDate);
+  const reminder = firstSelection || fallback;
+  const medicationId = data.medicamentoId || 'med-' + Date.now();
+  const treatmentId = data.treatmentId || 'treat-' + Date.now();
+  const primeirosLembretesAt = {};
+
+  if (tipoUso === 'scheduled') {
+    selections.forEach((selection) => {
+      primeirosLembretesAt[selection.horario] = selection.scheduledAt.toISOString();
+    });
+  }
+
+  const medication = {
+    medicamentoId: medicationId,
+    nome: cleanedName || 'Medicamento',
+    principioAtivo: String(data.principioAtivo || '').trim(),
+    concentracao: String(data.concentracao || '').trim(),
+    apresentacao: String(data.apresentacao || 'Comprimido').trim(),
+    viaAdministracao: String(data.viaAdministracao || '').trim(),
+    unidadeDose,
+    quantidadePorDose: safeQuantity,
+    dosagem: String(safeQuantity) + ' ' + unidadeDose,
+    vezesPorDia: horarios.length,
+    horarios,
+    primeirosLembretesAt,
+    primeiroLembreteAt: tipoUso === 'interval' && data.preservePrimeiroLembreteAt
+      ? data.preservePrimeiroLembreteAt
+      : firstSelection?.scheduledAt?.toISOString() || null,
+    primeiroLembreteHorario: firstSelection?.horario || null,
+    tipoLembrete: tipoUso,
+    tipoUso,
+    intervaloHoras: tipoUso === 'interval' ? Number(data.intervaloHoras) : null,
+    horarioInicial: tipoUso === 'interval' ? (firstSelection?.horario || '08:00') : '',
+    orientacaoAlimentacao: data.orientacaoAlimentacao || 'sem_orientacao',
+    finalidade: String(data.finalidade || '').trim(),
+    observacoes: String(data.observacoes || '').trim(),
+    intervaloMinimoHoras: Number(data.intervaloMinimoHoras) > 0 ? Number(data.intervaloMinimoHoras) : null,
+    limiteDosesDia: Number(data.limiteDosesDia) > 0 ? Number(data.limiteDosesDia) : null,
+    condicaoUso: String(data.condicaoUso || '').trim(),
+    validade: String(data.validade || '').trim(),
+  };
 
   return {
-    id: `treat-${Date.now()}`,
-    nome: cleanedName ? `Lembrete: ${cleanedName}` : 'Lembrete do remédio',
-    descricao: 'Lembrete simples para uso diário',
-    dataInicio: getLocalDateString(),
-    dataFim: '',
+    id: treatmentId,
+    nome: cleanedName ? 'Lembrete: ' + cleanedName : 'Lembrete do remédio',
+    descricao: String(data.finalidade || '').trim() || 'Lembrete para uso do medicamento',
+    dataInicio: data.dataInicio || reminder.dataInicio,
+    dataFim: data.dataFim || '',
     status: 'active',
-    medicamentos: [
-      {
-        medicamentoId: `med-${Date.now()}`,
-        nome: cleanedName || 'Medicamento',
-        dosagem: `${safeQuantity} comprimido${safeQuantity > 1 ? 's' : ''}`,
-        quantidadePorDose: safeQuantity,
-        vezesPorDia: normalizedSchedules.length,
-        horarios: normalizedSchedules,
-      },
-    ],
+    tipoUso,
+    orientacaoAlimentacao: data.orientacaoAlimentacao || 'sem_orientacao',
+    finalidade: String(data.finalidade || '').trim(),
+    observacoes: String(data.observacoes || '').trim(),
+    intervaloMinimoHoras: Number(data.intervaloMinimoHoras) > 0 ? Number(data.intervaloMinimoHoras) : null,
+    limiteDosesDia: Number(data.limiteDosesDia) > 0 ? Number(data.limiteDosesDia) : null,
+    condicaoUso: String(data.condicaoUso || '').trim(),
+    medicamentos: [medication],
   };
+}
+
+export function buildQuickReminderTreatment(
+  nome,
+  quantidadePorDose = 1,
+  horarios = ['08:00'],
+  referenceDate = new Date()
+) {
+  return buildMedicationTreatment(
+    {
+      nome,
+      quantidadePorDose,
+      unidadeDose: 'comprimido' + (Number(quantidadePorDose) > 1 ? 's' : ''),
+      horarios,
+      apresentacao: 'Comprimido',
+    },
+    referenceDate
+  );
 }

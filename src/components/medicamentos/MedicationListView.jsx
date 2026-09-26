@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { Pill, Search, Plus, Trash2, Clock3, ChevronRight } from 'lucide-react';
+import {
+  ChevronRight,
+  Clock3,
+  Pill,
+  Plus,
+  Search,
+  Trash2,
+} from 'lucide-react';
 
 export default function MedicationListView({
   medications = [],
@@ -10,252 +17,165 @@ export default function MedicationListView({
   const [searchTerm, setSearchTerm] = useState('');
 
   const filtered = medications.filter(
-    (m) =>
-      (m.nome || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (m.principioAtivo || '').toLowerCase().includes(searchTerm.toLowerCase())
+    (medication) =>
+      (medication.nome || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (medication.principioAtivo || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '48px' }} className="animate-fade-in">
-
-      {/* Header com botão único de adicionar */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%)',
-          borderRadius: '24px',
-          padding: '24px',
-          boxShadow: '0 10px 30px rgba(29,78,216,0.25)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-          <div
-            style={{
-              background: 'rgba(255,255,255,0.2)',
-              borderRadius: '12px',
-              width: '44px',
-              height: '44px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Pill style={{ width: '22px', height: '22px', color: '#ffffff' }} />
+    <section className="space-y-4">
+      <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 to-indigo-600 text-white shadow-lg">
+        <div className="p-6 sm:p-7">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15">
+              <Pill className="h-7 w-7" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-2xl font-black leading-tight">Meus remédios</h1>
+              <p className="mt-1 text-sm font-semibold leading-5 text-white/80">
+                Aqui ficam os remédios que você cadastrou e os horários usados pelos lembretes.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#ffffff', margin: 0 }}>
-              Meus Remédios
-            </h2>
-            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0 }}>
-              {medications.length === 0
-                ? 'Nenhum remédio cadastrado ainda'
-                : `${medications.length} remédio${medications.length !== 1 ? 's' : ''} cadastrado${medications.length !== 1 ? 's' : ''}`}
+
+          <div className="mt-5 rounded-2xl bg-white/10 px-4 py-3">
+            <p className="text-sm font-bold leading-5 text-white">
+              Na página inicial, você vê o que precisa fazer agora. Aqui, você confere seus remédios e os horários deles.
             </p>
           </div>
-        </div>
 
-        <button
-          type="button"
-          onClick={onOpenAdd}
-          style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px',
-            background: '#ffffff',
-            border: 'none',
-            borderRadius: '16px',
-            padding: '16px',
-            color: '#1d4ed8',
-            fontWeight: 900,
-            fontSize: '17px',
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          }}
-        >
-          <Plus style={{ width: '22px', height: '22px' }} />
-          Adicionar medicamento
-        </button>
+          <button
+            type="button"
+            onClick={onOpenAdd}
+            className="mt-5 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 py-4 text-lg font-black text-blue-700 shadow-md transition hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-white/40"
+          >
+            <Plus className="h-6 w-6" />
+            Adicionar remédio
+          </button>
+        </div>
       </div>
 
-      {/* Busca */}
       {medications.length > 0 && (
-        <div style={{ position: 'relative' }}>
-          <Search
-            style={{
-              width: '18px',
-              height: '18px',
-              color: '#94a3b8',
-              position: 'absolute',
-              left: '14px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-            }}
-          />
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Buscar remédio..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%',
-              paddingLeft: '42px',
-              paddingRight: '16px',
-              paddingTop: '14px',
-              paddingBottom: '14px',
-              background: '#ffffff',
-              border: '2px solid #e2e8f0',
-              borderRadius: '16px',
-              fontSize: '15px',
-              color: '#0f172a',
-              boxSizing: 'border-box',
-              outline: 'none',
-              fontWeight: 500,
-            }}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            className="min-h-14 w-full rounded-2xl border-2 border-slate-200 bg-white pl-12 pr-4 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+            aria-label="Buscar remédio"
           />
         </div>
       )}
 
-      {/* Lista / Estado vazio */}
       {filtered.length === 0 ? (
-        <div
-          style={{
-            background: '#f8fafc',
-            border: '2px dashed #cbd5e1',
-            borderRadius: '20px',
-            padding: '40px 24px',
-            textAlign: 'center',
-          }}
-        >
-          <p style={{ fontSize: '40px', margin: '0 0 12px' }}>💊</p>
-          <p style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
-            {searchTerm ? 'Nenhum resultado' : 'Nenhum remédio ainda'}
-          </p>
-          <p style={{ fontSize: '14px', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+        <div className="rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm">
+            💊
+          </div>
+          <h2 className="mt-4 text-xl font-black text-slate-900">
+            {searchTerm ? 'Nenhum remédio encontrado' : 'Nenhum remédio cadastrado'}
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm font-medium leading-5 text-slate-600">
             {searchTerm
-              ? 'Tente outro nome.'
-              : 'Toque em "Adicionar medicamento" acima para começar.'}
+              ? 'Tente buscar pelo nome do remédio ou pelo princípio ativo.'
+              : 'Quando você adicionar um remédio, ele aparecerá aqui com os horários dos lembretes.'}
           </p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {filtered.map((med) => (
-            <div
-              key={med.id}
-              onClick={() => onViewDetails(med)}
-              style={{
-                background: '#ffffff',
-                borderRadius: '24px',
-                border: '2px solid #e2e8f0',
-                padding: '20px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
-                cursor: 'pointer',
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)';
-                e.currentTarget.style.borderColor = '#cbd5e1';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.04)';
-                e.currentTarget.style.borderColor = '#e2e8f0';
-              }}
-            >
-              {/* Icone grande */}
+        <div className="space-y-3">
+          <div className="flex items-end justify-between gap-3 px-1">
+            <div>
+              <h2 className="text-xl font-black text-slate-900">
+                {medications.length} remédio{medications.length === 1 ? '' : 's'} cadastrado{medications.length === 1 ? '' : 's'}
+              </h2>
+              <p className="mt-1 text-sm font-semibold text-slate-500">
+                Toque em um remédio para conferir seus detalhes e horários.
+              </p>
+            </div>
+          </div>
+
+          {filtered.map((medication) => {
+            const horarios = Array.isArray(medication.horarios)
+              ? medication.horarios.map((horario) => String(horario).slice(0, 5))
+              : [];
+            const isAsNeeded = medication.tipoUso === 'as_needed';
+
+            return (
               <div
-                style={{
-                  background: '#eff6ff',
-                  borderRadius: '20px',
-                  width: '64px',
-                  height: '64px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  border: '2px solid #bfdbfe',
-                }}
+                key={medication.id}
+                className="overflow-hidden rounded-3xl border-2 border-slate-200 bg-white shadow-sm transition hover:border-blue-200 hover:shadow-md"
               >
-                <Pill style={{ width: '32px', height: '32px', color: '#2563eb' }} />
-              </div>
-
-              {/* Informações */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h3
-                  style={{
-                    fontSize: '22px',
-                    fontWeight: 900,
-                    color: '#0f172a',
-                    margin: '0 0 4px',
-                    lineHeight: 1.2,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
+                <button
+                  type="button"
+                  onClick={() => onViewDetails(medication)}
+                  className="flex min-h-28 w-full items-center gap-4 px-5 py-5 text-left focus:outline-none focus:ring-4 focus:ring-inset focus:ring-blue-100 sm:px-6"
+                  aria-label={'Ver detalhes de ' + medication.nome}
                 >
-                  {med.nome}
-                </h3>
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 border-blue-100 bg-blue-50 text-blue-600">
+                    <Pill className="h-8 w-8" />
+                  </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-                  {med.concentracao && (
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#475569' }}>
-                      {med.concentracao}
-                    </span>
-                  )}
-
-                  {Array.isArray(med.horarios) && med.horarios.length > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1d4ed8' }}>
-                      <Clock3 style={{ width: '16px', height: '16px', flexShrink: 0 }} />
-                      <span style={{ fontSize: '14px', fontWeight: 800 }}>
-                        Lembrete às {med.horarios.map((horario) => String(horario).slice(0, 5)).join(' e ')}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="truncate text-xl font-black text-slate-900 sm:text-2xl">
+                        {medication.nome}
+                      </h3>
+                      <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-black text-emerald-700">
+                        Lembrete ativo
                       </span>
                     </div>
-                  )}
 
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#64748b' }}>
-                    Toque para ver os detalhes
-                  </span>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-sm font-bold text-slate-500">
+                      {medication.concentracao && <span>{medication.concentracao}</span>}
+                      {medication.viaAdministracao && <span>· {medication.viaAdministracao}</span>}
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold text-blue-700">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock3 className="h-4 w-4" />
+                        {isAsNeeded
+                          ? 'Quando precisar'
+                          : medication.tipoUso === 'interval'
+                            ? 'A cada ' + medication.intervaloHoras + 'h · inicia ' + (medication.horarioInicial || horarios[0] || '--:--')
+                            : horarios.length > 0
+                              ? horarios.join(' · ')
+                              : 'Horário não informado'}
+                      </span>
+                      {!isAsNeeded && medication.tipoUso !== 'interval' && (
+                        <span className="text-slate-500">
+                          {horarios.length} {horarios.length === 1 ? 'horário por dia' : 'horários por dia'}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="mt-2 text-sm font-semibold text-slate-500">
+                      Toque para ver detalhes
+                    </p>
+                  </div>
+
+                  <ChevronRight className="h-6 w-6 shrink-0 text-slate-400" />
+                </button>
+
+                <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-5 py-3 sm:px-6">
+                  <p className="text-sm font-semibold text-slate-500">
+                    Os lembretes deste remédio aparecem na página inicial.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(medication.id)}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-red-200 bg-white text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    aria-label={'Excluir ' + medication.nome}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
                 </div>
               </div>
-
-              <ChevronRight style={{ width: '22px', height: '22px', color: '#94a3b8', flexShrink: 0 }} />
-
-              {/* Botão de excluir */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(med.id);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '14px',
-                  border: '2px solid #fecaca',
-                  background: '#fef2f2',
-                  color: '#dc2626',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  transition: 'background 0.2s',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = '#fef2f2'; }}
-                aria-label="Excluir remédio"
-              >
-                <Trash2 style={{ width: '20px', height: '20px' }} />
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
-    </div>
+    </section>
   );
 }

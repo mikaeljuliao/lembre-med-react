@@ -1,4 +1,11 @@
-import { generateDosesForDate, getDoseScheduledAt, getLocalDateString, sanitizeStoredData } from './businessLogic';
+import {
+  generateDosesForDate,
+  getDoseScheduledAt,
+  normalizeMedicationName,
+  isSameMedication,
+  sanitizeStoredData,
+} from './businessLogic';
+import { getLocalDateString } from './reminderEngine';
 
 const STORAGE_KEYS = {
   MEDICATIONS: 'dosefacil_medications',
@@ -10,32 +17,126 @@ const STORAGE_KEYS = {
 const INITIAL_MEDICATIONS = [];
 const INITIAL_TREATMENTS = [];
 
-const LEGACY_MOCK_IDS = new Set([
-  'med-1',
-  'med-2',
-  'med-3',
-  'med-4',
-  'treat-1',
-  'treat-2',
-  'treat-3',
-  'hist-1',
-]);
+const LEGACY_MOCK_IDS = new Set(['med-1', 'med-2', 'med-3', 'med-4', 'treat-1', 'treat-2', 'treat-3', 'hist-1']);
 
 function isLegacyMock(item) {
   return Boolean(item?.id && LEGACY_MOCK_IDS.has(String(item.id)));
 }
 
+function deduplicateMedications(medications) {
+  const result = [];
+
+  medications.forEach((medication) => {
+    if (!normalizeMedicationName(medication?.nome)) return;
+    if (result.some((existing) => isSameMedication(existing, medication))) return;
+    result.push(medication);
+  });
+
+  return result;
+}
+
+function mergeDuplicateTreatments(treatments, medications) {
+  const grouped = new Map();
+
+  treatments.forEach((treatment) => {
+    const medication = treatment?.medicamentos?.[0];
+    if (!medication || !normalizeMedicationName(medication.nome)) return;
+
+    const canonicalMedication = medications.find((item) => isSameMedication(item, medication));
+    const canonicalId = canonicalMedication?.id || medication.medicamentoId;
+    const key = canonicalId
+      ? 'id:' + String(canonicalId)
+      : 'med:' + normalizeMedicationName(medication.nome) + '|' +
+        normalizeMedicationName(medication.concentracao) + '|' +
+        normalizeMedicationName(medication.apresentacao) + '|' +
+        normalizeMedicationName(medication.viaAdministracao);
+
+    const existing = grouped.get(key);
+
+    if (!existing) {
+      grouped.set(key, {
+        ...treatment,
+        medicamentos: [
+          {
+            ...medication,
+            medicamentoId: canonicalId || medication.medicamentoId,
+            horarios: Array.isArray(medication.horarios) ? [...new Set(medication.horarios)] : [],
+          },
+        ],
+      });
+      return;
+    }
+
+    const existingMedication = existing.medicamentos[0];
+
+    if (medication.tipoUso === 'interval' || existingMedication.tipoUso === 'interval') {
+      Object.assign(existingMedication, medication);
+      existingMedication.medicamentoId = canonicalId || existingMedication.medicamentoId;
+      return;
+    }
+
+    existingMedication.horarios = [
+      ...new Set([
+        ...(existingMedication.horarios || []),
+        ...(Array.isArray(medication.horarios) ? medication.horarios : []),
+      ]),
+    ].sort();
+
+    const mergedFirstReminders = {
+      ...(existingMedication.primeirosLembretesAt || {}),
+      ...(medication.primeirosLembretesAt || {}),
+    };
+
+    Object.keys(medication.primeirosLembretesAt || {}).forEach((horario) => {
+      const currentValue = existingMedication.primeirosLembretesAt?.[horario];
+      const incomingValue = medication.primeirosLembretesAt?.[horario];
+      if (!currentValue || !incomingValue) return;
+
+      const currentDate = new Date(currentValue);
+      const incomingDate = new Date(incomingValue);
+
+      if (
+        !Number.isNaN(currentDate.getTime()) &&
+        !Number.isNaN(incomingDate.getTime()) &&
+        incomingDate.getTime() < currentDate.getTime()
+      ) {
+        mergedFirstReminders[horario] = incomingValue;
+      }
+    });
+
+    existingMedication.primeirosLembretesAt = mergedFirstReminders;
+
+    const reminderTimes = [
+      { value: existingMedication.primeiroLembreteAt, horario: existingMedication.primeiroLembreteHorario },
+      { value: medication.primeiroLembreteAt, horario: medication.primeiroLembreteHorario || medication.horarios?.[0] },
+    ]
+      .filter((item) => item.value)
+      .map((item) => ({ ...item, date: new Date(item.value) }))
+      .filter((item) => !Number.isNaN(item.date.getTime()))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    if (reminderTimes.length > 0) {
+      existingMedication.primeiroLembreteAt = reminderTimes[0].date.toISOString();
+      existingMedication.primeiroLembreteHorario = reminderTimes[0].horario || existingMedication.horarios?.[0];
+    }
+  });
+
+  return [...grouped.values()];
+}
+
 function normalizeDose(dose, dateStr) {
   if (!dose || typeof dose !== 'object') return null;
-
   const normalizedDate = dose.data || dateStr;
   const horario = String(dose.horario || '00:00');
   const scheduledAt = dose.scheduledAt || getDoseScheduledAt(normalizedDate, horario);
+  const status = ['pending', 'taken', 'skipped', 'missed'].includes(dose.status) ? dose.status : 'pending';
 
   return {
     ...dose,
     data: normalizedDate,
     scheduledAt,
+    status,
+    takenAt: status === 'taken' ? dose.takenAt || null : null,
     snoozedUntil: dose.snoozedUntil || null,
     alarmMuted: Boolean(dose.alarmMuted),
   };
@@ -47,17 +148,12 @@ export function getStoredMedications() {
     localStorage.setItem(STORAGE_KEYS.MEDICATIONS, JSON.stringify(INITIAL_MEDICATIONS));
     return [];
   }
-
   try {
     const parsed = JSON.parse(data);
-    const cleaned = sanitizeStoredData({ medications: parsed }).medications.filter(
-      (medication) => !isLegacyMock(medication)
+    const cleaned = deduplicateMedications(
+      sanitizeStoredData({ medications: parsed }).medications.filter((medication) => !isLegacyMock(medication))
     );
-
-    if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) {
-      localStorage.setItem(STORAGE_KEYS.MEDICATIONS, JSON.stringify(cleaned));
-    }
-
+    if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) localStorage.setItem(STORAGE_KEYS.MEDICATIONS, JSON.stringify(cleaned));
     return cleaned;
   } catch {
     return [];
@@ -74,17 +170,13 @@ export function getStoredTreatments() {
     localStorage.setItem(STORAGE_KEYS.TREATMENTS, JSON.stringify(INITIAL_TREATMENTS));
     return [];
   }
-
   try {
     const parsed = JSON.parse(data);
-    const cleaned = sanitizeStoredData({ treatments: parsed }).treatments.filter(
-      (treatment) => !isLegacyMock(treatment)
+    const cleaned = mergeDuplicateTreatments(
+      sanitizeStoredData({ treatments: parsed }).treatments.filter((treatment) => !isLegacyMock(treatment)),
+      getStoredMedications()
     );
-
-    if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) {
-      localStorage.setItem(STORAGE_KEYS.TREATMENTS, JSON.stringify(cleaned));
-    }
-
+    if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) localStorage.setItem(STORAGE_KEYS.TREATMENTS, JSON.stringify(cleaned));
     return cleaned;
   } catch {
     return [];
@@ -98,7 +190,6 @@ export function saveStoredTreatments(treatments) {
 export function getStoredDoses(dateStr = getLocalDateString()) {
   const allDosesData = localStorage.getItem(STORAGE_KEYS.DOSES);
   let allDosesMap = {};
-
   if (allDosesData) {
     try {
       allDosesMap = JSON.parse(allDosesData);
@@ -107,32 +198,36 @@ export function getStoredDoses(dateStr = getLocalDateString()) {
     }
   }
 
-  if (allDosesMap[dateStr]) {
-    const normalized = allDosesMap[dateStr]
-      .filter((dose) => !isLegacyMock(dose) && !['treat-1', 'treat-2', 'treat-3'].includes(String(dose?.treatmentId)))
-      .map((dose) => normalizeDose(dose, dateStr))
-      .filter(Boolean);
-
-    if (JSON.stringify(normalized) !== JSON.stringify(allDosesMap[dateStr])) {
-      allDosesMap[dateStr] = normalized;
-      localStorage.setItem(STORAGE_KEYS.DOSES, JSON.stringify(allDosesMap));
-    }
-
-    return normalized;
-  }
-
   const treatments = getStoredTreatments();
   const generated = generateDosesForDate(treatments, dateStr);
+  const stored = Array.isArray(allDosesMap[dateStr])
+    ? allDosesMap[dateStr]
+        .filter((dose) => !isLegacyMock(dose) && !['treat-1', 'treat-2', 'treat-3'].includes(String(dose?.treatmentId)))
+        .map((dose) => normalizeDose(dose, dateStr))
+        .filter(Boolean)
+    : [];
+  const storedById = new Map(stored.map((dose) => [dose.id, dose]));
+  const normalized = generated.map((dose) => {
+    const previous = storedById.get(dose.id);
+    if (!previous) return dose;
+    return {
+      ...dose,
+      status: previous.status,
+      takenAt: previous.takenAt,
+      skipReason: previous.skipReason || null,
+      snoozedUntil: previous.snoozedUntil || null,
+      alarmMuted: Boolean(previous.alarmMuted),
+    };
+  });
 
-  allDosesMap[dateStr] = generated;
+  allDosesMap[dateStr] = normalized;
   localStorage.setItem(STORAGE_KEYS.DOSES, JSON.stringify(allDosesMap));
-  return generated;
+  return normalized;
 }
 
 export function saveStoredDosesForDate(dateStr, doses) {
   const allDosesData = localStorage.getItem(STORAGE_KEYS.DOSES);
   let allDosesMap = {};
-
   if (allDosesData) {
     try {
       allDosesMap = JSON.parse(allDosesData);
@@ -140,44 +235,109 @@ export function saveStoredDosesForDate(dateStr, doses) {
       allDosesMap = {};
     }
   }
-
   allDosesMap[dateStr] = doses.map((dose) => normalizeDose(dose, dateStr)).filter(Boolean);
   localStorage.setItem(STORAGE_KEYS.DOSES, JSON.stringify(allDosesMap));
 }
 
+function reconcileHistoryWithStoredDoses(history) {
+  const dosesData = localStorage.getItem(STORAGE_KEYS.DOSES);
+  if (!dosesData) return history;
+
+  let dosesMap = {};
+  try {
+    dosesMap = JSON.parse(dosesData);
+  } catch {
+    return history;
+  }
+
+  const existingDoseIds = new Set(
+    history
+      .map((entry) => entry?.doseId)
+      .filter(Boolean)
+      .map((doseId) => String(doseId))
+  );
+
+  const reconciled = [...history];
+
+  Object.entries(dosesMap).forEach(([dateStr, dateDoses]) => {
+    if (!Array.isArray(dateDoses)) return;
+
+    dateDoses.forEach((dose) => {
+      if (!dose || !['taken', 'skipped'].includes(dose.status)) return;
+
+      const doseId = String(dose.id || '');
+      const alreadyExistsById = doseId && existingDoseIds.has(doseId);
+
+      const alreadyExistsByLegacyData = history.some(
+        (entry) =>
+          !entry.doseId &&
+          String(entry.data || dateStr) === String(dose.data || dateStr) &&
+          String(entry.horario || '') === String(dose.horario || '') &&
+          String(entry.medicationNome || '').trim().toLowerCase() ===
+            String(dose.medicationNome || '').trim().toLowerCase() &&
+          entry.status === dose.status
+      );
+
+      if (alreadyExistsById || alreadyExistsByLegacyData) return;
+
+      reconciled.push({
+        id: 'hist-reconciled-' + dateStr + '-' + String(dose.id || Date.now()),
+        timestamp: dose.takenAt || dose.scheduledAt || new Date(dateStr + 'T00:00:00').toISOString(),
+        doseId: dose.id || null,
+        data: dose.data || dateStr,
+        horario: dose.horario || null,
+        scheduledAt: dose.scheduledAt || null,
+        medicationNome: dose.medicationNome,
+        dosagem: dose.dosagem,
+        treatmentNome: dose.treatmentNome,
+        status: dose.status,
+        observacao:
+          dose.status === 'taken'
+            ? 'Dose recuperada do estado salvo.'
+            : 'Registro recuperado do estado salvo.',
+      });
+
+      if (doseId) existingDoseIds.add(doseId);
+    });
+  });
+
+  return reconciled.sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+}
+
 export function getStoredHistory() {
   const data = localStorage.getItem(STORAGE_KEYS.HISTORY);
+  let parsed = [];
 
-  if (!data) {
-    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify([]));
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(data);
-    const cleaned = sanitizeStoredData({ history: parsed }).history.filter(
-      (entry) => !isLegacyMock(entry)
-    );
-
-    if (JSON.stringify(parsed) !== JSON.stringify(cleaned)) {
-      localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(cleaned));
+  if (data) {
+    try {
+      parsed = JSON.parse(data);
+    } catch {
+      parsed = [];
     }
-
-    return cleaned;
-  } catch {
-    return [];
   }
+
+  const cleaned = sanitizeStoredData({ history: parsed }).history.filter(
+    (entry) => !isLegacyMock(entry)
+  );
+  const reconciled = reconcileHistoryWithStoredDoses(cleaned);
+
+  if (JSON.stringify(parsed) !== JSON.stringify(reconciled)) {
+    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(reconciled));
+  }
+
+  return reconciled;
 }
 
 export function addHistoryEntry(entry) {
   const history = getStoredHistory();
   const newEntry = {
-    id: `hist-${Date.now()}`,
+    id: 'hist-' + Date.now(),
     timestamp: new Date().toISOString(),
     ...entry,
   };
   const updated = [newEntry, ...history];
-
   localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(updated));
   return updated;
 }
