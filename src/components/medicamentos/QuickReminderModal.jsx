@@ -248,6 +248,7 @@ export default function QuickReminderModal({
       intervaloHoras,
       horarioInicial,
       medicamentoId: initialMedication?.id,
+      preservePrimeiroLembreteAt: isEditing && tipoUso === 'interval' ? initialMedication?.primeiroLembreteAt : null,
     });
     onSave(treatment);
     reset();
