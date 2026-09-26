@@ -173,7 +173,7 @@ export default function ProximaMedicacaoCard({
     }
 
     if (announcedAlarmRef.current !== selectedDose.id) {
-      speakText(buildReminderSpeech(doseToRead, new Date()));
+      speakText(buildReminderSpeech(selectedDose, new Date()));
       announcedAlarmRef.current = selectedDose.id;
     }
 
@@ -254,7 +254,7 @@ export default function ProximaMedicacaoCard({
       }
     }
 
-    speakText(buildReminderSpeech(selectedDose, new Date()));
+    speakText(buildReminderSpeech(doseToRead, new Date()));
   };
 
   if (medications.length === 0) {
