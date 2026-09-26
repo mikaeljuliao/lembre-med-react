@@ -71,6 +71,14 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
             <div className="rounded-xl bg-white px-4 py-3">
               <p className="text-base font-black text-slate-900">Quando precisar</p>
               <p className="mt-1 text-sm font-semibold text-slate-500">Este remédio não possui alarme fixo.</p>
+              {medication.condicaoUso && <p className="mt-3 text-sm font-bold text-slate-800">Quando usar: {medication.condicaoUso}</p>}
+              {(medication.intervaloMinimoHoras || medication.limiteDosesDia) && (
+                <p className="mt-1 text-sm font-semibold text-slate-600">
+                  {medication.intervaloMinimoHoras ? 'Intervalo mínimo: ' + medication.intervaloMinimoHoras + 'h' : ''}
+                  {medication.intervaloMinimoHoras && medication.limiteDosesDia ? ' · ' : ''}
+                  {medication.limiteDosesDia ? 'Máximo: ' + medication.limiteDosesDia + ' por dia' : ''}
+                </p>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2">
