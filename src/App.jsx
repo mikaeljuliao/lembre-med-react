@@ -192,6 +192,8 @@ export default function App() {
       intervaloMinimoHoras: medConfig?.intervaloMinimoHoras || existingMedication?.intervaloMinimoHoras || treatmentData?.intervaloMinimoHoras || null,
       limiteDosesDia: medConfig?.limiteDosesDia || existingMedication?.limiteDosesDia || treatmentData?.limiteDosesDia || null,
       condicaoUso: medConfig?.condicaoUso || existingMedication?.condicaoUso || treatmentData?.condicaoUso || '',
+      intervaloHoras: medConfig?.intervaloHoras || existingMedication?.intervaloHoras || treatmentData?.intervaloHoras || null,
+      horarioInicial: medConfig?.horarioInicial || existingMedication?.horarioInicial || treatmentData?.horarioInicial || '',
       horarios: nextHorarios,
       primeirosLembretesAt: nextPrimeirosLembretesAt,
       tipoUso: existingMedicationConfig?.tipoUso || medConfig?.tipoUso || existingMedication?.tipoUso || treatmentData?.tipoUso || 'scheduled',
@@ -231,6 +233,8 @@ export default function App() {
                   intervaloMinimoHoras: medConfig?.intervaloMinimoHoras || medication.intervaloMinimoHoras || treatmentData?.intervaloMinimoHoras || null,
                   limiteDosesDia: medConfig?.limiteDosesDia || medication.limiteDosesDia || treatmentData?.limiteDosesDia || null,
                   condicaoUso: medConfig?.condicaoUso || medication.condicaoUso || treatmentData?.condicaoUso || '',
+                  intervaloHoras: medConfig?.intervaloHoras || medication.intervaloHoras || treatmentData?.intervaloHoras || null,
+                  horarioInicial: medConfig?.horarioInicial || medication.horarioInicial || treatmentData?.horarioInicial || '',
                   dataInicio: treatmentData?.dataInicio || medication.dataInicio || '',
                   dataFim: treatmentData?.dataFim || medication.dataFim || '',
                 }
