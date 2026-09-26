@@ -17,6 +17,21 @@ import {
 } from '../../utils/reminderEngine';
 import { speakText, stopSpeaking } from '../../utils/speech';
 
+function isActiveMedicationDose(dose, medications) {
+  const medicationIds = new Set(medications.map((medication) => String(medication.id)));
+
+  if (dose?.medicationId && medicationIds.has(String(dose.medicationId))) {
+    return true;
+  }
+
+  const doseName = String(dose?.medicationNome || '').trim().toLowerCase();
+
+  return medications.some(
+    (medication) =>
+      String(medication?.nome || '').trim().toLowerCase() === doseName
+  );
+}
+
 function createAlarmTone(audioContext) {
   const oscillator = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
@@ -49,33 +64,15 @@ export default function ProximaMedicacaoCard({
   const alarmIntervalRef = useRef(null);
   const announcedAlarmRef = useRef(null);
 
-  const activeMedicationIds = useMemo(
-    () => new Set(medications.map((medication) => String(medication.id))),
-    [medications]
-  );
-
-  const isActiveMedicationDose = (dose) => {
-    if (dose?.medicationId && activeMedicationIds.has(String(dose.medicationId))) {
-      return true;
-    }
-
-    const doseName = String(dose?.medicationNome || '').trim().toLowerCase();
-
-    return medications.some(
-      (medication) =>
-        String(medication?.nome || '').trim().toLowerCase() === doseName
-    );
-  };
-
   const activeTodayDoses = useMemo(
-    () => doses.filter(isActiveMedicationDose),
+    () => doses.filter((dose) => isActiveMedicationDose(dose, medications)),
     [doses, medications]
   );
 
   const pendingDoses = useMemo(() => {
     const todayPending = activeTodayDoses.filter((dose) => dose.status === 'pending');
     const futurePending = futureDoses
-      .filter(isActiveMedicationDose)
+      .filter((dose) => isActiveMedicationDose(dose, medications))
       .filter((dose) => dose.status === 'pending');
 
     return [...todayPending, ...futurePending];
