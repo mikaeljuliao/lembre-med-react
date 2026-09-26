@@ -9,6 +9,7 @@ import {
   buildReminderSpeech,
   formatClockTime,
   formatCountdown,
+  getLocalDateString,
   formatRemainingForUser,
   getCalendarLabel,
   getDailyDoseSummary,
@@ -48,7 +49,7 @@ function FutureReminderSchedule({ doses = [], medications = [], now, excludeId =
     const grouped = [];
 
     activeDoses.forEach((dose) => {
-      const dateKey = dose.target.toISOString().slice(0, 10);
+      const dateKey = getLocalDateString(dose.target);
       const existing = grouped.find((group) => group.dateKey === dateKey);
 
       if (existing) {
