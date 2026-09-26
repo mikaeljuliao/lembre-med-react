@@ -22,15 +22,12 @@ import {
   getStoredHistory,
   addHistoryEntry,
 } from './utils/storage';
-import { generateDosesForDate } from './utils/businessLogic';
 import { getLocalDateString } from './utils/reminderEngine';
+import { generateDosesForDate } from './utils/businessLogic';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('inicio');
-  const [selectedDate, setSelectedDate] = useState(
-    getLocalDateString()
-  );
-
+  const [selectedDate, setSelectedDate] = useState(getLocalDateString());
   const [medications, setMedications] = useState([]);
   const [treatments, setTreatments] = useState([]);
   const [doses, setDoses] = useState([]);
@@ -50,12 +47,9 @@ export default function App() {
   }, [treatments, selectedDate]);
 
   const [toast, setToast] = useState(null);
-
   const [isQuickReminderModalOpen, setIsQuickReminderModalOpen] = useState(false);
-
   const [isDetailMedOpen, setIsDetailMedOpen] = useState(false);
   const [selectedDetailMed, setSelectedDetailMed] = useState(null);
-
   const [deleteRequest, setDeleteRequest] = useState(null);
 
   useEffect(() => {
@@ -67,10 +61,7 @@ export default function App() {
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       const today = getLocalDateString();
-
-      setSelectedDate((currentDate) =>
-        currentDate === today ? currentDate : today
-      );
+      setSelectedDate((currentDate) => currentDate === today ? currentDate : today);
     }, 30000);
 
     return () => window.clearInterval(intervalId);
@@ -88,7 +79,8 @@ export default function App() {
   const handleQuickReminderSave = (treatmentData) => {
     const medConfig = treatmentData?.medicamentos?.[0];
     const medName = medConfig?.nome || 'Medicamento';
-    const medicationId = medConfig?.medicamentoId || `med-${Date.now()}`;
+    const medicationId = medConfig?.medicamentoId || 'med-' + Date.now();
+
     const medRecord = {
       id: medicationId,
       nome: medName,
@@ -103,75 +95,112 @@ export default function App() {
       lembreteId: treatmentData.id,
     };
 
-    const updatedMedications = [medRecord, ...medications.filter((med) => med.id !== medicationId)];
+    const updatedMedications = [
+      medRecord,
+      ...medications.filter((medication) => medication.id !== medicationId),
+    ];
+    const updatedTreatments = [
+      treatmentData,
+      ...treatments.filter((treatment) => treatment.id !== treatmentData.id),
+    ];
+
     setMedications(updatedMedications);
     saveStoredMedications(updatedMedications);
-
-    const today = getLocalDateString();
-    setSelectedDate(today);
-
-    const updatedTreatments = [treatmentData, ...treatments.filter((t) => t.id !== treatmentData.id)];
     setTreatments(updatedTreatments);
     saveStoredTreatments(updatedTreatments);
 
-    const nextDoses = generateDosesForDate(updatedTreatments, today);
-    saveStoredDosesForDate(today, nextDoses);
+    const today = getLocalDateString();
+    setSelectedDate(today);
+    const nextDoses = getStoredDoses(today);
     setDoses(nextDoses);
     setIsQuickReminderModalOpen(false);
     setActiveTab('inicio');
-    showToast(`${medName} adicionado e lembrete criado.`, 'success');
+    showToast(medName + ' adicionado e lembrete criado.', 'success');
   };
 
   const handleDeleteMedication = (medId) => {
-    const med = medications.find((m) => m.id === medId);
+    const med = medications.find((medication) => medication.id === medId);
     if (!med) return;
+
     setDeleteRequest({
       type: 'medication',
       title: 'Remover medicamento',
-      message: `Deseja remover "${med.nome}"?`,
+      message: 'Deseja remover "' + med.nome + '"?',
       item: med,
       onConfirm: () => {
-        const updated = medications.filter((m) => m.id !== medId);
-        setMedications(updated);
-        saveStoredMedications(updated);
-        showToast(`"${med.nome}" removido.`, 'info');
+        const updatedMedications = medications.filter((medication) => medication.id !== medId);
+        const normalizedName = String(med.nome || '').trim().toLowerCase();
+        const updatedTreatments = treatments
+          .map((treatment) => {
+            const remainingMedications = (treatment.medicamentos || []).filter(
+              (medication) =>
+                String(medication.medicamentoId) !== String(medId) &&
+                String(medication.nome || '').trim().toLowerCase() !== normalizedName
+            );
+
+            return remainingMedications.length > 0
+              ? { ...treatment, medicamentos: remainingMedications }
+              : null;
+          })
+          .filter(Boolean);
+
+        setMedications(updatedMedications);
+        saveStoredMedications(updatedMedications);
+        setTreatments(updatedTreatments);
+        saveStoredTreatments(updatedTreatments);
+
+        const today = getLocalDateString();
+        const refreshedDoses = getStoredDoses(today);
+        setSelectedDate(today);
+        setDoses(refreshedDoses);
+
+        showToast('"' + med.nome + '" removido.', 'info');
         setDeleteRequest(null);
       },
     });
   };
 
   const handleToggleDoseStatus = (doseId, newStatus) => {
-    const updatedDoses = doses.map((d) => {
-      if (d.id !== doseId) return d;
+    const dose = doses.find((item) => item.id === doseId);
+    if (!dose) return;
 
-      const isTaken = newStatus === 'taken';
-      const updatedItem = {
-        ...d,
+    const doseDate = dose.data || selectedDate;
+    const dateDoses = doseDate === selectedDate ? doses : getStoredDoses(doseDate);
+    const currentDose = dateDoses.find((item) => item.id === doseId);
+    if (!currentDose) return;
+
+    const isTaken = newStatus === 'taken';
+    const previousStatus = currentDose.status;
+    const updatedDoses = dateDoses.map((item) => {
+      if (item.id !== doseId) return item;
+      return {
+        ...item,
         status: newStatus,
         takenAt: isTaken ? new Date().toISOString() : null,
         snoozedUntil: null,
         alarmMuted: false,
       };
-
-      if (isTaken || newStatus === 'skipped') {
-        const newHist = addHistoryEntry({
-          medicationNome: d.medicationNome,
-          dosagem: d.dosagem,
-          treatmentNome: d.treatmentNome,
-          status: newStatus,
-          observacao: isTaken
-            ? 'Dose registrada pelo usuário.'
-            : 'Dose não registrada pelo usuário.',
-        });
-        setHistory(newHist);
-
-      }
-
-      return updatedItem;
     });
 
-    setDoses(updatedDoses);
-    saveStoredDosesForDate(selectedDate, updatedDoses);
+    if (previousStatus !== newStatus && (isTaken || newStatus === 'skipped')) {
+      const newHist = addHistoryEntry({
+        doseId: currentDose.id,
+        data: currentDose.data,
+        horario: currentDose.horario,
+        scheduledAt: currentDose.scheduledAt,
+        medicationNome: currentDose.medicationNome,
+        dosagem: currentDose.dosagem,
+        treatmentNome: currentDose.treatmentNome,
+        status: newStatus,
+        observacao: isTaken
+          ? 'Dose registrada pelo usuário.'
+          : 'Dose não registrada pelo usuário.',
+      });
+      setHistory(newHist);
+    }
+
+    saveStoredDosesForDate(doseDate, updatedDoses);
+    if (doseDate === selectedDate) setDoses(updatedDoses);
 
     if (newStatus === 'taken') showToast('Dose registrada! ✓');
     if (newStatus === 'skipped') showToast('Dose não registrada.', 'info');
@@ -179,29 +208,24 @@ export default function App() {
   };
 
   const handleUpdateDose = (doseId, changes) => {
-    const updatedDoses = doses.map((dose) =>
-      dose.id === doseId ? { ...dose, ...changes } : dose
-    );
+    const dose = doses.find((item) => item.id === doseId);
+    if (!dose) return;
 
+    const updatedDoses = doses.map((item) =>
+      item.id === doseId ? { ...item, ...changes } : item
+    );
     setDoses(updatedDoses);
     saveStoredDosesForDate(selectedDate, updatedDoses);
   };
 
   const handleSnoozeDose = (doseId, minutes = 10) => {
     const snoozedUntil = new Date(Date.now() + minutes * 60000).toISOString();
-    handleUpdateDose(doseId, {
-      snoozedUntil,
-      alarmMuted: false,
-    });
+    handleUpdateDose(doseId, { snoozedUntil, alarmMuted: false });
   };
 
   return (
     <div className="min-h-screen text-slate-900 flex flex-col font-sans">
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
-
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-5 sm:py-7">
         {activeTab === 'inicio' && (
           <InicioView
@@ -214,62 +238,46 @@ export default function App() {
             onNavigate={setActiveTab}
           />
         )}
-
         {activeTab === 'remedios' && (
           <RemediosView
             medications={medications}
             history={history}
             onOpenAdd={() => setIsQuickReminderModalOpen(true)}
             onDelete={handleDeleteMedication}
-            onViewDetails={(med) => {
-              setSelectedDetailMed(med);
+            onViewDetails={(medication) => {
+              setSelectedDetailMed(medication);
               setIsDetailMedOpen(true);
             }}
           />
         )}
-
         {activeTab === 'saude' && <SaudeView />}
         {activeTab === 'ajuda' && <AjudaView />}
       </main>
-
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
-
       <Toast toast={toast} onClose={() => setToast(null)} />
-
       <MedicationDetailModal
         isOpen={isDetailMedOpen}
         onClose={() => setIsDetailMedOpen(false)}
         medication={selectedDetailMed}
         onOpenOfficialInfo={() => setActiveTab('saude')}
       />
-
       <QuickReminderModal
         isOpen={isQuickReminderModalOpen}
         onClose={() => setIsQuickReminderModalOpen(false)}
         onSave={handleQuickReminderSave}
         existingMedications={medications}
       />
-
-
       {deleteRequest && (
-        <Modal isOpen={!!deleteRequest} onClose={() => setDeleteRequest(null)} title={deleteRequest.title}>
+        <Modal
+          isOpen={!!deleteRequest}
+          onClose={() => setDeleteRequest(null)}
+          title={deleteRequest.title}
+        >
           <div className="space-y-5">
             <p className="text-sm text-slate-600">{deleteRequest.message}</p>
             <div className="flex gap-3 justify-end">
-              <button
-                type="button"
-                onClick={() => setDeleteRequest(null)}
-                className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={deleteRequest.onConfirm}
-                className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white"
-              >
-                Remover
-              </button>
+              <button type="button" onClick={() => setDeleteRequest(null)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700">Cancelar</button>
+              <button type="button" onClick={deleteRequest.onConfirm} className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white">Remover</button>
             </div>
           </div>
         </Modal>
