@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   ChevronRight,
-  Clock3,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -314,7 +313,7 @@ export default function ProximaMedicacaoCard({
             </p>
             <p className="mt-2 text-sm font-bold text-white/80">
               {selectedDose.isDue
-                ? `O alarme deveria tocar às ${formatClockTime(selectedDose.target)}.`
+                ? `Horário do alarme: ${formatClockTime(selectedDose.target)}.`
                 : `${formatRemainingForUser(selectedDose.remainingMs)} · ${targetDescription}`}
             </p>
           </div>
