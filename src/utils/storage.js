@@ -1,4 +1,5 @@
-import { generateDosesForDate, getDoseScheduledAt, getLocalDateString, sanitizeStoredData } from './businessLogic';
+import { generateDosesForDate, getDoseScheduledAt, sanitizeStoredData } from './businessLogic';
+import { getLocalDateString } from './reminderEngine';
 
 const STORAGE_KEYS = {
   MEDICATIONS: 'dosefacil_medications',
