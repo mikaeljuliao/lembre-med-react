@@ -243,6 +243,38 @@ describe('businessLogic tests', () => {
     });
   });
 
+  describe('interval schedules', () => {
+    it('generates every interval across midnight', () => {
+      const treatment = buildMedicationTreatment(
+        {
+          nome: 'Antibiótico',
+          horarios: ['22:00'],
+          horarioInicial: '22:00',
+          intervaloHoras: 8,
+          tipoUso: 'interval',
+        },
+        new Date(2026, 8, 26, 10, 0, 0)
+      );
+
+      expect(generateDosesForDate([treatment], '2026-09-26').map((dose) => dose.horario)).toEqual(['22:00']);
+      expect(generateDosesForDate([treatment], '2026-09-27').map((dose) => dose.horario)).toEqual(['06:00', '14:00', '22:00']);
+    });
+
+    it('does not generate doses for as-needed use', () => {
+      const treatment = buildMedicationTreatment({
+        nome: 'Dipirona',
+        quantidadePorDose: 20,
+        unidadeDose: 'gota',
+        tipoUso: 'as_needed',
+        intervaloMinimoHoras: 6,
+        limiteDosesDia: 4,
+        condicaoUso: 'Se estiver com dor',
+      });
+
+      expect(generateDosesForDate([treatment], '2026-09-26')).toEqual([]);
+    });
+  });
+
   describe('medication identity', () => {
     it('keeps different concentrations as different medications', () => {
       expect(
