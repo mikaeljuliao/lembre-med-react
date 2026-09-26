@@ -116,6 +116,62 @@ describe('businessLogic tests', () => {
     });
   });
 
+  describe('schedule-specific first reminders', () => {
+    it('does not apply one exact first reminder time to every schedule', () => {
+      const doses = generateDosesForDate(
+        [
+          {
+            id: 't1',
+            status: 'active',
+            dataInicio: '2026-09-26',
+            medicamentos: [
+              {
+                medicamentoId: 'm1',
+                nome: 'Paracetamol',
+                dosagem: '1 comprimido',
+                horarios: ['08:00', '20:00'],
+                primeiroLembreteAt: new Date(2026, 8, 26, 20, 0, 30).toISOString(),
+                primeiroLembreteHorario: '20:00',
+              },
+            ],
+          },
+        ],
+        '2026-09-26'
+      );
+
+      expect(doses).toHaveLength(2);
+      expect(doses[0].scheduledAt).toBe(new Date(2026, 8, 26, 8, 0, 0).toISOString());
+      expect(doses[1].scheduledAt).toBe(new Date(2026, 8, 26, 20, 0, 30).toISOString());
+    });
+
+    it('does not generate a newly added schedule before its first occurrence', () => {
+      const doses = generateDosesForDate(
+        [
+          {
+            id: 't1',
+            status: 'active',
+            dataInicio: '2026-09-26',
+            medicamentos: [
+              {
+                medicamentoId: 'm1',
+                nome: 'Paracetamol',
+                dosagem: '1 comprimido',
+                horarios: ['08:00', '20:00'],
+                primeirosLembretesAt: {
+                  '20:00': new Date(2026, 8, 27, 20, 0, 0).toISOString(),
+                },
+              },
+            ],
+          },
+        ],
+        '2026-09-26'
+      );
+
+      expect(doses).toHaveLength(1);
+      expect(doses[0].horario).toBe('08:00');
+    });
+  });
+
   describe('buildQuickReminderTreatment', () => {
     it('creates a simple reminder treatment from name, quantity and schedule', () => {
       const reminder = buildQuickReminderTreatment('Losartana', 1, ['08:00', '20:00']);
