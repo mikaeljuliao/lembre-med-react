@@ -33,17 +33,6 @@ function deduplicateMedications(medications) {
   });
 }
 
-function getTreatmentMedicationKey(treatment) {
-  const medication = treatment?.medicamentos?.[0];
-  if (!medication) return '';
-
-  const medicationId = String(medication.medicamentoId || '').trim();
-  if (medicationId) return 'id:' + medicationId;
-
-  const medicationName = normalizeMedicationName(medication.nome);
-  return medicationName ? 'name:' + medicationName : '';
-}
-
 function mergeDuplicateTreatments(treatments, medications) {
   const canonicalMedicationIds = new Map(
     medications.map((medication) => [
