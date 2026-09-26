@@ -19,6 +19,116 @@ import {
 } from '../../utils/reminderEngine';
 import { speakText, stopSpeaking } from '../../utils/speech';
 
+
+function formatFutureDateLabel(target, now) {
+  const calendarLabel = getCalendarLabel(target, now);
+
+  if (calendarLabel === 'Hoje' || calendarLabel === 'Amanhã') {
+    return calendarLabel;
+  }
+
+  const value = target.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function FutureReminderSchedule({ doses = [], medications = [], now, excludeId = null, title = 'Próximas doses' }) {
+  const groups = useMemo(() => {
+    const activeDoses = doses
+      .filter((dose) => isDoseForActiveMedication(dose, medications))
+      .filter((dose) => dose.status === 'pending')
+      .filter((dose) => dose.id !== excludeId)
+      .map((dose) => getReminderState(dose, now))
+      .sort((a, b) => a.target.getTime() - b.target.getTime());
+
+    const grouped = [];
+
+    activeDoses.forEach((dose) => {
+      const dateKey = dose.target.toISOString().slice(0, 10);
+      const existing = grouped.find((group) => group.dateKey === dateKey);
+
+      if (existing) {
+        existing.doses.push(dose);
+        return;
+      }
+
+      grouped.push({
+        dateKey,
+        label: formatFutureDateLabel(dose.target, now),
+        doses: [dose],
+      });
+    });
+
+    return grouped;
+  }, [doses, medications, now, excludeId]);
+
+  if (groups.length === 0) return null;
+
+  return (
+    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-100 px-5 py-4">
+        <p className="text-xs font-black uppercase tracking-wider text-blue-600">
+          {title}
+        </p>
+        <h3 className="mt-1 text-xl font-black text-slate-900">
+          Você já tem estes lembretes programados
+        </h3>
+        <p className="mt-1 text-sm font-medium leading-5 text-slate-500">
+          Cada grupo mostra o dia em que a dose está programada.
+        </p>
+      </div>
+
+      <div className="divide-y divide-slate-100">
+        {groups.map((group) => (
+          <div key={group.dateKey} className="px-5 py-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-lg font-black text-slate-900">{group.label}</p>
+                <p className="text-sm font-semibold text-slate-500">
+                  {group.doses.length} dose{group.doses.length === 1 ? '' : 's'} programada{group.doses.length === 1 ? '' : 's'}
+                </p>
+              </div>
+              <span className="flex h-10 min-w-10 items-center justify-center rounded-xl bg-blue-50 px-2 text-sm font-black text-blue-700">
+                {group.doses.length}
+              </span>
+            </div>
+
+            <div className="mt-3 space-y-2">
+              {group.doses.map((dose) => (
+                <div
+                  key={dose.id}
+                  className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
+                >
+                  <div className="flex h-11 w-14 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
+                    <span className="text-base font-black">{formatClockTime(dose.target)}</span>
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-black text-slate-900">
+                      {dose.medicationNome}
+                    </p>
+                    <p className="mt-0.5 text-sm font-semibold text-slate-500">
+                      {dose.dosagem}
+                    </p>
+                  </div>
+
+                  <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-black text-amber-800">
+                    Pendente
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function createAlarmTone(audioContext) {
   const oscillator = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
@@ -108,8 +218,7 @@ export default function ProximaMedicacaoCard({
     .filter((dose) => dose.id !== selectedDose?.id)
     .map((dose) => getReminderState(dose, now));
 
-  const visibleOtherTodayDoses = sortReminderStates(otherTodayDoses).slice(0, 4);
-  const hiddenTodayCount = Math.max(0, otherTodayDoses.length - visibleOtherTodayDoses.length);
+  const visibleOtherTodayDoses = sortReminderStates(otherTodayDoses);
   const dailySummary = getDailyDoseSummary(doses, medications);
   const takenCount = dailySummary.taken;
 
@@ -283,22 +392,29 @@ export default function ProximaMedicacaoCard({
 
     return (
       <section className="space-y-4">
-        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-7 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-sm">
-            <Check className="h-9 w-9" strokeWidth={3} />
+        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-7">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-sm">
+              <Check className="h-8 w-8" strokeWidth={3} />
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-wider text-emerald-700">
+                Hoje
+              </p>
+              <h2 className="mt-1 text-2xl font-black text-slate-900">
+                {allTaken
+                  ? 'Todas as doses de hoje foram registradas'
+                  : 'Não há mais doses pendentes hoje'}
+              </h2>
+              <p className="mt-2 text-base font-semibold leading-6 text-slate-600">
+                {allTaken
+                  ? takenCount + ' de ' + activeTodayDoses.length + ' doses registradas.'
+                  : skippedCount > 0
+                    ? skippedCount + ' dose' + (skippedCount === 1 ? '' : 's') + ' marcada' + (skippedCount === 1 ? '' : 's') + ' como não tomada.'
+                    : 'Você não tem mais doses pendentes neste dia.'}
+              </p>
+            </div>
           </div>
-          <h2 className="mt-5 text-2xl font-black text-slate-900">
-            {allTaken
-              ? 'Todas as doses de hoje foram registradas'
-              : 'Não há mais doses pendentes hoje'}
-          </h2>
-          <p className="mx-auto mt-2 max-w-md text-base leading-6 text-slate-600">
-            {allTaken
-              ? takenCount + ' de ' + activeTodayDoses.length + ' doses registradas.'
-              : skippedCount > 0
-                ? skippedCount + ' dose' + (skippedCount === 1 ? '' : 's') + ' marcada' + (skippedCount === 1 ? '' : 's') + ' como não tomada.'
-                : 'Você não tem mais medicamentos pendentes neste dia.'}
-          </p>
         </div>
 
         {nextFutureReminder && (
@@ -331,6 +447,14 @@ export default function ProximaMedicacaoCard({
             </div>
           </div>
         )}
+
+        <FutureReminderSchedule
+          doses={futureDoses}
+          medications={medications}
+          now={now}
+          excludeId={nextFutureReminder?.id || null}
+          title="Outros dias"
+        />
       </section>
     );
   }
@@ -459,33 +583,56 @@ export default function ProximaMedicacaoCard({
       </div>
 
       {todayPendingDoses.length > 0 && (
-        <div className="rounded-3xl border border-blue-100 bg-blue-50 px-4 py-3">
-          <p className="text-sm font-black text-blue-900">
-            {dailySummary.pending} dose{dailySummary.pending === 1 ? '' : 's'} pendente{dailySummary.pending === 1 ? '' : 's'} hoje.
-          </p>
-          <p className="mt-1 text-sm font-semibold text-blue-800">
-            {dailySummary.taken} de {dailySummary.total} doses já registradas.
-          </p>
+        <div className="rounded-3xl border border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wider text-blue-700">
+                Resumo de hoje
+              </p>
+              <p className="mt-1 text-base font-black text-slate-900">
+                {dailySummary.taken} de {dailySummary.total} doses registradas
+              </p>
+            </div>
+            <span className="rounded-full bg-white px-3 py-1.5 text-sm font-black text-blue-700">
+              {dailySummary.pending} pendente{dailySummary.pending === 1 ? '' : 's'}
+            </span>
+          </div>
+          <div className="mt-3 rounded-2xl bg-white px-4 py-3">
+            <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+              Falta registrar
+            </p>
+            <p className="mt-1 text-base font-black text-slate-900">
+              {selectedDose.medicationNome} · {formatClockTime(selectedDose.target)}
+            </p>
+            {dailySummary.pending > 1 && (
+              <p className="mt-1 text-sm font-semibold text-slate-500">
+                As outras doses pendentes de hoje estão listadas logo abaixo.
+              </p>
+            )}
+          </div>
         </div>
       )}
 
       {visibleOtherTodayDoses.length > 0 && (
-        <div className="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
-          <div className="px-4 pb-2 pt-3">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 px-5 py-4">
             <p className="text-xs font-black uppercase tracking-wider text-slate-400">
               Outras doses pendentes de hoje
             </p>
+            <p className="mt-1 text-sm font-semibold text-slate-500">
+              Estas são as doses além da que aparece no cartão acima.
+            </p>
           </div>
 
-          <div className="space-y-1">
+          <div className="divide-y divide-slate-100">
             {visibleOtherTodayDoses.map((dose) => (
               <button
                 key={dose.id}
                 type="button"
                 onClick={() => setSelectedDoseId(dose.id)}
-                className="flex min-h-16 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="flex min-h-16 w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                <span className="flex h-11 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
                   <span className="text-sm font-black">{formatClockTime(dose.target)}</span>
                 </span>
 
@@ -502,18 +649,15 @@ export default function ProximaMedicacaoCard({
               </button>
             ))}
           </div>
-
-          {hiddenTodayCount > 0 && onNavigate && (
-            <button
-              type="button"
-              onClick={() => onNavigate('remedios')}
-              className="mt-1 flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
-            >
-              Ver os outros {hiddenTodayCount} lembretes de hoje
-            </button>
-          )}
         </div>
       )}
+
+      <FutureReminderSchedule
+        doses={futureDoses}
+        medications={medications}
+        now={now}
+        title="Próximos dias"
+      />
 
       <div className="flex items-center justify-between px-1 text-sm">
         <span className="font-bold text-slate-500">
