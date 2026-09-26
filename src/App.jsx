@@ -132,7 +132,6 @@ export default function App() {
       condicaoUso: medConfig?.condicaoUso || existingMedication?.condicaoUso || treatmentData?.condicaoUso || '',
       horarios: nextHorarios,
       primeirosLembretesAt: nextPrimeirosLembretesAt,
-      quantidadePorDose: medConfig?.quantidadePorDose || existingMedication?.quantidadePorDose || 1,
       tipoUso: existingMedicationConfig?.tipoUso || medConfig?.tipoUso || existingMedication?.tipoUso || treatmentData?.tipoUso || 'scheduled',
       lembreteId: treatmentId,
     };
@@ -140,7 +139,7 @@ export default function App() {
     const updatedTreatment = existingTreatment
       ? {
           ...existingTreatment,
-          tipoUso: medConfig?.tipoUso || existingTreatment.tipoUso || 'scheduled',
+          tipoUso: existingMedicationConfig?.tipoUso || medConfig?.tipoUso || existingTreatment.tipoUso || 'scheduled',
           dataFim: treatmentData?.dataFim || existingTreatment.dataFim || '',
           finalidade: medConfig?.finalidade || existingTreatment.finalidade || treatmentData?.finalidade || '',
           orientacaoAlimentacao: medConfig?.orientacaoAlimentacao || existingTreatment.orientacaoAlimentacao || treatmentData?.orientacaoAlimentacao || 'sem_orientacao',
