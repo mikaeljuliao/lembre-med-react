@@ -2,6 +2,7 @@ import {
   generateDosesForDate,
   getDoseScheduledAt,
   normalizeMedicationName,
+  isSameMedication,
   sanitizeStoredData,
 } from './businessLogic';
 import { getLocalDateString } from './reminderEngine';
@@ -23,14 +24,15 @@ function isLegacyMock(item) {
 }
 
 function deduplicateMedications(medications) {
-  const seen = new Set();
+  const result = [];
 
-  return medications.filter((medication) => {
-    const key = normalizeMedicationName(medication?.nome);
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
+  medications.forEach((medication) => {
+    if (!normalizeMedicationName(medication?.nome)) return;
+    if (result.some((existing) => isSameMedication(existing, medication))) return;
+    result.push(medication);
   });
+
+  return result;
 }
 
 function mergeDuplicateTreatments(treatments, medications) {
