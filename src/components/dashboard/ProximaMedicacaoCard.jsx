@@ -124,10 +124,10 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
       <div className={`bg-white rounded-3xl border border-slate-200 shadow-sm text-center ${simpleMode ? 'p-10' : 'p-8'}`}>
         <div className={`${simpleMode ? 'text-6xl mb-6' : 'text-4xl mb-4'}`}>💊</div>
         <p className={`font-bold text-slate-700 ${simpleMode ? 'text-2xl mb-3' : 'text-lg mb-2'}`}>
-          Nenhum medicamento cadastrado
+          Nenhum lembrete ainda
         </p>
         <p className={`text-slate-500 ${simpleMode ? 'text-lg' : 'text-sm'}`}>
-          Peça a um familiar para configurar seus remédios.
+          Adicione um medicamento para começar.
         </p>
       </div>
     );
@@ -138,10 +138,10 @@ export default function ProximaMedicacaoCard({ doses = [], onToggleDoseStatus, o
       <div className={`bg-emerald-600 rounded-3xl shadow-lg text-white text-center ${simpleMode ? 'p-10' : 'p-8'}`}>
         <div className={`${simpleMode ? 'text-6xl mb-6' : 'text-4xl mb-4'}`}>✅</div>
         <p className={`font-extrabold ${simpleMode ? 'text-3xl mb-3' : 'text-2xl mb-2'}`}>
-          Parabéns!
+          Nenhum lembrete pendente
         </p>
         <p className={`${simpleMode ? 'text-xl' : 'text-base'} text-emerald-100`}>
-          Todos os remédios de hoje foram tomados.
+          Você não tem mais medicamentos para tomar agora.
         </p>
         <p className={`mt-2 font-semibold ${simpleMode ? 'text-lg' : 'text-sm'} text-emerald-200`}>
           {takenCount} de {totalCount} remédio{totalCount !== 1 ? 's' : ''} tomado{takenCount !== 1 ? 's' : ''}
