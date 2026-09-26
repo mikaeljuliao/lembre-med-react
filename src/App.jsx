@@ -22,7 +22,8 @@ import {
   getStoredHistory,
   addHistoryEntry,
 } from './utils/storage';
-import { generateDosesForDate, getLocalDateString } from './utils/businessLogic';
+import { generateDosesForDate } from './utils/businessLogic';
+import { getLocalDateString } from './utils/reminderEngine';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('inicio');
