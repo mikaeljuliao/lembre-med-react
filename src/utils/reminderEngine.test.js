@@ -147,6 +147,24 @@ describe('reminderEngine', () => {
     expect(getReminderState(dose, now).isDue).toBe(true);
   });
 
+  it('moves the same dose when snoozed instead of creating another dose', () => {
+    const now = new Date(2026, 8, 26, 15, 0, 0);
+    const dose = {
+      id: 'dose-1',
+      medicationId: 'med-1',
+      medicationNome: 'Paracetamol',
+      scheduledAt: new Date(2026, 8, 26, 15, 0, 0).toISOString(),
+      snoozedUntil: new Date(2026, 8, 26, 15, 10, 0).toISOString(),
+      status: 'pending',
+    };
+
+    const state = getReminderState(dose, now);
+
+    expect(state.id).toBe('dose-1');
+    expect(state.target.toISOString()).toBe(dose.snoozedUntil);
+    expect(state.isDue).toBe(false);
+  });
+
   it('keeps the nearest reminder first', () => {
     const now = new Date(2026, 8, 26, 12, 0, 0);
     const doses = [
