@@ -234,9 +234,11 @@ export function buildMedicationTreatment(
     ? [...new Set((Array.isArray(data.horarios) ? data.horarios : []).filter(Boolean))]
     : [];
 
-  const firstSelection = horarios[0]
-    ? resolveReminderSelection(horarios[0], referenceDate)
-    : null;
+  const selections = horarios
+    .map((horario) => resolveReminderSelection(horario, referenceDate))
+    .filter(Boolean)
+    .sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
+  const firstSelection = selections[0] || null;
   const fallback = resolveReminderSelection('08:00', referenceDate);
   const reminder = firstSelection || fallback;
   const medicationId = data.medicamentoId || 'med-' + Date.now();
@@ -244,11 +246,8 @@ export function buildMedicationTreatment(
   const primeirosLembretesAt = {};
 
   if (tipoUso === 'scheduled') {
-    horarios.forEach((horario) => {
-      const selection = resolveReminderSelection(horario, referenceDate);
-      if (selection) {
-        primeirosLembretesAt[selection.horario] = selection.scheduledAt.toISOString();
-      }
+    selections.forEach((selection) => {
+      primeirosLembretesAt[selection.horario] = selection.scheduledAt.toISOString();
     });
   }
 
