@@ -324,6 +324,13 @@ export default function QuickReminderModal({
               <span className="mt-1 block text-xs font-semibold text-slate-500">Sem alarme fixo</span>
             </button>
           </div>
+  
+        {tipoUso === 'interval' && (
+          <div className="space-y-4 rounded-2xl border-2 border-blue-100 bg-blue-50/60 p-4">
+            <div>
+              <p className="text-base font-black text-slate-900">Intervalo do lembrete</p>
+              <p className="mt-1 text-sm font-semibold text-slate-500">Use quando a orientação indicar um intervalo, como a cada 6 ou 8 horas.</p>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="intervalo-horas" className="mb-2 block text-sm font-black text-slate-700">A cada quantas horas?</label>
@@ -338,7 +345,7 @@ export default function QuickReminderModal({
           </div>
         )}
 
-        {(tipoUso === 'scheduled' || tipoUso === 'interval') && (
+        {tipoUso === 'scheduled' && (
           <div className="rounded-2xl border-2 border-blue-100 bg-blue-50/60 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
