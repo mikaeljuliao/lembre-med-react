@@ -56,8 +56,6 @@ export default function App() {
   const [isDetailMedOpen, setIsDetailMedOpen] = useState(false);
   const [selectedDetailMed, setSelectedDetailMed] = useState(null);
 
-  const [isTreatmentModalOpen, setIsTreatmentModalOpen] = useState(false);
-  const [treatmentToEdit, setTreatmentToEdit] = useState(null);
   const [deleteRequest, setDeleteRequest] = useState(null);
 
   useEffect(() => {
