@@ -30,6 +30,7 @@ function getDoseTime(dose) {
 
 export default function InicioView({
   doses = [],
+  futureDoses = [],
   medications = [],
   onToggleDoseStatus,
   onUpdateDose,
@@ -70,6 +71,7 @@ export default function InicioView({
 
       <ProximaMedicacaoCard
         doses={doses}
+        futureDoses={futureDoses}
         medications={medications}
         onToggleDoseStatus={onToggleDoseStatus}
         onUpdateDose={onUpdateDose}
