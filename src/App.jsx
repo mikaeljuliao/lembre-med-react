@@ -109,6 +109,8 @@ export default function App() {
           intervaloMinimoHoras: medConfig.intervaloMinimoHoras || null,
           limiteDosesDia: medConfig.limiteDosesDia || null,
           condicaoUso: medConfig.condicaoUso || '',
+          intervaloHoras: medConfig.intervaloHoras || null,
+          horarioInicial: medConfig.horarioInicial || '',
           dataInicio: existingTreatment.dataInicio || treatmentData.dataInicio,
           medicamentos: existingTreatment.medicamentos.map((medication) =>
             String(medication.medicamentoId) === String(medConfig.medicamentoId)
