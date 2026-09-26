@@ -80,6 +80,9 @@ export default function QuickReminderModal({
   const [viaAdministracao, setViaAdministracao] = useState('Oral');
   const [finalidade, setFinalidade] = useState('');
   const [observacoes, setObservacoes] = useState('');
+  const [intervaloMinimoHoras, setIntervaloMinimoHoras] = useState('');
+  const [limiteDosesDia, setLimiteDosesDia] = useState('');
+  const [condicaoUso, setCondicaoUso] = useState('');
   const [showDetails, setShowDetails] = useState(false);
 
   const suggestions = useMemo(() => {
@@ -114,6 +117,9 @@ export default function QuickReminderModal({
     setViaAdministracao('Oral');
     setFinalidade('');
     setObservacoes('');
+    setIntervaloMinimoHoras('');
+    setLimiteDosesDia('');
+    setCondicaoUso('');
     setShowDetails(false);
   };
 
@@ -160,7 +166,13 @@ export default function QuickReminderModal({
     })
   );
 
-  const isReady = Boolean(nome.trim() && Number(quantidade) > 0 && (tipoUso === 'as_needed' || horarios.every(Boolean)));
+  const isReady = Boolean(
+    nome.trim() &&
+      Number(quantidade) > 0 &&
+      (tipoUso === 'scheduled' ||
+        (Number(intervaloMinimoHoras) > 0 && Number(limiteDosesDia) > 0 && condicaoUso.trim())) &&
+      (tipoUso === 'as_needed' || horarios.every(Boolean))
+  );
 
   const handleSave = () => {
     if (!isReady) return;
@@ -178,6 +190,9 @@ export default function QuickReminderModal({
       viaAdministracao,
       finalidade,
       observacoes,
+      intervaloMinimoHoras,
+      limiteDosesDia,
+      condicaoUso,
     });
     onSave(treatment);
     reset();
@@ -286,9 +301,27 @@ export default function QuickReminderModal({
         )}
 
         {tipoUso === 'as_needed' && (
-          <div className="rounded-2xl border-2 border-amber-100 bg-amber-50 px-4 py-4">
-            <p className="text-sm font-black text-amber-900">Uso conforme necessidade</p>
-            <p className="mt-1 text-sm font-semibold leading-5 text-amber-800">O DoseFácil não cria um horário automático para este remédio. Cadastre apenas a orientação que consta na sua receita ou orientação profissional.</p>
+          <div className="space-y-4 rounded-2xl border-2 border-amber-100 bg-amber-50 p-4">
+            <div>
+              <p className="text-base font-black text-amber-900">Uso conforme necessidade</p>
+              <p className="mt-1 text-sm font-semibold leading-5 text-amber-800">
+                Não haverá alarme fixo. Para registrar este tipo de uso com segurança, informe os limites que constam na sua orientação profissional.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="intervalo-minimo" className="mb-2 block text-sm font-black text-slate-700">Intervalo mínimo (horas)</label>
+                <input id="intervalo-minimo" type="number" min="1" step="1" value={intervaloMinimoHoras} onChange={(event) => setIntervaloMinimoHoras(event.target.value)} placeholder="Ex.: 6" className="min-h-12 w-full rounded-xl border-2 border-slate-200 bg-white px-3 text-center text-lg font-black outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
+              </div>
+              <div>
+                <label htmlFor="limite-doses" className="mb-2 block text-sm font-black text-slate-700">Máximo por dia</label>
+                <input id="limite-doses" type="number" min="1" step="1" value={limiteDosesDia} onChange={(event) => setLimiteDosesDia(event.target.value)} placeholder="Ex.: 4" className="min-h-12 w-full rounded-xl border-2 border-slate-200 bg-white px-3 text-center text-lg font-black outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="condicao-uso" className="mb-2 block text-sm font-black text-slate-700">Quando usar?</label>
+              <input id="condicao-uso" value={condicaoUso} onChange={(event) => setCondicaoUso(event.target.value)} placeholder="Ex.: se estiver com dor" className="min-h-12 w-full rounded-xl border-2 border-slate-200 bg-white px-3 font-semibold outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
+            </div>
           </div>
         )}
 
@@ -340,6 +373,7 @@ export default function QuickReminderModal({
           <p className="text-sm font-bold text-slate-700">Resumo</p>
           <p className="mt-1 text-base font-black text-slate-900">{formatDose(quantidade, unidadeDose)}{tipoUso === 'scheduled' ? ' · ' + horarios.join(' · ') : ' · quando precisar'}</p>
           {orientacaoAlimentacao !== 'sem_orientacao' && <p className="mt-1 text-sm font-semibold text-slate-500">Orientação: {MEAL_OPTIONS.find(([value]) => value === orientacaoAlimentacao)?.[1]}</p>}
+          {tipoUso === 'as_needed' && <p className="mt-1 text-sm font-semibold text-slate-500">Máximo: {limiteDosesDia} por dia · intervalo mínimo: {intervaloMinimoHoras}h</p>}
         </div>
 
         <button type="button" onClick={handleSave} disabled={!isReady} className="flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 text-xl font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-200">
