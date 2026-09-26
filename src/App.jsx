@@ -322,6 +322,57 @@ export default function App() {
     });
   };
 
+  const handleRegisterAsNeededUse = (medication) => {
+    if (!medication || medication.tipoUso !== 'as_needed') return;
+
+    const now = new Date();
+    const today = getLocalDateString(now);
+    const todayUses = history.filter((entry) =>
+      entry.medicationId &&
+      String(entry.medicationId) === String(medication.id) &&
+      entry.status === 'taken' &&
+      getLocalDateString(new Date(entry.timestamp)) === today
+    );
+
+    const maxPerDay = Number(medication.limiteDosesDia) || 0;
+    if (maxPerDay > 0 && todayUses.length >= maxPerDay) {
+      showToast('O limite diário cadastrado para este remédio já foi atingido.', 'info');
+      return;
+    }
+
+    const lastUse = history.find((entry) =>
+      entry.medicationId &&
+      String(entry.medicationId) === String(medication.id) &&
+      entry.status === 'taken'
+    );
+
+    const minimumHours = Number(medication.intervaloMinimoHoras) || 0;
+    if (minimumHours > 0 && lastUse?.timestamp) {
+      const elapsedHours = (now.getTime() - new Date(lastUse.timestamp).getTime()) / 3600000;
+      if (elapsedHours < minimumHours) {
+        const remaining = Math.ceil(minimumHours - elapsedHours);
+        showToast('Ainda faltam ' + remaining + ' hora' + (remaining === 1 ? '' : 's') + ' para o próximo uso permitido.', 'info');
+        return;
+      }
+    }
+
+    const newHistory = addHistoryEntry({
+      medicationId: medication.id,
+      data: today,
+      horario: now.toTimeString().slice(0, 5),
+      scheduledAt: now.toISOString(),
+      medicationNome: medication.nome,
+      dosagem: medication.dosagem || String(medication.quantidadePorDose || 1) + ' ' + (medication.unidadeDose || 'unidade'),
+      treatmentNome: 'Uso conforme necessidade',
+      status: 'taken',
+      observacao: 'Uso registrado manualmente pelo usuário.',
+    });
+
+    setHistory(newHistory);
+    setIsDetailMedOpen(false);
+    showToast('Uso de ' + medication.nome + ' registrado.', 'success');
+  };
+
   const handleToggleDoseStatus = (doseId, newStatus) => {
     const dose = doses.find((item) => item.id === doseId);
     if (!dose) return;
@@ -431,6 +482,7 @@ export default function App() {
           setIsQuickReminderModalOpen(true);
         }}
         onOpenOfficialInfo={() => setActiveTab('saude')}
+        onRegisterUse={handleRegisterAsNeededUse}
       />
       <QuickReminderModal
         isOpen={isQuickReminderModalOpen}
