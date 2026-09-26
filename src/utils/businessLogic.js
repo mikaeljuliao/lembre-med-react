@@ -7,6 +7,20 @@ export function normalizeMedicationName(value) {
   return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
+export function isSameMedication(first, second) {
+  if (normalizeMedicationName(first?.nome) !== normalizeMedicationName(second?.nome)) {
+    return false;
+  }
+
+  const fields = ['concentracao', 'apresentacao', 'viaAdministracao', 'principioAtivo'];
+
+  return fields.every((field) => {
+    const firstValue = normalizeMedicationName(first?.[field]);
+    const secondValue = normalizeMedicationName(second?.[field]);
+    return !firstValue || !secondValue || firstValue === secondValue;
+  });
+}
+
 function isUserMedicationItem(item) {
   if (!item || typeof item !== 'object') return false;
   return Boolean(normalizeMedicationName(item.nome));
