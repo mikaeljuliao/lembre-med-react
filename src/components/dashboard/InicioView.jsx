@@ -16,8 +16,7 @@ function formatToday() {
 export default function InicioView({
   doses = [],
   medications = [],
-  treatments = [],
-  onToggleDoseStatus,
+  onToggleDoseStatus,  onToggleDoseStatus,
   onNavigate,
 }) {
   const [confirmModal, setConfirmModal] = useState({
