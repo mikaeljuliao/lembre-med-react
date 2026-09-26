@@ -264,10 +264,12 @@ export function buildMedicationTreatment(
   const safeQuantity =
     Number(data.quantidadePorDose) > 0 ? Number(data.quantidadePorDose) : 1;
   const unidadeDose = String(data.unidadeDose || 'unidade').trim() || 'unidade';
-  const tipoUso = data.tipoUso === 'as_needed' ? 'as_needed' : 'scheduled';
+  const tipoUso = ['scheduled', 'interval', 'as_needed'].includes(data.tipoUso) ? data.tipoUso : 'scheduled';
   const horarios = tipoUso === 'scheduled'
     ? [...new Set((Array.isArray(data.horarios) ? data.horarios : []).filter(Boolean))]
-    : [];
+    : tipoUso === 'interval'
+      ? [String(data.horarioInicial || data.horarios?.[0] || '08:00')]
+      : [];
 
   const selections = horarios
     .map((horario) => resolveReminderSelection(horario, referenceDate))
@@ -301,8 +303,10 @@ export function buildMedicationTreatment(
     primeirosLembretesAt,
     primeiroLembreteAt: firstSelection?.scheduledAt?.toISOString() || null,
     primeiroLembreteHorario: firstSelection?.horario || null,
-    tipoLembrete: tipoUso === 'as_needed' ? 'as_needed' : 'scheduled',
+    tipoLembrete: tipoUso,
     tipoUso,
+    intervaloHoras: tipoUso === 'interval' ? Number(data.intervaloHoras) : null,
+    horarioInicial: tipoUso === 'interval' ? (firstSelection?.horario || '08:00') : '',
     orientacaoAlimentacao: data.orientacaoAlimentacao || 'sem_orientacao',
     finalidade: String(data.finalidade || '').trim(),
     observacoes: String(data.observacoes || '').trim(),
