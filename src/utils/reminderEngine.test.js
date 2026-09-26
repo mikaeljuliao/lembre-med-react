@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildReminderSpeech,
   getReminderState,
+  isDoseForActiveMedication,
   resolveNextScheduledAt,
   sortReminderStates,
 } from './reminderEngine';
@@ -50,6 +51,34 @@ describe('reminderEngine', () => {
     expect(target.getDate()).toBe(27);
     expect(target.getHours()).toBe(0);
     expect(target.getMinutes()).toBe(5);
+  });
+
+  it('recognizes doses belonging to active medications by id or name', () => {
+    const medications = [
+      { id: 'med-1', nome: 'Losartana' },
+      { id: 'med-2', nome: 'Anlodipino' },
+    ];
+
+    expect(
+      isDoseForActiveMedication(
+        { medicationId: 'med-1', medicationNome: 'Losartana' },
+        medications
+      )
+    ).toBe(true);
+
+    expect(
+      isDoseForActiveMedication(
+        { medicationId: 'removed', medicationNome: 'Losartana' },
+        medications
+      )
+    ).toBe(true);
+
+    expect(
+      isDoseForActiveMedication(
+        { medicationId: 'removed', medicationNome: 'Ibuprofeno' },
+        medications
+      )
+    ).toBe(false);
   });
 
   it('keeps a selected evening time on the same day', () => {
