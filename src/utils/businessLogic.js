@@ -1,5 +1,4 @@
 import {
-  formatClockTime,
   getLocalDateString,
   resolveReminderSelection,
 } from './reminderEngine';
