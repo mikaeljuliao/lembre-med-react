@@ -429,8 +429,9 @@ export default function QuickReminderModal({
               <input id="finalidade" value={finalidade} onChange={(event) => setFinalidade(event.target.value)} placeholder="Ex.: pressão alta" className="min-h-12 w-full rounded-xl border-2 border-slate-200 bg-white px-3 font-semibold outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
             </div>
             <div>
-              <label htmlFor="observacoes" className="mb-2 block text-sm font-black text-slate-700">Observações</label>
-              <textarea id="observacoes" value={observacoes} onChange={(event) => setObservacoes(event.target.value)} placeholder="Alguma orientação importante para lembrar" rows="3" className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-3 font-semibold outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
+              <label htmlFor="observacoes" className="mb-2 block text-sm font-black text-slate-700">Observações importantes <span className="font-semibold text-slate-400">(opcional)</span></label>
+              <p className="mb-2 text-xs font-semibold leading-5 text-slate-500">Anote uma orientação prática que você não quer esquecer. Ex.: “agitar antes de usar” ou “guardar na geladeira”.</p>
+              <textarea id="observacoes" value={observacoes} onChange={(event) => setObservacoes(event.target.value)} placeholder="Ex.: agitar antes de usar" rows="3" className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-3 font-semibold outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
             </div>
             <div>
               <label htmlFor="validade-remedio" className="mb-2 block text-sm font-black text-slate-700">Validade da embalagem</label>
