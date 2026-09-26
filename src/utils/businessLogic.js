@@ -159,11 +159,14 @@ export function generateDosesForDate(
       const times = med.horarios || ['08:00'];
 
       times.forEach((horario) => {
-        const firstReminderAt =
+        const isFirstReminder =
           med.primeiroLembreteAt &&
-          getLocalDateString(new Date(med.primeiroLembreteAt)) === dateStr
-            ? med.primeiroLembreteAt
-            : getDoseScheduledAt(dateStr, horario);
+          getLocalDateString(new Date(med.primeiroLembreteAt)) === dateStr &&
+          (!med.primeiroLembreteHorario || med.primeiroLembreteHorario === horario);
+
+        const firstReminderAt = isFirstReminder
+          ? med.primeiroLembreteAt
+          : getDoseScheduledAt(dateStr, horario);
 
         doses.push({
           id: `${treatment.id}-${med.medicamentoId || med.nome}-${dateStr}-${horario}`,
@@ -226,6 +229,7 @@ export function buildQuickReminderTreatment(
         vezesPorDia: 1,
         horarios: [reminder.horario],
         primeiroLembreteAt: reminder.scheduledAt.toISOString(),
+        primeiroLembreteHorario: reminder.horario,
         tipoLembrete: reminder.tipo,
       },
     ],
