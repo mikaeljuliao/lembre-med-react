@@ -71,6 +71,13 @@ describe('reminderEngine', () => {
         { medicationId: 'removed', medicationNome: 'Losartana' },
         medications
       )
+    ).toBe(false);
+
+    expect(
+      isDoseForActiveMedication(
+        { medicationNome: 'Losartana' },
+        medications
+      )
     ).toBe(true);
 
     expect(
