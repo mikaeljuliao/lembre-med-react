@@ -543,7 +543,8 @@ export default function EmergencyContactsView() {
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                   <a
-                    href={`tel:${contact.telefone.replace(/\D/g, '')}`}
+                    href={`tel:${normalizePhoneNumber(contact.telefone)}`}
+                    aria-label={`Ligar para ${contact.nome}, ${contact.telefone}`}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
