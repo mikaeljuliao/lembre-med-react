@@ -139,3 +139,106 @@
 .simple-mode label {
   font-size: 1rem;
 }
+
+
+@media (max-width: 640px) {
+  .health-diary {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .health-diary .health-diary-entry {
+    align-items: flex-start !important;
+    padding: 14px !important;
+    gap: 10px !important;
+  }
+
+  .health-diary .health-diary-entry > div:nth-child(2) {
+    min-width: 0;
+  }
+
+  .health-diary .health-diary-entry button {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .health-diary .health-diary-history-entry {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+
+  .health-diary-actions {
+    flex-direction: column;
+  }
+
+  .health-diary-actions button {
+    width: 100%;
+    flex: 1 !important;
+  }
+
+  .health-diary input,
+  .health-diary select {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .health-diary > div:first-child {
+    border-radius: 20px !important;
+    padding: 22px 18px !important;
+  }
+
+  .health-diary > div:first-child h1 {
+    font-size: 21px !important;
+  }
+
+  .health-diary > div:first-child p {
+    font-size: 13px !important;
+  }
+
+  .health-diary .health-diary-entry > div:first-child {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .health-diary .health-diary-entry > div:first-child svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .health-diary .health-diary-entry p {
+    overflow-wrap: anywhere;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .health-tabs {
+    gap: 8px !important;
+  }
+
+  .health-tabs .health-tab {
+    min-width: 0;
+    padding: 12px 6px !important;
+    gap: 6px !important;
+    transform: none !important;
+  }
+
+  .health-tabs .health-tab > div:first-child {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .health-tabs .health-tab > div:first-child svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .health-tabs .health-tab p {
+    overflow-wrap: anywhere;
+  }
+
+  .health-tabs .health-tab p:last-child {
+    display: none;
+  }
+}

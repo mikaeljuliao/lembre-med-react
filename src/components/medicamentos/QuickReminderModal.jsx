@@ -23,6 +23,68 @@ const COMMON_MEDICATIONS = [
   { nome: 'Levotiroxina 50mcg', categoria: 'Tireoide' },
   { nome: 'Sertralina 50mg', categoria: 'Saúde mental' },
   { nome: 'Vitamina D 1000 UI', categoria: 'Vitaminas' },
+  { nome: 'AAS 100mg', categoria: 'Coração' },
+  { nome: 'Atorvastatina 20mg', categoria: 'Colesterol' },
+  { nome: 'Rosuvastatina 10mg', categoria: 'Colesterol' },
+  { nome: 'Clopidogrel 75mg', categoria: 'Coração' },
+  { nome: 'Rivaroxabana 20mg', categoria: 'Anticoagulante' },
+  { nome: 'Apixabana 5mg', categoria: 'Anticoagulante' },
+  { nome: 'Gliclazida 30mg', categoria: 'Diabetes' },
+  { nome: 'Glibenclamida 5mg', categoria: 'Diabetes' },
+  { nome: 'Insulina NPH', categoria: 'Diabetes' },
+  { nome: 'Amoxicilina 500mg', categoria: 'Antibiótico' },
+  { nome: 'Azitromicina 500mg', categoria: 'Antibiótico' },
+  { nome: 'Cefalexina 500mg', categoria: 'Antibiótico' },
+  { nome: 'Prednisona 20mg', categoria: 'Anti-inflamatório' },
+  { nome: 'Dexametasona 4mg', categoria: 'Anti-inflamatório' },
+  { nome: 'Cetirizina 10mg', categoria: 'Alergia' },
+  { nome: 'Loratadina 10mg', categoria: 'Alergia' },
+  { nome: 'Salbutamol 100mcg', categoria: 'Respiratório' },
+  { nome: 'Budesonida 200mcg', categoria: 'Respiratório' },
+  { nome: 'Metoclopramida 10mg', categoria: 'Náusea' },
+  { nome: 'Domperidona 10mg', categoria: 'Náusea' },
+  { nome: 'Lactulose', categoria: 'Intestino' },
+  { nome: 'Valsartana 80mg', categoria: 'Pressão' },
+  { nome: 'Valsartana 160mg', categoria: 'Pressão' },
+  { nome: 'Telmisartana 40mg', categoria: 'Pressão' },
+  { nome: 'Carvedilol 6,25mg', categoria: 'Coração' },
+  { nome: 'Carvedilol 12,5mg', categoria: 'Coração' },
+  { nome: 'Bisoprolol 5mg', categoria: 'Coração' },
+  { nome: 'Espironolactona 25mg', categoria: 'Diurético' },
+  { nome: 'Indapamida 1,5mg', categoria: 'Pressão' },
+  { nome: 'Dapagliflozina 10mg', categoria: 'Diabetes' },
+  { nome: 'Empagliflozina 10mg', categoria: 'Diabetes' },
+  { nome: 'Sitagliptina 100mg', categoria: 'Diabetes' },
+  { nome: 'Levotiroxina 25mcg', categoria: 'Tireoide' },
+  { nome: 'Levotiroxina 75mcg', categoria: 'Tireoide' },
+  { nome: 'Levotiroxina 100mcg', categoria: 'Tireoide' },
+  { nome: 'Escitalopram 10mg', categoria: 'Saúde mental' },
+  { nome: 'Fluoxetina 20mg', categoria: 'Saúde mental' },
+  { nome: 'Amitriptilina 25mg', categoria: 'Saúde mental' },
+  { nome: 'Clonazepam 0,5mg', categoria: 'Saúde mental' },
+  { nome: 'Pregabalina 75mg', categoria: 'Dor' },
+  { nome: 'Gabapentina 300mg', categoria: 'Dor' },
+  { nome: 'Naproxeno 500mg', categoria: 'Dor' },
+  { nome: 'Tramadol 50mg', categoria: 'Dor' },
+  { nome: 'Codeína 30mg', categoria: 'Dor' },
+  { nome: 'Diclofenaco 50mg', categoria: 'Dor' },
+  { nome: 'Ondansetrona 8mg', categoria: 'Náusea' },
+  { nome: 'Simeticona 40mg', categoria: 'Estômago' },
+  { nome: 'Famotidina 20mg', categoria: 'Estômago' },
+  { nome: 'Alendronato 70mg', categoria: 'Ossos' },
+  { nome: 'Carbonato de cálcio 500mg', categoria: 'Suplementos' },
+  { nome: 'Sulfato ferroso 40mg', categoria: 'Suplementos' },
+  { nome: 'Ácido fólico 5mg', categoria: 'Vitaminas' },
+  { nome: 'Vitamina B12', categoria: 'Vitaminas' },
+  { nome: 'Varfarina 5mg', categoria: 'Anticoagulante' },
+  { nome: 'Amoxicilina + clavulanato', categoria: 'Antibiótico' },
+  { nome: 'Levofloxacino 500mg', categoria: 'Antibiótico' },
+  { nome: 'Clindamicina 300mg', categoria: 'Antibiótico' },
+  { nome: 'Mometasona', categoria: 'Alergia' },
+  { nome: 'Prednisolona', categoria: 'Anti-inflamatório' },
+  { nome: 'Tiotrópio 18mcg', categoria: 'Respiratório' },
+  { nome: 'Formoterol + budesonida', categoria: 'Respiratório' },
+  { nome: 'Acetilcisteína 600mg', categoria: 'Respiratório' },
 ];
 
 const PRESENTATIONS = [
@@ -106,7 +168,22 @@ export default function QuickReminderModal({
   const filteredSuggestions = useMemo(() => {
     const term = nome.trim().toLowerCase();
     if (!term) return [];
-    return suggestions.filter((item) => item.nome.toLowerCase().includes(term)).slice(0, 6);
+
+    return suggestions
+      .filter((item) => item.nome.toLowerCase().includes(term))
+      .sort((first, second) => {
+        const firstName = first.nome.toLowerCase();
+        const secondName = second.nome.toLowerCase();
+        const firstStartsWithTerm = firstName.startsWith(term);
+        const secondStartsWithTerm = secondName.startsWith(term);
+
+        if (firstStartsWithTerm !== secondStartsWithTerm) {
+          return firstStartsWithTerm ? -1 : 1;
+        }
+
+        return firstName.localeCompare(secondName, 'pt-BR');
+      })
+      .slice(0, 8);
   }, [nome, suggestions]);
 
   const reset = () => {
@@ -294,7 +371,7 @@ export default function QuickReminderModal({
               <button key={label} type="button" onClick={() => handlePresentationChange(label)} className={`min-h-14 rounded-2xl border-2 px-3 text-sm font-black ${apresentacao === label ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`} aria-pressed={apresentacao === label}>{label}</button>
             ))}
           </div>
-          <div className="mt-3 grid grid-cols-[1fr_1fr] gap-3">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label htmlFor="quantidade-dose" className="mb-2 block text-sm font-black text-slate-700">Quantidade por vez</label>
               <div className="flex items-center gap-2">
@@ -332,12 +409,12 @@ export default function QuickReminderModal({
           </div>
   
         {tipoUso === 'interval' && (
-          <div className="space-y-4 rounded-2xl border-2 border-blue-100 bg-blue-50/60 p-4">
+          <div className="mt-4 space-y-4 rounded-2xl border-2 border-blue-100 bg-blue-50/60 p-4 sm:p-5">
             <div>
               <p className="text-base font-black text-slate-900">Intervalo do lembrete</p>
               <p className="mt-1 text-sm font-semibold text-slate-500">Use quando a orientação indicar um intervalo, como a cada 6 ou 8 horas.</p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor="intervalo-horas" className="mb-2 block text-sm font-black text-slate-700">A cada quantas horas?</label>
                 <input id="intervalo-horas" type="number" min="1" max="24" step="1" value={intervaloHoras} onChange={(event) => setIntervaloHoras(event.target.value)} placeholder="Ex.: 8" className="min-h-13 w-full rounded-xl border-2 border-slate-200 bg-white px-3 text-center text-xl font-black outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
@@ -352,20 +429,22 @@ export default function QuickReminderModal({
         )}
 
         {tipoUso === 'scheduled' && (
-          <div className="rounded-2xl border-2 border-blue-100 bg-blue-50/60 p-4">
-            <div className="flex items-center justify-between gap-3">
+          <div className="mt-4 rounded-2xl border-2 border-blue-100 bg-blue-50/60 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-base font-black text-slate-900">Horários dos lembretes</p>
                 <p className="mt-1 text-sm font-semibold text-slate-500">Escolha os horários conforme a orientação que você recebeu.</p>
               </div>
-              {horarios.length < 4 && <button type="button" onClick={addHorario} className="min-h-11 rounded-xl bg-white px-3 text-sm font-black text-blue-700 shadow-sm">Adicionar horário</button>}
+              {horarios.length < 4 && <button type="button" onClick={addHorario} className="min-h-11 w-full shrink-0 rounded-xl bg-white px-3 text-sm font-black text-blue-700 shadow-sm sm:w-auto">Adicionar horário</button>}
             </div>
-            <div className="mt-4 space-y-2">
+            <div className="mt-4 space-y-3">
               {horarios.map((horario, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div key={index} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="flex min-w-0 items-center gap-2">
                   <Clock3 className="h-5 w-5 shrink-0 text-blue-600" />
                   <input type="time" value={horario} onChange={(event) => updateHorario(index, event.target.value)} className="min-h-13 flex-1 rounded-xl border-2 border-blue-100 bg-white px-4 text-xl font-black text-slate-900 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" aria-label={'Horário ' + (index + 1)} />
-                  {horarios.length > 1 && <button type="button" onClick={() => removeHorario(index)} className="min-h-12 rounded-xl px-3 text-sm font-black text-red-600">Remover</button>}
+                  </div>
+                  {horarios.length > 1 && <button type="button" onClick={() => removeHorario(index)} className="min-h-11 rounded-xl px-3 text-sm font-black text-red-600 sm:shrink-0">Remover</button>}
                 </div>
               ))}
             </div>
@@ -375,7 +454,7 @@ export default function QuickReminderModal({
             </div>}
             <div className="mt-4">
               <label htmlFor="data-fim" className="mb-2 block text-sm font-black text-slate-700">Até quando?</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <button type="button" onClick={() => setDataFim('')} className={`min-h-12 rounded-xl border-2 text-sm font-black ${!dataFim ? 'border-blue-600 bg-white text-blue-700' : 'border-slate-200 bg-white text-slate-600'}`}>Sem data para terminar</button>
                 <input id="data-fim" type="date" value={dataFim} onChange={(event) => setDataFim(event.target.value)} className="min-h-12 rounded-xl border-2 border-slate-200 bg-white px-3 text-sm font-black text-slate-900 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" aria-label="Data de término" />
               </div>
@@ -385,14 +464,14 @@ export default function QuickReminderModal({
         )}
 
         {tipoUso === 'as_needed' && (
-          <div className="space-y-4 rounded-2xl border-2 border-amber-100 bg-amber-50 p-4">
+          <div className="mt-4 space-y-4 rounded-2xl border-2 border-amber-100 bg-amber-50 p-4 sm:p-5">
             <div>
               <p className="text-base font-black text-amber-900">Uso conforme necessidade</p>
               <p className="mt-1 text-sm font-semibold leading-5 text-amber-800">
                 Não haverá alarme fixo. Para registrar este tipo de uso com segurança, informe os limites que constam na sua orientação profissional.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor="intervalo-minimo" className="mb-2 block text-sm font-black text-slate-700">Intervalo mínimo (horas)</label>
                 <input id="intervalo-minimo" type="number" min="1" step="1" value={intervaloMinimoHoras} onChange={(event) => setIntervaloMinimoHoras(event.target.value)} placeholder="Ex.: 6" className="min-h-12 w-full rounded-xl border-2 border-slate-200 bg-white px-3 text-center text-lg font-black outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" />
@@ -470,10 +549,12 @@ export default function QuickReminderModal({
           {tipoUso === 'as_needed' && <p className="mt-1 text-sm font-semibold text-slate-500">Máximo: {limiteDosesDia} por dia · intervalo mínimo: {intervaloMinimoHoras}h</p>}
         </div>
 
-        <button type="button" onClick={handleSave} disabled={!isReady} className="sticky bottom-0 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 text-xl font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-200">
+        <div className="sticky bottom-0 z-10 mt-6 bg-white/95 pb-1 pt-3 backdrop-blur-sm">
+        <button type="button" onClick={handleSave} disabled={!isReady} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 text-xl font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-200">
           <Check className="h-6 w-6" strokeWidth={3} />
           {isEditing ? 'Salvar alterações' : isExistingMedication ? 'Adicionar horário' : 'Cadastrar remédio'}
         </button>
+        </div>
       </div>
     </Modal>
   );
