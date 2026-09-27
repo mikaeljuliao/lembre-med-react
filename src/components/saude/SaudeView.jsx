@@ -38,7 +38,7 @@ export default function SaudeView() {
     <div className="animate-fade-in">
 
       <div
-        style={{
+        className="health-tabs" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '10px',
@@ -53,7 +53,7 @@ export default function SaudeView() {
               key={tab.id}
               type="button"
               onClick={() => setActiveSubTab(tab.id)}
-              style={{
+              className="health-tab" style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
