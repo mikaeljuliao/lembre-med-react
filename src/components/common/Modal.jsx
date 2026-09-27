@@ -19,17 +19,17 @@ export default function Modal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-      <div className="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+    <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain" role="dialog" aria-modal="true">
+      <div className="flex min-h-dvh items-start justify-center p-2 text-center sm:items-center sm:p-4">
         <div
           className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
           onClick={onClose}
           aria-hidden="true"
         />
 
-        <div className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-100 animate-fade-in">
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
-            <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+        <div className="relative my-2 w-full max-w-2xl transform overflow-hidden rounded-2xl border border-slate-100 bg-white text-left shadow-xl transition-all animate-fade-in sm:my-8 sm:max-h-[calc(100dvh-2rem)]">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/50 px-4 py-3 sm:px-6 sm:py-4">
+            <h3 className="min-w-0 text-base font-bold text-slate-900 sm:text-lg">{title}</h3>
             <button
               onClick={onClose}
               type="button"
@@ -40,7 +40,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
             </button>
           </div>
 
-          <div className="px-6 py-5 max-h-[80vh] overflow-y-auto">{children}</div>
+          <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto px-4 py-4 overscroll-contain sm:px-6 sm:py-5">{children}</div>
         </div>
       </div>
     </div>
