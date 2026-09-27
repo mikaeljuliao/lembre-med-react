@@ -33,8 +33,8 @@ const GUIDE_TOPICS = [
     sinaisDeAlerta:
       'Dor muito forte e repentina (a pior da vida), dor com febre alta, confusão mental, fraqueza em um lado do corpo ou dificuldade de falar. Nesses casos, ligue 192 (SAMU) imediatamente.',
     fonteOficial: {
-      label: 'Ministério da Saúde — Saúde de A a Z',
-      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z',
+      label: 'Saiba mais sobre dor de cabeça',
+      url: 'https://www.gov.br/ebserh/pt-br/comunicacao/noticias/especialistas-da-rede-ebserh-apontam-sinais-de-alarme-quando-o-assunto-e-dor-de-cabeca',
     },
   },
   {
@@ -123,8 +123,8 @@ const GUIDE_TOPICS = [
     sinaisDeAlerta:
       'Dor no peito com suor frio, falta de ar, dor que vai para o braço esquerdo ou mandíbula, palidez, desmaio. Ligue 192 imediatamente — pode ser infarto.',
     fonteOficial: {
-      label: 'Saiba mais sobre infarto',
-      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/i/infarto',
+      label: 'Saiba mais sobre dor no peito',
+      url: 'https://linhasdecuidado.saude.gov.br/portal/dor-toracica/sou-paciente/',
     },
   },
   {
@@ -178,7 +178,7 @@ const GUIDE_TOPICS = [
       'Dor intensa em alguma parte do corpo após a queda, inchaço, deformidade, incapacidade de apoiar o peso. Vá ao pronto-socorro.',
     fonteOficial: {
       label: 'Saiba mais sobre prevenção de quedas',
-      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/s/saude-da-pessoa-idosa',
+      url: 'https://www.gov.br/saude/pt-br/composicao/saes/seguranca-do-paciente/protocolos-de-seguranca-do-paciente/protocolo-de-prevencao-de-quedas/view',
     },
   },
   {
@@ -196,7 +196,7 @@ const GUIDE_TOPICS = [
       'Perda súbita de visão em um olho, visão dupla repentina, flashes de luz ou sombra preta cobrindo parte do campo visual. Vá ao pronto-socorro urgente.',
     fonteOficial: {
       label: 'Saiba mais sobre doenças oculares',
-      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/doencas-oculares/tratamento',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/doencas-oculares',
     },
   },
   {
@@ -213,8 +213,8 @@ const GUIDE_TOPICS = [
     sinaisDeAlerta:
       'Sono muito ruim por mais de 2 semanas, sonolência excessiva durante o dia, paradas na respiração durante o sono. Converse com seu médico.',
     fonteOficial: {
-      label: 'Saiba mais sobre higiene do sono',
-      url: 'https://www.gov.br/hubrasil/pt-br/comunicacao/rede-ebserh-tv/drops-de-saude/drops-de-saude-higiene-do-sono',
+      label: 'Saiba mais sobre insônia e sono',
+      url: 'https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/ch-ufc_old/dormir-bem-influencia-na-producao-hormonal-e-fortalece-a-cognicao',
     },
   },
   {
