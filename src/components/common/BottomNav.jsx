@@ -1,4 +1,3 @@
-import React from 'react';
 import { HeartPulse, Home, Pill, CircleHelp } from 'lucide-react';
 
 const MOBILE_NAV_ITEMS = [
