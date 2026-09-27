@@ -1,4 +1,3 @@
-import React from 'react';
 import { Check, ClipboardList, History, XCircle } from 'lucide-react';
 import MedicationListView from '../medicamentos/MedicationListView';
 
