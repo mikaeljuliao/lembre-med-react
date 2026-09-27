@@ -210,3 +210,35 @@
     overflow-wrap: anywhere;
   }
 }
+
+
+@media (max-width: 480px) {
+  .health-tabs {
+    gap: 8px !important;
+  }
+
+  .health-tabs .health-tab {
+    min-width: 0;
+    padding: 12px 6px !important;
+    gap: 6px !important;
+    transform: none !important;
+  }
+
+  .health-tabs .health-tab > div:first-child {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .health-tabs .health-tab > div:first-child svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .health-tabs .health-tab p {
+    overflow-wrap: anywhere;
+  }
+
+  .health-tabs .health-tab p:last-child {
+    display: none;
+  }
+}
