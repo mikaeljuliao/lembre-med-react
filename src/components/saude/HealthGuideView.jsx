@@ -413,7 +413,7 @@ export default function HealthGuideView() {
       }}
       className="animate-fade-in"
     >
-      {/* Header */}
+
       <div
         style={{
           background: 'linear-gradient(135deg, #0f766e 0%, #0891b2 100%)',
@@ -453,7 +453,6 @@ export default function HealthGuideView() {
         </p>
       </div>
 
-      {/* Botão SOS de emergência */}
       <a
         href="tel:192"
         style={{
@@ -476,7 +475,6 @@ export default function HealthGuideView() {
         Emergência — Ligar 192 (SAMU)
       </a>
 
-      {/* Busca */}
       <div style={{ position: 'relative' }}>
         <input
           type="text"
@@ -498,7 +496,6 @@ export default function HealthGuideView() {
         />
       </div>
 
-      {/* Lista de tópicos */}
       {filteredTopics.length === 0 ? (
         <div
           style={{
@@ -526,7 +523,6 @@ export default function HealthGuideView() {
         </div>
       )}
 
-      {/* Rodapé informativo */}
       <div
         style={{
           background: '#f0fdf4',
