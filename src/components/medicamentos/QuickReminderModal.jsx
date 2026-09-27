@@ -409,7 +409,7 @@ export default function QuickReminderModal({
           </div>
   
         {tipoUso === 'interval' && (
-          <div className="space-y-4 rounded-2xl border-2 border-blue-100 bg-blue-50/60 p-4">
+          <div className="mt-4 space-y-4 rounded-2xl border-2 border-blue-100 bg-blue-50/60 p-4 sm:p-5">
             <div>
               <p className="text-base font-black text-slate-900">Intervalo do lembrete</p>
               <p className="mt-1 text-sm font-semibold text-slate-500">Use quando a orientação indicar um intervalo, como a cada 6 ou 8 horas.</p>
@@ -439,10 +439,12 @@ export default function QuickReminderModal({
             </div>
             <div className="mt-4 space-y-3">
               {horarios.map((horario, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div key={index} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="flex min-w-0 items-center gap-2">
                   <Clock3 className="h-5 w-5 shrink-0 text-blue-600" />
                   <input type="time" value={horario} onChange={(event) => updateHorario(index, event.target.value)} className="min-h-13 flex-1 rounded-xl border-2 border-blue-100 bg-white px-4 text-xl font-black text-slate-900 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100" aria-label={'Horário ' + (index + 1)} />
-                  {horarios.length > 1 && <button type="button" onClick={() => removeHorario(index)} className="min-h-12 rounded-xl px-3 text-sm font-black text-red-600">Remover</button>}
+                  </div>
+                  {horarios.length > 1 && <button type="button" onClick={() => removeHorario(index)} className="min-h-11 rounded-xl px-3 text-sm font-black text-red-600 sm:shrink-0">Remover</button>}
                 </div>
               ))}
             </div>
@@ -462,7 +464,7 @@ export default function QuickReminderModal({
         )}
 
         {tipoUso === 'as_needed' && (
-          <div className="space-y-4 rounded-2xl border-2 border-amber-100 bg-amber-50 p-4">
+          <div className="mt-4 space-y-4 rounded-2xl border-2 border-amber-100 bg-amber-50 p-4 sm:p-5">
             <div>
               <p className="text-base font-black text-amber-900">Uso conforme necessidade</p>
               <p className="mt-1 text-sm font-semibold leading-5 text-amber-800">
@@ -547,7 +549,8 @@ export default function QuickReminderModal({
           {tipoUso === 'as_needed' && <p className="mt-1 text-sm font-semibold text-slate-500">Máximo: {limiteDosesDia} por dia · intervalo mínimo: {intervaloMinimoHoras}h</p>}
         </div>
 
-        <button type="button" onClick={handleSave} disabled={!isReady} className="sticky bottom-0 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 text-xl font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-200">
+        <div className="sticky bottom-0 z-10 mt-6 bg-white/95 pb-1 pt-3 backdrop-blur-sm">
+        <button type="button" onClick={handleSave} disabled={!isReady} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 text-xl font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-200">
           <Check className="h-6 w-6" strokeWidth={3} />
           {isEditing ? 'Salvar alterações' : isExistingMedication ? 'Adicionar horário' : 'Cadastrar remédio'}
         </button>
