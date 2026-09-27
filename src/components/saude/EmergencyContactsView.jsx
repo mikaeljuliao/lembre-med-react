@@ -119,7 +119,7 @@ export default function EmergencyContactsView() {
       }}
       className="animate-fade-in"
     >
-      {/* Header */}
+
       <div
         style={{
           background: 'linear-gradient(135deg, #dc2626 0%, #e11d48 100%)',
@@ -158,7 +158,6 @@ export default function EmergencyContactsView() {
         </p>
       </div>
 
-      {/* Contatos fixos (SAMU e Bombeiros) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {FIXED_CONTACTS.map((c) => (
           <a
@@ -222,7 +221,6 @@ export default function EmergencyContactsView() {
         ))}
       </div>
 
-      {/* Separador */}
       <div
         style={{
           display: 'flex',
@@ -237,7 +235,6 @@ export default function EmergencyContactsView() {
         <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
       </div>
 
-      {/* Botão adicionar */}
       {!showForm && (
         <button
           type="button"
@@ -263,7 +260,6 @@ export default function EmergencyContactsView() {
         </button>
       )}
 
-      {/* Formulário */}
       {showForm && (
         <div
           style={{
@@ -301,7 +297,6 @@ export default function EmergencyContactsView() {
             </button>
           </div>
 
-          {/* Tipo de contato */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
             {CONTACT_TYPES.map((t) => {
               const Icon = t.icon;
@@ -471,7 +466,6 @@ export default function EmergencyContactsView() {
         </div>
       )}
 
-      {/* Lista de contatos */}
       {contacts.length === 0 && !showForm ? (
         <div
           style={{
