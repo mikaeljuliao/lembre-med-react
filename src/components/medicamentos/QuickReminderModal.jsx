@@ -23,6 +23,27 @@ const COMMON_MEDICATIONS = [
   { nome: 'Levotiroxina 50mcg', categoria: 'Tireoide' },
   { nome: 'Sertralina 50mg', categoria: 'Saúde mental' },
   { nome: 'Vitamina D 1000 UI', categoria: 'Vitaminas' },
+  { nome: 'AAS 100mg', categoria: 'Coração' },
+  { nome: 'Atorvastatina 20mg', categoria: 'Colesterol' },
+  { nome: 'Rosuvastatina 10mg', categoria: 'Colesterol' },
+  { nome: 'Clopidogrel 75mg', categoria: 'Coração' },
+  { nome: 'Rivaroxabana 20mg', categoria: 'Anticoagulante' },
+  { nome: 'Apixabana 5mg', categoria: 'Anticoagulante' },
+  { nome: 'Gliclazida 30mg', categoria: 'Diabetes' },
+  { nome: 'Glibenclamida 5mg', categoria: 'Diabetes' },
+  { nome: 'Insulina NPH', categoria: 'Diabetes' },
+  { nome: 'Amoxicilina 500mg', categoria: 'Antibiótico' },
+  { nome: 'Azitromicina 500mg', categoria: 'Antibiótico' },
+  { nome: 'Cefalexina 500mg', categoria: 'Antibiótico' },
+  { nome: 'Prednisona 20mg', categoria: 'Anti-inflamatório' },
+  { nome: 'Dexametasona 4mg', categoria: 'Anti-inflamatório' },
+  { nome: 'Cetirizina 10mg', categoria: 'Alergia' },
+  { nome: 'Loratadina 10mg', categoria: 'Alergia' },
+  { nome: 'Salbutamol 100mcg', categoria: 'Respiratório' },
+  { nome: 'Budesonida 200mcg', categoria: 'Respiratório' },
+  { nome: 'Metoclopramida 10mg', categoria: 'Náusea' },
+  { nome: 'Domperidona 10mg', categoria: 'Náusea' },
+  { nome: 'Lactulose', categoria: 'Intestino' },
 ];
 
 const PRESENTATIONS = [
@@ -106,7 +127,22 @@ export default function QuickReminderModal({
   const filteredSuggestions = useMemo(() => {
     const term = nome.trim().toLowerCase();
     if (!term) return [];
-    return suggestions.filter((item) => item.nome.toLowerCase().includes(term)).slice(0, 6);
+
+    return suggestions
+      .filter((item) => item.nome.toLowerCase().includes(term))
+      .sort((first, second) => {
+        const firstName = first.nome.toLowerCase();
+        const secondName = second.nome.toLowerCase();
+        const firstStartsWithTerm = firstName.startsWith(term);
+        const secondStartsWithTerm = secondName.startsWith(term);
+
+        if (firstStartsWithTerm !== secondStartsWithTerm) {
+          return firstStartsWithTerm ? -1 : 1;
+        }
+
+        return firstName.localeCompare(secondName, 'pt-BR');
+      })
+      .slice(0, 8);
   }, [nome, suggestions]);
 
   const reset = () => {
