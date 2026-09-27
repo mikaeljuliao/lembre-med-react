@@ -269,10 +269,10 @@ export default function QuickReminderModal({
             <input id="nome-remedio" type="text" value={nome} onChange={(event) => setNome(event.target.value)} placeholder="Digite o nome do remédio" autoFocus className="min-h-14 w-full rounded-2xl border-2 border-slate-200 bg-slate-50 pl-12 pr-4 text-lg font-bold text-slate-900 outline-none focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-100" />
           </div>
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {filteredSuggestions.map((item) => {
+            {filteredSuggestions.map((item, index) => {
               const selected = nome.trim().toLowerCase() === item.nome.toLowerCase();
               return (
-                <button key={item.nome} type="button" onClick={() => handleSuggestionSelect(item)} className={`flex min-h-14 items-center gap-3 rounded-2xl border-2 px-3 py-2 text-left ${selected ? 'border-blue-600 bg-blue-50 text-blue-800' : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'}`} aria-pressed={selected}>
+                <button key={`${item.nome}-${item.medication?.id ?? index}`} type="button" onClick={() => handleSuggestionSelect(item)} className={`flex min-h-14 items-center gap-3 rounded-2xl border-2 px-3 py-2 text-left ${selected ? 'border-blue-600 bg-blue-50 text-blue-800' : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'}`} aria-pressed={selected}>
                   <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${selected ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
                     {selected ? <Check className="h-5 w-5" strokeWidth={3} /> : <Pill className="h-5 w-5" />}
                   </span>
