@@ -32,6 +32,10 @@ const GUIDE_TOPICS = [
       'Descanse num lugar calmo. Beba bastante água. Evite barulho e luz forte. Se tiver remédio indicado pelo médico, use conforme orientação.',
     sinaisDeAlerta:
       'Dor muito forte e repentina (a pior da vida), dor com febre alta, confusão mental, fraqueza em um lado do corpo ou dificuldade de falar. Nesses casos, ligue 192 (SAMU) imediatamente.',
+    fonteOficial: {
+      label: 'Ministério da Saúde — Saúde de A a Z',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z',
+    },
   },
   {
     id: 'febre',
@@ -46,6 +50,10 @@ const GUIDE_TOPICS = [
       'Beba muita água. Fique em repouso. Use roupas leves. Verifique a temperatura de hora em hora. Se o médico indicou, use o antitérmico conforme prescrito.',
     sinaisDeAlerta:
       'Febre acima de 39 °C, febre que dura mais de 2 dias, confusão mental, dificuldade para respirar, manchas na pele. Procure atendimento médico.',
+    fonteOficial: {
+      label: 'Ministério da Saúde — Saúde de A a Z',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z',
+    },
   },
   {
     id: 'pressao-alta',
@@ -60,6 +68,10 @@ const GUIDE_TOPICS = [
       'Sente-se ou deite. Respire fundo e devagar. Evite esforço. Tome o remédio de pressão se foi prescrito. Meça a pressão e anote o valor.',
     sinaisDeAlerta:
       'Pressão muito alta (acima de 180×110), dor no peito, falta de ar, confusão, fraqueza em um lado do corpo, rosto caído, fala travada. Ligue 192 imediatamente.',
+    fonteOficial: {
+      label: 'Saiba mais sobre hipertensão',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/h/hipertensao',
+    },
   },
   {
     id: 'tontura',
@@ -74,6 +86,10 @@ const GUIDE_TOPICS = [
       'Sente-se imediatamente para evitar queda. Beba água devagar. Levante sempre devagar, apoiando em algo. Não dirija.',
     sinaisDeAlerta:
       'Desmaio, tontura com vômito muito forte, zumbido no ouvido repentino, dificuldade para andar ou falar. Procure atendimento médico.',
+    fonteOficial: {
+      label: 'Ministério da Saúde — Saúde de A a Z',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z',
+    },
   },
   {
     id: 'falta-ar',
@@ -88,6 +104,10 @@ const GUIDE_TOPICS = [
       'Sente-se ereto, inclinado ligeiramente para frente. Tente respirar devagar pelo nariz. Evite esforço. Use o inalador se for prescrito.',
     sinaisDeAlerta:
       'Lábios ou unhas roxos, não conseguir completar frases, falta de ar em repouso. Ligue 192 imediatamente.',
+    fonteOficial: {
+      label: 'Ministério da Saúde — Saúde de A a Z',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z',
+    },
   },
   {
     id: 'dor-peito',
@@ -102,6 +122,10 @@ const GUIDE_TOPICS = [
       'Sente-se ou deite. Não faça esforço. Chame alguém que esteja perto. Se tiver nitroglicerina prescrita, use conforme orientação médica.',
     sinaisDeAlerta:
       'Dor no peito com suor frio, falta de ar, dor que vai para o braço esquerdo ou mandíbula, palidez, desmaio. Ligue 192 imediatamente — pode ser infarto.',
+    fonteOficial: {
+      label: 'Saiba mais sobre infarto',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/i/infarto',
+    },
   },
   {
     id: 'dor-nas-juntas',
@@ -116,6 +140,10 @@ const GUIDE_TOPICS = [
       'Descanse a articulação dolorida. Aplique calor (bolsa de água quente) se não houver inchaço. Evite movimentos bruscos. Use os remédios prescritos pelo médico.',
     sinaisDeAlerta:
       'Inchaço grande e vermelhidão, febre na junta, dor que impede qualquer movimento ou piora muito de repente. Procure seu médico.',
+    fonteOficial: {
+      label: 'Ministério da Saúde — Saúde de A a Z',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z',
+    },
   },
   {
     id: 'enjoo',
@@ -130,6 +158,10 @@ const GUIDE_TOPICS = [
       'Coma de forma leve (torrada, arroz, maçã). Beba água em pequenos goles. Descanse em ambiente arejado. Evite alimentos gordurosos.',
     sinaisDeAlerta:
       'Vômito com sangue, não conseguir beber água por mais de 6 horas, sinais de desidratação (boca muito seca, urina escura). Procure atendimento.',
+    fonteOficial: {
+      label: 'Ministério da Saúde — Saúde de A a Z',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z',
+    },
   },
   {
     id: 'queda',
@@ -144,6 +176,10 @@ const GUIDE_TOPICS = [
       'Não tente levantar sozinho com pressa. Chame alguém para ajudar. Verifique se há dor intensa antes de se mover. Remova tapetes e objetos no chão de casa.',
     sinaisDeAlerta:
       'Dor intensa em alguma parte do corpo após a queda, inchaço, deformidade, incapacidade de apoiar o peso. Vá ao pronto-socorro.',
+    fonteOficial: {
+      label: 'Saiba mais sobre prevenção de quedas',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/s/saude-da-pessoa-idosa',
+    },
   },
   {
     id: 'visao-turva',
@@ -158,6 +194,10 @@ const GUIDE_TOPICS = [
       'Sente-se em lugar seguro. Evite dirigir ou caminhar em lugares sem apoio. Anote quando a alteração começou.',
     sinaisDeAlerta:
       'Perda súbita de visão em um olho, visão dupla repentina, flashes de luz ou sombra preta cobrindo parte do campo visual. Vá ao pronto-socorro urgente.',
+    fonteOficial: {
+      label: 'Saiba mais sobre doenças oculares',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/doencas-oculares/tratamento',
+    },
   },
   {
     id: 'insonia',
@@ -172,6 +212,10 @@ const GUIDE_TOPICS = [
       'Mantenha um horário fixo para dormir e acordar. Evite cafeína após as 15h. Deixe o quarto escuro e fresco. Não use celular antes de dormir.',
     sinaisDeAlerta:
       'Sono muito ruim por mais de 2 semanas, sonolência excessiva durante o dia, paradas na respiração durante o sono. Converse com seu médico.',
+    fonteOficial: {
+      label: 'Saiba mais sobre higiene do sono',
+      url: 'https://www.gov.br/hubrasil/pt-br/comunicacao/rede-ebserh-tv/drops-de-saude/drops-de-saude-higiene-do-sono',
+    },
   },
   {
     id: 'alimentacao',
@@ -186,6 +230,10 @@ const GUIDE_TOPICS = [
       'Beba pelo menos 6 a 8 copos de água por dia, mesmo sem sede. Coma em horários fixos. Prefira alimentos macios e nutritivos. Frutas e legumes são ótimas opções.',
     sinaisDeAlerta:
       'Perda de peso sem querer, boca muito seca, confusão mental por falta de água ou alimento, desmaio. Procure atendimento médico.',
+    fonteOficial: {
+      label: 'Saiba mais sobre os Guias Alimentares',
+      url: 'https://www.gov.br/saude/pt-br/composicao/saps/promocao-da-saude/guias-alimentares',
+    },
   },
 ];
 
@@ -356,7 +404,7 @@ function TopicCard({ topic, isSelected, onClick }) {
           </div>
 
           <a
-            href="https://www.gov.br/saude/pt-br"
+            href={topic.fonteOficial.url}
             target="_blank"
             rel="noreferrer"
             style={{
@@ -375,7 +423,7 @@ function TopicCard({ topic, isSelected, onClick }) {
             }}
           >
             <ShieldCheck style={{ width: '18px', height: '18px' }} />
-            Fonte Oficial: Ministério da Saúde
+            {topic.fonteOficial.label}
           </a>
         </div>
       )}
