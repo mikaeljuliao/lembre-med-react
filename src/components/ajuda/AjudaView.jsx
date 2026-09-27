@@ -7,198 +7,155 @@ import {
   Search,
   ArrowRight,
   ShieldAlert,
-  ExternalLink,
   Heart,
   Phone,
 } from 'lucide-react';
 
-const HELP_ITEMS = [
+const START_ITEMS = [
   {
     icon: Pill,
-    title: 'Adicionar meu remédio',
+    title: 'Cadastre seus remédios',
     description:
-      'Vá na aba "Remédios", toque em "Adicionar medicamento", escreva o nome e o horário. O lembrete é criado automaticamente.',
+      'Abra "Remédios", toque em "Adicionar medicamento" e informe o nome, a dose e os horários.',
   },
   {
     icon: Clock3,
-    title: 'Ver o que tomar agora',
+    title: 'Veja o próximo remédio',
     description:
-      'A tela inicial mostra o próximo remédio e quanto tempo falta. Você não precisa decorar nada.',
-  },
-  {
-    icon: BellRing,
-    title: 'Receber aviso no horário',
-    description:
-      'Quando chega a hora, o app faz um alerta para chamar atenção. Fique com o celular por perto.',
+      'Na tela "Início", o aplicativo mostra qual é a próxima dose e quanto tempo falta para ela.',
   },
   {
     icon: CheckCircle2,
-    title: 'Confirmar que tomou',
+    title: 'Confirme quando tomar',
     description:
-      'Toque em "Já tomei" para confirmar a dose. O app registra e mostra o próximo lembrete.',
+      'Quando tomar o remédio, toque em "Já tomei". O aplicativo registra a dose e atualiza o próximo lembrete.',
+  },
+];
+
+const NAVIGATION_ITEMS = [
+  {
+    icon: Pill,
+    title: 'Remédios',
+    description: 'Cadastre, consulte e altere seus medicamentos e horários.',
+  },
+  {
+    icon: Clock3,
+    title: 'Início',
+    description: 'Veja o próximo remédio e acompanhe as doses do dia.',
   },
   {
     icon: Heart,
-    title: 'Registrar pressão e peso',
-    description:
-      'Na aba "Saúde", toque em "Diário" para anotar sua pressão, glicemia e peso do dia.',
+    title: 'Cuidados',
+    description: 'Encontre orientações, registre suas medidas e consulte telefones importantes.',
   },
   {
     icon: Phone,
-    title: 'Ligar para emergência',
-    description:
-      'Na aba "Saúde", toque em "Contatos" para ver o SAMU (192) e adicionar o número do seu médico ou de um familiar.',
+    title: 'Emergência',
+    description: 'Dentro de "Cuidados", veja o SAMU (192) e outros contatos cadastrados.',
   },
 ];
 
 const FAQ_ITEMS = [
-  'A tela inicial mostra sempre o próximo remédio e o tempo que falta para ele.',
-  'Para adicionar um remédio, vá na aba "Remédios" e toque no botão azul "Adicionar medicamento".',
-  'Quando chegar a hora do remédio, o app toca e mostra um aviso grande.',
-  'Para registrar que tomou o remédio, toque em "Já tomei" na tela inicial.',
-  'Se errar algum dado, entre na aba "Remédios", localize o remédio e toque em "Detalhes" para ver as opções.',
-];
-
-const OFFICIAL_LINKS = [
   {
-    title: 'Ministério da Saúde',
-    description: 'Informações oficiais sobre saúde, doenças e cuidados.',
-    url: 'https://www.gov.br/saude/pt-br',
-    color: '#0891b2',
-    bg: '#ecfeff',
-  },
-  {
-    title: 'ANVISA — Consulta de Medicamentos',
-    description: 'Verifique se seu remédio é registrado e veja a bula oficial.',
-    url: 'https://consultas.anvisa.gov.br/#/bulario/',
-    color: '#16a34a',
-    bg: '#f0fdf4',
-  },
-  {
-    title: 'Disque Saúde — 136',
+    title: 'Como altero um remédio?',
     description:
-      'Ligue 136 para tirar dúvidas de saúde gratuitamente com profissionais do governo.',
-    url: 'tel:136',
-    color: '#7c3aed',
-    bg: '#f5f3ff',
+      'Abra "Remédios", encontre o medicamento e entre em "Detalhes" para editar as informações.',
+  },
+  {
+    title: 'Como registro uma medida?',
+    description:
+      'Abra "Cuidados", entre em "Minhas medidas" e toque em "Registrar nova medida".',
+  },
+  {
+    title: 'Onde encontro informações sobre um sintoma?',
+    description:
+      'Abra "Cuidados" e entre em "Orientações". Você encontrará situações comuns, sinais de alerta e fontes oficiais.',
+  },
+  {
+    title: 'Onde encontro os telefones de emergência?',
+    description:
+      'Abra "Cuidados" e entre em "Emergência". O SAMU pode ser acionado pelo número 192.',
   },
 ];
 
 export default function AjudaView() {
   return (
     <div className="space-y-6 pb-24 animate-fade-in" style={{ maxWidth: '640px', margin: '0 auto' }}>
-
       <div className="bg-gradient-to-br from-blue-700 to-indigo-700 rounded-[2rem] p-6 text-white shadow-lg shadow-blue-200">
         <div className="flex items-center gap-2 text-blue-100 text-xs font-bold uppercase tracking-[0.18em]">
           <BookOpenText className="w-4 h-4" />
-          <span>Ajuda</span>
+          <span>Como usar</span>
         </div>
-        <h1 className="mt-3 text-2xl font-black">Como usar o DoseFácil</h1>
-        <p className="mt-2 text-sm text-blue-100">
-          Em poucos passos, o aplicativo mostra o que você precisa fazer agora.
+        <h1 className="mt-3 text-2xl font-black">Aprenda a usar o aplicativo</h1>
+        <p className="mt-2 text-sm text-blue-100 leading-relaxed">
+          Aqui você encontra as tarefas mais comuns. Para informações sobre sintomas e cuidados,
+          use "Cuidados" &gt; "Orientações".
         </p>
       </div>
 
-      <div className="grid gap-4">
-        {HELP_ITEMS.map(({ icon: Icon, title, description }) => (
-          <div
-            key={title}
-            className="bg-white rounded-[1.75rem] border border-slate-200 p-5 shadow-sm"
-          >
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 shrink-0">
-                <Icon className="h-5 w-5" />
+      <section>
+        <div className="flex items-center gap-2 text-sm font-black text-slate-900">
+          <CheckCircle2 className="w-4 h-4 text-blue-700" />
+          Comece por aqui
+        </div>
+
+        <div className="mt-4 grid gap-4">
+          {START_ITEMS.map(({ icon: Icon, title, description }, index) => (
+            <div
+              key={title}
+              className="bg-white rounded-[1.75rem] border border-slate-200 p-5 shadow-sm"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 shrink-0">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wider text-blue-700">
+                    Passo {index + 1}
+                  </p>
+                  <h2 className="mt-1 text-base font-extrabold text-slate-900">{title}</h2>
+                  <p className="mt-1 text-sm text-slate-600 leading-relaxed">{description}</p>
+                </div>
               </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="bg-white rounded-[2rem] border border-slate-200 p-5 shadow-sm">
+        <div className="flex items-center gap-2 text-sm font-black text-slate-900">
+          <ArrowRight className="w-4 h-4 text-blue-700" />
+          Onde encontrar cada coisa
+        </div>
+
+        <div className="mt-4 grid gap-3">
+          {NAVIGATION_ITEMS.map(({ icon: Icon, title, description }) => (
+            <div key={title} className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4">
+              <Icon className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
               <div>
-                <h2 className="text-base font-extrabold text-slate-900">{title}</h2>
+                <h2 className="text-sm font-extrabold text-slate-900">{title}</h2>
                 <p className="mt-1 text-sm text-slate-600 leading-relaxed">{description}</p>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </section>
 
-      <div className="bg-white rounded-[2rem] border border-slate-200 p-5 shadow-sm">
+      <section className="bg-white rounded-[2rem] border border-slate-200 p-5 shadow-sm">
         <div className="flex items-center gap-2 text-sm font-black text-slate-900">
           <Search className="w-4 h-4 text-blue-700" />
           Dúvidas rápidas
         </div>
 
         <div className="mt-4 space-y-3">
-          {FAQ_ITEMS.map((item, index) => (
-            <div key={item} className="flex items-start gap-3 rounded-2xl bg-slate-50 p-3">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-xs font-black text-blue-700 shrink-0">
-                {index + 1}
-              </div>
-              <p className="text-sm text-slate-700 leading-relaxed">{item}</p>
+          {FAQ_ITEMS.map(({ title, description }) => (
+            <div key={title} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <h2 className="text-sm font-extrabold text-slate-900">{title}</h2>
+              <p className="mt-1 text-sm text-slate-600 leading-relaxed">{description}</p>
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="bg-white rounded-[2rem] border border-slate-200 p-5 shadow-sm">
-        <div className="flex items-center gap-2 text-sm font-black text-slate-900 mb-4">
-          <ExternalLink className="w-4 h-4 text-emerald-600" />
-          Fontes oficiais de saúde
-        </div>
-
-        <div className="space-y-3">
-          {OFFICIAL_LINKS.map((link) => (
-            <a
-              key={link.title}
-              href={link.url}
-              target={link.url.startsWith('tel:') ? '_self' : '_blank'}
-              rel="noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                background: link.bg,
-                border: `1.5px solid ${link.color}30`,
-                borderRadius: '16px',
-                padding: '14px 16px',
-                textDecoration: 'none',
-              }}
-            >
-              <div
-                style={{
-                  background: link.color,
-                  borderRadius: '10px',
-                  width: '38px',
-                  height: '38px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <ExternalLink style={{ width: '16px', height: '16px', color: '#ffffff' }} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', margin: '0 0 2px' }}>
-                  {link.title}
-                </p>
-                <p style={{ fontSize: '12px', color: '#64748b', margin: 0, lineHeight: 1.4 }}>
-                  {link.description}
-                </p>
-              </div>
-              <ArrowRight style={{ width: '16px', height: '16px', color: link.color, flexShrink: 0 }} />
-            </a>
-          ))}
-        </div>
-
-        <p
-          style={{
-            fontSize: '12px',
-            color: '#94a3b8',
-            margin: '16px 0 0',
-            textAlign: 'center',
-            lineHeight: 1.5,
-          }}
-        >
-          📋 As informações deste app não substituem a orientação do seu médico.
-        </p>
-      </div>
+      </section>
 
       <div className="rounded-[2rem] bg-slate-900 p-5 text-white">
         <div className="flex items-center gap-2 text-blue-200 text-sm font-bold">
@@ -206,12 +163,12 @@ export default function AjudaView() {
           Importante
         </div>
         <p className="mt-3 text-base font-semibold leading-relaxed">
-          O app foi pensado para reduzir dúvidas. Se ficar em dúvida, volte para a tela inicial: ela
-          sempre mostra o próximo passo.
+          O aplicativo ajuda a organizar seus cuidados, mas não substitui a orientação de um
+          profissional de saúde.
         </p>
-        <div className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-blue-200">
-          <span>Voltar para Início</span>
-          <ArrowRight className="w-4 h-4" />
+        <div className="mt-4 flex items-center gap-2 text-sm font-bold text-blue-200">
+          <span>Em caso de emergência, use "Cuidados" &gt; "Emergência".</span>
+          <ArrowRight className="w-4 h-4 shrink-0" />
         </div>
       </div>
     </div>
