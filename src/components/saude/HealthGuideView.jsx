@@ -286,7 +286,7 @@ const GUIDE_TOPICS = [
       'Engasgo com dificuldade para respirar, lábios arroxeados ou incapacidade de engolir líquidos. Ligue 192 imediatamente.',
     fonteOficial: {
       label: 'Orientações sobre dificuldade para engolir',
-      url: 'https://bvsms.saude.gov.br/bvs/publicacoes/guia_pratico_agente_comunitario_saude.pdf',
+      url: 'https://bvsms.saude.gov.br/20-3-dia-nacional-de-atencao-a-disfagia-2026/',
     },
   },
   {
