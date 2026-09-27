@@ -218,6 +218,96 @@ const GUIDE_TOPICS = [
     },
   },
   {
+    id: 'prisao-de-ventre',
+    icon: Droplets,
+    color: '#92400e',
+    bg: '#fffbeb',
+    titulo: 'Prisão de ventre',
+    resumo: 'Fezes duras, esforço ou dificuldade para evacuar.',
+    oQuePodeCausar:
+      'Pouca água, pouca fibra, pouca atividade física, alguns medicamentos ou alterações do intestino.',
+    oQueFazer:
+      'Beba água ao longo do dia, mantenha uma alimentação com fibras e movimente-se dentro do que for seguro para você. Se o problema persistir, converse com sua equipe de saúde.',
+    sinaisDeAlerta:
+      'Dor abdominal forte, vômitos, barriga muito inchada, sangue nas fezes ou incapacidade de evacuar e eliminar gases. Procure atendimento médico.',
+    fonteOficial: {
+      label: 'Saiba mais sobre constipação intestinal',
+      url: 'https://bvsms.saude.gov.br/constipacao-intestinal/',
+    },
+  },
+  {
+    id: 'perda-de-urina',
+    icon: Droplets,
+    color: '#0369a1',
+    bg: '#f0f9ff',
+    titulo: 'Perda de urina',
+    resumo: 'Urina escapa sem conseguir segurar ou chegar ao banheiro.',
+    oQuePodeCausar:
+      'Alterações urinárias, doenças, medicamentos e dificuldades de mobilidade ou de chegar ao banheiro a tempo.',
+    oQueFazer:
+      'Anote quando os escapes acontecem e converse com sua equipe de saúde. Não esconda o problema: existem causas tratáveis e formas de cuidado.',
+    sinaisDeAlerta:
+      'Incapacidade súbita de urinar, sangue na urina, febre, dor forte ou confusão repentina. Procure atendimento médico.',
+    fonteOficial: {
+      label: 'Saiba mais sobre incontinência urinária',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/s/saude-da-pessoa-idosa',
+    },
+  },
+  {
+    id: 'confusao-memoria',
+    icon: Brain,
+    color: '#6d28d9',
+    bg: '#f5f3ff',
+    titulo: 'Confusão ou esquecimento',
+    resumo: 'Esquece coisas importantes, fica desorientado ou confuso.',
+    oQuePodeCausar:
+      'Alterações de memória podem ter diferentes causas. Mudanças rápidas também podem estar relacionadas a dor, infecção, desidratação ou reação a medicamentos.',
+    oQueFazer:
+      'Anote quando começou e quais mudanças foram percebidas. Avise um familiar ou pessoa de confiança e procure sua equipe de saúde para avaliação.',
+    sinaisDeAlerta:
+      'Confusão que começou de repente, sonolência intensa, agitação incomum, dificuldade para falar, fraqueza de um lado do corpo ou perda de consciência. Ligue 192 imediatamente.',
+    fonteOficial: {
+      label: 'Saiba mais sobre demências',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/s/saude-da-pessoa-idosa/alzheimer-e-outras-demencias',
+    },
+  },
+  {
+    id: 'dificuldade-engolir',
+    icon: Droplets,
+    color: '#0f766e',
+    bg: '#f0fdfa',
+    titulo: 'Dificuldade para engolir',
+    resumo: 'Engasga, tosse ao comer ou sente dificuldade para engolir.',
+    oQuePodeCausar:
+      'Alterações da mastigação e deglutição podem acontecer por diferentes condições e precisam ser avaliadas pela equipe de saúde.',
+    oQueFazer:
+      'Coma sentado e devagar. Não force alimentos que provocam engasgos. Informe a equipe de saúde para avaliar a dificuldade de engolir.',
+    sinaisDeAlerta:
+      'Engasgo com dificuldade para respirar, lábios arroxeados ou incapacidade de engolir líquidos. Ligue 192 imediatamente.',
+    fonteOficial: {
+      label: 'Orientações sobre dificuldade para engolir',
+      url: 'https://bvsms.saude.gov.br/bvs/publicacoes/guia_pratico_agente_comunitario_saude.pdf',
+    },
+  },
+  {
+    id: 'saude-bucal',
+    icon: Heart,
+    color: '#be123c',
+    bg: '#fff1f2',
+    titulo: 'Dor ou problema na boca',
+    resumo: 'Dor de dente, gengiva sangrando, prótese solta ou ferida.',
+    oQuePodeCausar:
+      'Problemas nos dentes, gengivas, próteses ou outras alterações da boca.',
+    oQueFazer:
+      'Mantenha a higiene da boca e procure atendimento odontológico para avaliar a causa. Não ignore feridas que não cicatrizam.',
+    sinaisDeAlerta:
+      'Inchaço importante, dificuldade para respirar ou engolir, sangramento que não para ou ferida na boca que não cicatriza em até 15 dias. Procure atendimento.',
+    fonteOficial: {
+      label: 'Saiba mais sobre saúde bucal',
+      url: 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/s/saude-da-pessoa-idosa/saude-bucal',
+    },
+  },
+  {
     id: 'alimentacao',
     icon: Apple,
     color: '#16a34a',
