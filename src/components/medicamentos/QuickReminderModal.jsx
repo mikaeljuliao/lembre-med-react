@@ -554,6 +554,7 @@ export default function QuickReminderModal({
           <Check className="h-6 w-6" strokeWidth={3} />
           {isEditing ? 'Salvar alterações' : isExistingMedication ? 'Adicionar horário' : 'Cadastrar remédio'}
         </button>
+        </div>
       </div>
     </Modal>
   );
