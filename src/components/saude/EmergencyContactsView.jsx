@@ -54,6 +54,11 @@ function saveStored(contacts) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
 }
 
+function normalizePhoneNumber(phone) {
+  return phone.replace(/\\D/g, '');
+}
+
+
 const EMPTY_FORM = { nome: '', telefone: '', tipo: 'familia', nota: '' };
 
 export default function EmergencyContactsView() {
@@ -162,7 +167,8 @@ export default function EmergencyContactsView() {
         {FIXED_CONTACTS.map((c) => (
           <a
             key={c.id}
-            href={`tel:${c.telefone}`}
+            href={`tel:${normalizePhoneNumber(c.telefone)}`}
+            aria-label={`Ligar para ${c.nome}, ${c.telefone}`} 
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -537,7 +543,8 @@ export default function EmergencyContactsView() {
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                   <a
-                    href={`tel:${contact.telefone.replace(/\D/g, '')}`}
+                    href={`tel:${normalizePhoneNumber(contact.telefone)}`}
+                    aria-label={`Ligar para ${contact.nome}, ${contact.telefone}`}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
