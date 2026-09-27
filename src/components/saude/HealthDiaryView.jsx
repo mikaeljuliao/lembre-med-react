@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   Heart,
+  Thermometer,
   Droplets,
   Scale,
   Plus,
@@ -24,6 +25,16 @@ const METRICS = [
     unit: 'mmHg',
     placeholder: 'Ex: 120/80',
     hint: 'Sistólica / Diastólica',
+  },
+  {
+    id: 'temperatura',
+    label: 'Temperatura',
+    icon: Thermometer,
+    color: '#dc2626',
+    bg: '#fef2f2',
+    unit: '°C',
+    placeholder: 'Ex: 36,5',
+    hint: 'Temperatura corporal',
   },
   {
     id: 'glicemia',
@@ -72,7 +83,7 @@ function formatTime(iso) {
 
 export default function HealthDiaryView() {
   const [entries, setEntries] = useState([]);
-  const [form, setForm] = useState({ metricId: 'pressao', value: '', note: '' });
+  const [form, setForm] = useState({ metricId: 'pressao', value: '', context: '', note: '' });
   const [showForm, setShowForm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -90,12 +101,13 @@ export default function HealthDiaryView() {
       metricLabel: metric.label,
       unit: metric.unit,
       value: form.value.trim(),
+      context: form.context.trim(),
       note: form.note.trim(),
     };
     const updated = [newEntry, ...entries];
     setEntries(updated);
     saveStored(updated);
-    setForm({ metricId: 'pressao', value: '', note: '' });
+    setForm({ metricId: 'pressao', value: '', context: '', note: '' });
     setShowForm(false);
   };
 
@@ -158,7 +170,7 @@ export default function HealthDiaryView() {
           Suas medidas de hoje
         </h1>
         <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.75)', margin: 0, lineHeight: 1.5 }}>
-          Registre pressão, glicemia e peso.
+          Registre pressão, temperatura, glicemia e peso.
         </p>
       </div>
 
@@ -266,6 +278,43 @@ export default function HealthDiaryView() {
               {selectedMetric?.hint}
             </p>
           </div>
+
+          {form.metricId === 'glicemia' && (
+            <div style={{ marginBottom: '14px' }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  color: '#374151',
+                  marginBottom: '8px',
+                }}
+              >
+                Quando foi medida?
+              </label>
+              <select
+                value={form.context}
+                onChange={(e) => setForm((f) => ({ ...f, context: e.target.value }))}
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  fontSize: '16px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '14px',
+                  background: '#f8fafc',
+                  color: '#0f172a',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                }}
+              >
+                <option value="">Selecione uma opção</option>
+                <option value="Em jejum">Em jejum</option>
+                <option value="Antes da refeição">Antes da refeição</option>
+                <option value="Após a refeição">Após a refeição</option>
+                <option value="Outro momento">Outro momento</option>
+              </select>
+            </div>
+          )}
 
           <div style={{ marginBottom: '18px' }}>
             <label
@@ -426,6 +475,11 @@ export default function HealthDiaryView() {
                         {entry.unit}
                       </span>
                     </p>
+                    {entry.context && (
+                      <p style={{ fontSize: '13px', color: '#64748b', margin: '2px 0 0' }}>
+                        {entry.context}
+                      </p>
+                    )}
                     {entry.note && (
                       <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0 0' }}>
                         {entry.note}
