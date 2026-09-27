@@ -36,7 +36,7 @@ export default function SaudeView() {
 
   return (
     <div className="animate-fade-in">
-      {/* Sub-navegação com cards grandes */}
+
       <div
         style={{
           display: 'grid',
@@ -115,7 +115,6 @@ export default function SaudeView() {
         })}
       </div>
 
-      {/* Conteúdo da sub-aba */}
       {activeSubTab === 'guia' && <HealthGuideView />}
       {activeSubTab === 'diario' && <HealthDiaryView />}
       {activeSubTab === 'contatos' && <EmergencyContactsView />}
