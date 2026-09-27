@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { HeartPulse, BookOpen, TrendingUp, Phone } from 'lucide-react';
 import HealthGuideView from './HealthGuideView';
 import HealthDiaryView from './HealthDiaryView';
