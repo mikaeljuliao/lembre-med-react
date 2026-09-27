@@ -123,7 +123,7 @@ export default function HealthDiaryView() {
       }}
       className="animate-fade-in"
     >
-      {/* Header */}
+
       <div
         style={{
           background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
@@ -162,7 +162,6 @@ export default function HealthDiaryView() {
         </p>
       </div>
 
-      {/* Botão adicionar */}
       {!showForm && (
         <button
           type="button"
@@ -188,7 +187,6 @@ export default function HealthDiaryView() {
         </button>
       )}
 
-      {/* Formulário */}
       {showForm && (
         <div
           style={{
@@ -203,7 +201,6 @@ export default function HealthDiaryView() {
             Nova medida
           </p>
 
-          {/* Seletor de métrica */}
           <div style={{ display: 'flex', gap: '10px', marginBottom: '18px', flexWrap: 'wrap' }}>
             {METRICS.map((m) => {
               const Icon = m.icon;
@@ -344,7 +341,6 @@ export default function HealthDiaryView() {
         </div>
       )}
 
-      {/* Medidas de hoje */}
       <div>
         <p
           style={{
@@ -458,7 +454,6 @@ export default function HealthDiaryView() {
         )}
       </div>
 
-      {/* Histórico */}
       {historyEntries.length > 0 && (
         <div>
           <button
