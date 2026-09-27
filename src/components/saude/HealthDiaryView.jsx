@@ -133,7 +133,7 @@ export default function HealthDiaryView() {
         flexDirection: 'column',
         gap: '16px',
       }}
-      className="animate-fade-in"
+      className="health-diary animate-fade-in"
     >
 
       <div
@@ -347,7 +347,7 @@ export default function HealthDiaryView() {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div className="health-diary-actions" style={{ display: 'flex', gap: '10px' }}>
             <button
               type="button"
               onClick={() => setShowForm(false)}
@@ -424,7 +424,7 @@ export default function HealthDiaryView() {
               return (
                 <div
                   key={entry.id}
-                  style={{
+                  className="health-diary-entry" style={{
                     background: '#ffffff',
                     borderRadius: '18px',
                     padding: '16px 18px',
@@ -542,7 +542,7 @@ export default function HealthDiaryView() {
                 return (
                   <div
                     key={entry.id}
-                    style={{
+                    className="health-diary-history-entry" style={{
                       background: '#f8fafc',
                       borderRadius: '14px',
                       padding: '12px 16px',
