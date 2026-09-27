@@ -1,4 +1,3 @@
-import React from 'react';
 import Modal from '../common/Modal';
 import Badge from '../common/Badge';
 import { Pill, BookOpenText, Calendar, Clock3, Utensils, Info, Pencil } from 'lucide-react';
