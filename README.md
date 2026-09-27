@@ -55,14 +55,6 @@ npm install
 npm run dev
 ```
 
-Para validação:
-
-```bash
-npm run lint
-npm run test
-npm run build
-```
-
 ## Objetivo do projeto
 
 O LembreMed é um **projeto de portfólio e laboratório de desenvolvimento**, utilizado para aplicar conceitos de desenvolvimento frontend, arquitetura de componentes, regras de negócio, responsividade, acessibilidade e qualidade de código em uma aplicação completa.
