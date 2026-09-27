@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   BookOpenText,
   Clock3,
@@ -88,7 +87,7 @@ const OFFICIAL_LINKS = [
 export default function AjudaView() {
   return (
     <div className="space-y-6 pb-24 animate-fade-in" style={{ maxWidth: '640px', margin: '0 auto' }}>
-      {/* Header */}
+
       <div className="bg-gradient-to-br from-blue-700 to-indigo-700 rounded-[2rem] p-6 text-white shadow-lg shadow-blue-200">
         <div className="flex items-center gap-2 text-blue-100 text-xs font-bold uppercase tracking-[0.18em]">
           <BookOpenText className="w-4 h-4" />
@@ -100,7 +99,6 @@ export default function AjudaView() {
         </p>
       </div>
 
-      {/* Passos principais */}
       <div className="grid gap-4">
         {HELP_ITEMS.map(({ icon: Icon, title, description }) => (
           <div
@@ -120,7 +118,6 @@ export default function AjudaView() {
         ))}
       </div>
 
-      {/* Dúvidas rápidas */}
       <div className="bg-white rounded-[2rem] border border-slate-200 p-5 shadow-sm">
         <div className="flex items-center gap-2 text-sm font-black text-slate-900">
           <Search className="w-4 h-4 text-blue-700" />
@@ -139,7 +136,6 @@ export default function AjudaView() {
         </div>
       </div>
 
-      {/* Fontes oficiais */}
       <div className="bg-white rounded-[2rem] border border-slate-200 p-5 shadow-sm">
         <div className="flex items-center gap-2 text-sm font-black text-slate-900 mb-4">
           <ExternalLink className="w-4 h-4 text-emerald-600" />
@@ -204,7 +200,6 @@ export default function AjudaView() {
         </p>
       </div>
 
-      {/* Rodapé */}
       <div className="rounded-[2rem] bg-slate-900 p-5 text-white">
         <div className="flex items-center gap-2 text-blue-200 text-sm font-bold">
           <ShieldAlert className="w-4 h-4" />

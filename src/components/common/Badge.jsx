@@ -1,4 +1,3 @@
-import React from 'react';
 
 const VARIANTS = {
   success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
