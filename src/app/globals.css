@@ -125,7 +125,6 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Modo Simples — larger fonts, bigger touch targets */
 .simple-mode {
   font-size: 1.125rem;
   line-height: 1.7;
