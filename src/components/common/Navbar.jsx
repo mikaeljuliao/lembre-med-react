@@ -3,8 +3,8 @@ import { HeartPulse, Home, Pill, CircleHelp } from 'lucide-react';
 const NAV_ITEMS = [
   { id: 'inicio', label: 'Início', icon: Home },
   { id: 'remedios', label: 'Remédios', icon: Pill },
-  { id: 'saude', label: 'Saúde', icon: HeartPulse },
-  { id: 'ajuda', label: 'Ajuda', icon: CircleHelp },
+  { id: 'saude', label: 'Cuidados', icon: HeartPulse },
+  { id: 'ajuda', label: 'Como usar', icon: CircleHelp },
 ];
 
 export default function Navbar({ activeTab, setActiveTab }) {
