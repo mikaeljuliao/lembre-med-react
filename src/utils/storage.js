@@ -291,10 +291,13 @@ function reconcileHistoryWithStoredDoses(history) {
         dosagem: dose.dosagem,
         treatmentNome: dose.treatmentNome,
         status: dose.status,
+        skipReason: dose.skipReason || null,
         observacao:
           dose.status === 'taken'
             ? 'Dose recuperada do estado salvo.'
-            : 'Registro recuperado do estado salvo.',
+            : dose.skipReason
+              ? 'Registro recuperado do estado salvo. Motivo: ' + dose.skipReason
+              : 'Registro recuperado do estado salvo.',
       });
 
       if (doseId) existingDoseIds.add(doseId);
