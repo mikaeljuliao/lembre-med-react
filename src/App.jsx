@@ -401,7 +401,7 @@ export default function App() {
       medicationId: medication.id,
       data: today,
       horario: now.toTimeString().slice(0, 5),
-      scheduledAt: now.toISOString(),
+      scheduledAt: null,
       medicationNome: medication.nome,
       dosagem: medication.dosagem || String(medication.quantidadePorDose || 1) + ' ' + (medication.unidadeDose || 'unidade'),
       treatmentNome: 'Uso conforme necessidade',
