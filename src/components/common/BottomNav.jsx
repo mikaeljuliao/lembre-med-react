@@ -17,13 +17,16 @@ export default function BottomNav({ activeTab, setActiveTab }) {
           return (
             <button
               key={item.id}
+              type="button"
               onClick={() => setActiveTab(item.id)}
               className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl transition-all min-w-0 ${
                 isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-500'
               }`}
               aria-current={isActive ? 'page' : undefined}
+              aria-label={item.label}
             >
               <Icon
+                aria-hidden="true"
                 className={`w-5 h-5 mb-1 ${isActive ? 'text-blue-700' : 'text-slate-500'}`}
                 strokeWidth={isActive ? 2.5 : 1.75}
               />
