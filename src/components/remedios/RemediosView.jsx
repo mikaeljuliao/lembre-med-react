@@ -294,6 +294,12 @@ export default function RemediosView({
                           {wasRecordedLate && ' · tomada depois do horário'}
                         </p>
                       )}
+
+                      {!isTaken && entry.skipReason && (
+                        <p className="mt-1 text-sm font-semibold text-slate-600">
+                          Motivo: {entry.skipReason}
+                        </p>
+                      )}
                     </div>
                   </div>
                   </div>
