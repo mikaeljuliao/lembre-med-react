@@ -29,15 +29,30 @@ export default function RemediosView({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-xl font-black text-slate-900">
-                    Registro das doses
+                    Histórico de uso
                   </h2>
                   <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-600">
-                    Últimos {recentHistory.length}
+                    {history.length} {history.length === 1 ? 'registro' : 'registros'}
                   </span>
                 </div>
                 <p className="mt-1 text-sm font-semibold leading-5 text-slate-500">
-                  Aqui ficam as doses que você já registrou. Esta área é apenas um registro do que aconteceu.
+                  Veja o que foi registrado para os seus medicamentos.
                 </p>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Registradas</p>
+                <p className="mt-1 text-xl font-black text-slate-900">{history.filter((entry) => entry.status === 'taken').length}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Não tomadas</p>
+                <p className="mt-1 text-xl font-black text-slate-900">{history.filter((entry) => entry.status === 'skipped').length}</p>
+              </div>
+              <div className="col-span-2 rounded-2xl bg-slate-50 px-4 py-3 sm:col-span-1">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Exibindo</p>
+                <p className="mt-1 text-xl font-black text-slate-900">Últimos {recentHistory.length}</p>
               </div>
             </div>
           </div>
@@ -45,52 +60,68 @@ export default function RemediosView({
           <div className="divide-y divide-slate-100">
             {recentHistory.map((entry) => {
               const isTaken = entry.status === 'taken';
+              const scheduledAt = entry.scheduledAt ? new Date(entry.scheduledAt) : null;
+              const recordedAt = entry.timestamp ? new Date(entry.timestamp) : null;
+              const hasValidScheduledAt = scheduledAt && !Number.isNaN(scheduledAt.getTime());
+              const hasValidRecordedAt = recordedAt && !Number.isNaN(recordedAt.getTime());
+              const wasRecordedLate =
+                isTaken &&
+                hasValidScheduledAt &&
+                hasValidRecordedAt &&
+                recordedAt.getTime() - scheduledAt.getTime() >= 60000;
 
               return (
-                <div key={entry.id} className="flex items-center gap-3 px-5 py-4 sm:px-6">
-                  <div
-                    className={
-                      'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ' +
-                      (isTaken
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-slate-100 text-slate-500')
-                    }
-                  >
-                    {isTaken ? (
-                      <Check className="h-5 w-5" strokeWidth={3} />
-                    ) : (
-                      <XCircle className="h-5 w-5" />
-                    )}
-                  </div>
+                <div key={entry.id} className="px-5 py-4 sm:px-6">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={
+                        'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ' +
+                        (isTaken
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-slate-100 text-slate-500')
+                      }
+                    >
+                      {isTaken ? (
+                        <Check className="h-5 w-5" strokeWidth={3} />
+                      ) : (
+                        <XCircle className="h-5 w-5" />
+                      )}
+                    </div>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-base font-black text-slate-900">
-                      {entry.medicationNome}
-                    </p>
-                    <p className="mt-0.5 text-sm font-semibold text-slate-500">
-                      {new Date(entry.timestamp).toLocaleDateString('pt-BR', {
-                        weekday: 'short',
-                        day: '2-digit',
-                        month: '2-digit',
-                      })}{' '}
-                      às{' '}
-                      {new Date(entry.timestamp).toLocaleTimeString('pt-BR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-base font-black text-slate-900">
+                          {entry.medicationNome}
+                        </p>
+                        <span
+                          className={
+                            'rounded-full px-2.5 py-1 text-xs font-black ' +
+                            (isTaken
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-slate-100 text-slate-600')
+                          }
+                        >
+                          {isTaken ? 'Tomada' : 'Não tomada'}
+                        </span>
+                      </div>
 
-                  <span
-                    className={
-                      'shrink-0 rounded-full px-3 py-1.5 text-xs font-black ' +
-                      (isTaken
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-slate-100 text-slate-600')
-                    }
-                  >
-                    {isTaken ? 'Tomado' : 'Não tomada'}
-                  </span>
+                      <p className="mt-1 text-sm font-semibold text-slate-500">
+                        Registrado em{' '}
+                        {hasValidRecordedAt
+                          ? recordedAt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+                            ' às ' +
+                            recordedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                          : 'data não disponível'}
+                      </p>
+
+                      {hasValidScheduledAt && (
+                        <p className="mt-1 text-sm font-semibold text-slate-500">
+                          Programado para {scheduledAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          {wasRecordedLate && ' · registrado depois do horário'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -100,7 +131,7 @@ export default function RemediosView({
             <div className="flex items-start gap-3">
               <ClipboardList className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" />
               <p className="text-sm font-semibold leading-5 text-slate-600">
-                Para saber o que você precisa fazer, volte para <strong className="font-black text-slate-800">Início</strong>. Este registro não cria novos lembretes.
+                Este histórico mostra registros já realizados. As próximas doses continuam sendo acompanhadas em <strong className="font-black text-slate-800">Início</strong>.
               </p>
             </div>
           </div>
