@@ -1,10 +1,13 @@
 import { useMemo } from 'react';
 import {
+  AlertTriangle,
+  ArrowRight,
   CalendarDays,
   Check,
+  CheckCircle2,
   CircleAlert,
   Clock3,
-  XCircle,
+  ListChecks,
   Plus,
 } from 'lucide-react';
 import ProximaMedicacaoCard from './ProximaMedicacaoCard';
@@ -41,6 +44,135 @@ function getDoseTime(dose) {
     .map(Number);
 
   return (Number(hours) || 0) * 60 * 60000 + (Number(minutes) || 0) * 60000;
+}
+
+function getDayStatus(summary, overdueCount) {
+  if (summary.total === 0) {
+    return {
+      title: 'Nenhum lembrete para hoje',
+      description: 'Sua rotina está livre de doses programadas hoje.',
+      tone: 'slate',
+    };
+  }
+
+  if (overdueCount > 0) {
+    return {
+      title: 'Há uma dose aguardando registro',
+      description: 'Confira as doses pendentes e registre o que aconteceu.',
+      tone: 'amber',
+    };
+  }
+
+  if (summary.pending === 0) {
+    return {
+      title: 'Tudo registrado por hoje',
+      description: 'Você já registrou todas as doses programadas para hoje.',
+      tone: 'emerald',
+    };
+  }
+
+  return {
+    title: 'Dia em andamento',
+    description: 'Continue registrando cada dose conforme ela acontecer.',
+    tone: 'blue',
+  };
+}
+
+function DayOverview({ summary, overdueCount }) {
+  const resolved = summary.taken + summary.skipped;
+  const progress = summary.total > 0
+    ? Math.round((resolved / summary.total) * 100)
+    : 0;
+  const status = getDayStatus(summary, overdueCount);
+
+  const toneClasses = {
+    slate: {
+      icon: 'bg-slate-100 text-slate-600',
+      panel: 'border-slate-200 bg-white',
+      progress: 'bg-slate-400',
+      text: 'text-slate-900',
+      description: 'text-slate-500',
+    },
+    blue: {
+      icon: 'bg-blue-100 text-blue-700',
+      panel: 'border-blue-100 bg-white',
+      progress: 'bg-blue-600',
+      text: 'text-slate-900',
+      description: 'text-slate-600',
+    },
+    amber: {
+      icon: 'bg-amber-100 text-amber-700',
+      panel: 'border-amber-200 bg-amber-50/40',
+      progress: 'bg-amber-500',
+      text: 'text-amber-950',
+      description: 'text-amber-900/70',
+    },
+    emerald: {
+      icon: 'bg-emerald-100 text-emerald-700',
+      panel: 'border-emerald-200 bg-emerald-50/40',
+      progress: 'bg-emerald-600',
+      text: 'text-emerald-950',
+      description: 'text-emerald-900/70',
+    },
+  };
+
+  const colors = toneClasses[status.tone];
+
+  return (
+    <section className={'overflow-hidden rounded-3xl border shadow-sm ' + colors.panel}>
+      <div className="px-5 py-5 sm:px-6 sm:py-6">
+        <div className="flex items-start gap-4">
+          <div className={'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ' + colors.icon}>
+            {status.tone === 'emerald' ? (
+              <CheckCircle2 className="h-6 w-6" />
+            ) : status.tone === 'amber' ? (
+              <AlertTriangle className="h-6 w-6" />
+            ) : (
+              <ListChecks className="h-6 w-6" />
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+              Resumo do dia
+            </p>
+            <h2 className={'mt-1 text-xl font-black ' + colors.text}>
+              {status.title}
+            </h2>
+            <p className={'mt-1 text-sm font-semibold leading-5 ' + colors.description}>
+              {status.description}
+            </p>
+          </div>
+
+          <div className="shrink-0 text-right">
+            <p className="text-2xl font-black tabular-nums text-slate-900">
+              {progress}%
+            </p>
+            <p className="text-xs font-bold text-slate-400">
+              resolvido
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className={'h-full rounded-full transition-all duration-500 ' + colors.progress}
+              style={{ width: progress + '%' }}
+            />
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold text-slate-600">
+            <span>{summary.taken} tomadas</span>
+            <span>{summary.pending} pendentes</span>
+            {summary.skipped > 0 && (
+              <span>{summary.skipped} não tomada{summary.skipped === 1 ? '' : 's'}</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function DoseRow({ dose, status, now, onToggleDoseStatus, onRequestSkip }) {
@@ -125,6 +257,55 @@ function DoseRow({ dose, status, now, onToggleDoseStatus, onRequestSkip }) {
         )}
       </div>
     </div>
+  );
+}
+
+function UpcomingDoses({ doses, now, onToggleDoseStatus, onRequestSkip }) {
+  const upcoming = useMemo(
+    () =>
+      sortReminderStates(
+        doses
+          .filter((dose) => dose.status === 'pending')
+          .map((dose) => getReminderState(dose, now))
+      )
+    ,
+    [doses, now]
+  ).filter((dose) => dose.remainingMs > 0).slice(0, 3);
+
+  if (upcoming.length === 0) return null;
+
+  return (
+    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+              Próximos lembretes
+            </p>
+            <h2 className="mt-1 text-xl font-black text-slate-900">
+              O que vem depois
+            </h2>
+          </div>
+          <Clock3 className="h-6 w-6 text-blue-600" />
+        </div>
+        <p className="mt-1 text-sm font-semibold text-slate-500">
+          Assim você sabe o que esperar sem precisar procurar.
+        </p>
+      </div>
+
+      <div className="divide-y divide-slate-100">
+        {upcoming.map((dose) => (
+          <DoseRow
+            key={dose.id}
+            dose={dose}
+            status="pending"
+            now={now}
+            onToggleDoseStatus={onToggleDoseStatus}
+            onRequestSkip={onRequestSkip}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -231,6 +412,8 @@ export default function InicioView({
   onSnoozeDose,
   onNavigate,
 }) {
+  const now = new Date();
+
   const activeDoses = useMemo(
     () => doses.filter((dose) => isDoseForActiveMedication(dose, medications)),
     [doses, medications]
@@ -240,9 +423,14 @@ export default function InicioView({
     () =>
       activeDoses
         .filter((dose) => dose.status === 'pending')
-        .map((dose) => getReminderState(dose))
+        .map((dose) => getReminderState(dose, now))
         .sort((a, b) => a.target.getTime() - b.target.getTime()),
-    [activeDoses]
+    [activeDoses, now]
+  );
+
+  const overdueDoses = useMemo(
+    () => pendingDoses.filter((dose) => dose.isOverdue),
+    [pendingDoses]
   );
 
   const takenDoses = useMemo(
@@ -262,7 +450,7 @@ export default function InicioView({
   );
 
   const hasMedications = medications.length > 0;
-  const dailySummary = getDailyDoseSummary(doses, medications);
+  const dailySummary = getDailyDoseSummary(doses, medications, now);
 
   return (
     <div className="space-y-5 pb-24">
@@ -286,68 +474,101 @@ export default function InicioView({
         )}
       </header>
 
-      <ProximaMedicacaoCard
-        doses={doses}
-        futureDoses={futureDoses}
-        medications={medications}
-        onToggleDoseStatus={onToggleDoseStatus}
-        onRequestSkip={onRequestSkip}
-        onUpdateDose={onUpdateDose}
-        onSnoozeDose={onSnoozeDose}
-      />
-
-      {hasMedications && (
+      {!hasMedications ? (
+        <section className="overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-sm">
+          <div className="bg-gradient-to-br from-blue-50 via-white to-white px-6 py-8 text-center sm:px-10 sm:py-12">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
+              <Plus className="h-8 w-8" />
+            </div>
+            <h2 className="mt-5 text-2xl font-black text-slate-900">
+              Comece pela sua rotina de remédios
+            </h2>
+            <p className="mx-auto mt-2 max-w-lg text-base font-semibold leading-6 text-slate-600">
+              Cadastre um remédio e seus horários. Depois, o Início mostrará o que você precisa fazer ao longo do dia.
+            </p>
+            <button
+              type="button"
+              onClick={() => onNavigate('remedios')}
+              className="mt-6 inline-flex min-h-14 w-full max-w-sm items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 text-lg font-black text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200"
+            >
+              <Plus className="h-6 w-6" />
+              Adicionar meu primeiro remédio
+            </button>
+          </div>
+        </section>
+      ) : (
         <>
+          <DayOverview summary={dailySummary} overdueCount={overdueDoses.length} />
+
+          <ProximaMedicacaoCard
+            doses={doses}
+            futureDoses={futureDoses}
+            medications={medications}
+            onToggleDoseStatus={onToggleDoseStatus}
+            onRequestSkip={onRequestSkip}
+            onUpdateDose={onUpdateDose}
+            onSnoozeDose={onSnoozeDose}
+          />
+
+          {overdueDoses.length > 0 && (
+            <section className="overflow-hidden rounded-3xl border border-amber-200 bg-amber-50/60 shadow-sm">
+              <div className="border-b border-amber-200 px-5 py-4 sm:px-6">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-amber-950">
+                      {overdueDoses.length === 1
+                        ? 'Uma dose está aguardando registro'
+                        : overdueDoses.length + ' doses estão aguardando registro'}
+                    </h2>
+                    <p className="mt-1 text-sm font-semibold leading-5 text-amber-900/75">
+                      Se você já tomou, registre. Se não tomou, marque o motivo.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="divide-y divide-amber-200">
+                {overdueDoses.map((dose) => (
+                  <DoseRow
+                    key={dose.id}
+                    dose={dose}
+                    status="pending"
+                    now={now}
+                    onToggleDoseStatus={onToggleDoseStatus}
+                    onRequestSkip={onRequestSkip}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          <UpcomingDoses
+            doses={activeDoses}
+            now={now}
+            onToggleDoseStatus={onToggleDoseStatus}
+            onRequestSkip={onRequestSkip}
+          />
+
           <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-black uppercase tracking-wider text-slate-400">
-                    Controle de hoje
+                    Registros de hoje
                   </p>
                   <h2 className="mt-1 text-xl font-black text-slate-900">
-                    {dailySummary.taken} de {dailySummary.total} doses registradas
+                    O que já aconteceu
                   </h2>
                 </div>
-
-                <div className="flex flex-wrap gap-2 text-xs font-black">
-                  <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-emerald-700">
-                    {dailySummary.taken} tomadas
-                  </span>
-                  <span className="rounded-full bg-amber-100 px-3 py-1.5 text-amber-800">
-                    {dailySummary.pending} pendentes
-                  </span>
-                  {dailySummary.skipped > 0 && (
-                    <span className="rounded-full bg-slate-100 px-3 py-1.5 text-slate-600">
-                      {dailySummary.skipped} não tomada{dailySummary.skipped === 1 ? '' : 's'}
-                    </span>
-                  )}
-                </div>
+                <CheckCircle2 className="h-6 w-6 text-emerald-600" />
               </div>
-
-              <p className="mt-2 text-sm font-semibold leading-5 text-slate-500">
-                Aqui você confere tudo o que aconteceu hoje. O cartão acima mostra a próxima ação.
+              <p className="mt-1 text-sm font-semibold text-slate-500">
+                Confira suas doses sem precisar abrir outra tela.
               </p>
             </div>
-
-            {pendingDoses.length > 0 && (
-              <div className="border-b border-slate-100">
-                <div className="bg-amber-50 px-5 py-3 sm:px-6">
-                  <p className="text-sm font-black text-amber-900">
-                    Ainda pendentes
-                  </p>
-                  <p className="mt-0.5 text-xs font-semibold text-amber-800">
-                    Essas doses ainda precisam ser registradas hoje.
-                  </p>
-                </div>
-
-                <div className="divide-y divide-slate-100">
-                  {pendingDoses.map((dose) => (
-                    <DoseRow key={dose.id} dose={dose} status="pending" now={new Date()} onToggleDoseStatus={onToggleDoseStatus} onRequestSkip={onRequestSkip} />
-                  ))}
-                </div>
-              </div>
-            )}
 
             {takenDoses.length > 0 && (
               <div className="border-b border-slate-100">
@@ -355,14 +576,16 @@ export default function InicioView({
                   <p className="text-sm font-black text-emerald-900">
                     Já tomadas
                   </p>
-                  <p className="mt-0.5 text-xs font-semibold text-emerald-800">
-                    Estas doses já foram registradas como tomadas hoje.
-                  </p>
                 </div>
-
                 <div className="divide-y divide-slate-100">
                   {takenDoses.map((dose) => (
-                    <DoseRow key={dose.id} dose={dose} status="taken" now={new Date()} onToggleDoseStatus={onToggleDoseStatus} />
+                    <DoseRow
+                      key={dose.id}
+                      dose={dose}
+                      status="taken"
+                      now={now}
+                      onToggleDoseStatus={onToggleDoseStatus}
+                    />
                   ))}
                 </div>
               </div>
@@ -375,39 +598,47 @@ export default function InicioView({
                     Marcadas como não tomadas
                   </p>
                 </div>
-
                 <div className="divide-y divide-slate-100">
                   {skippedDoses.map((dose) => (
-                    <DoseRow key={dose.id} dose={dose} status="skipped" now={new Date()} onToggleDoseStatus={onToggleDoseStatus} />
+                    <DoseRow
+                      key={dose.id}
+                      dose={dose}
+                      status="skipped"
+                      now={now}
+                      onToggleDoseStatus={onToggleDoseStatus}
+                    />
                   ))}
                 </div>
               </div>
             )}
 
-            {pendingDoses.length === 0 && takenDoses.length === 0 && skippedDoses.length === 0 && (
-              <div className="px-5 py-6 text-sm font-semibold text-slate-500 sm:px-6">
-                Nenhuma dose foi registrada para hoje.
+            {takenDoses.length === 0 && skippedDoses.length === 0 && (
+              <div className="px-5 py-7 sm:px-6">
+                <p className="text-base font-black text-slate-800">
+                  Nenhuma dose foi concluída ainda.
+                </p>
+                <p className="mt-1 text-sm font-semibold leading-5 text-slate-500">
+                  Quando você registrar uma dose, ela aparecerá aqui.
+                </p>
               </div>
             )}
+
+            <button
+              type="button"
+              onClick={() => onNavigate('remedios')}
+              className="flex min-h-12 w-full items-center justify-center gap-2 border-t border-slate-100 px-5 text-sm font-black text-blue-700 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-600"
+            >
+              Ver medicamentos e histórico
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </section>
 
           <FutureDaySummary
             futureDoses={futureDoses}
             medications={medications}
-            now={new Date()}
+            now={now}
           />
         </>
-      )}
-
-      {!hasMedications && (
-        <button
-          type="button"
-          onClick={() => onNavigate('remedios')}
-          className="flex min-h-16 w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 py-4 text-lg font-black text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200"
-        >
-          <Plus className="h-6 w-6" />
-          Adicionar meu primeiro remédio
-        </button>
       )}
     </div>
   );
