@@ -43,7 +43,7 @@ function getDoseTime(dose) {
   return (Number(hours) || 0) * 60 * 60000 + (Number(minutes) || 0) * 60000;
 }
 
-function DoseRow({ dose, status, now, onToggleDoseStatus }) {
+function DoseRow({ dose, status, now, onToggleDoseStatus, onRequestSkip }) {
   const target = getReminderState(dose, now).target;
   const isTaken = status === 'taken';
   const isSkipped = status === 'skipped';
@@ -104,7 +104,7 @@ function DoseRow({ dose, status, now, onToggleDoseStatus }) {
             </button>
             <button
               type="button"
-              onClick={() => onToggleDoseStatus(dose.id, 'skipped')}
+              onClick={() => onRequestSkip?.(dose)}
               className="min-h-10 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500"
               aria-label={'Registrar como não tomada: ' + dose.medicationNome}
             >
@@ -226,6 +226,7 @@ export default function InicioView({
   futureDoses = [],
   medications = [],
   onToggleDoseStatus,
+  onRequestSkip,
   onUpdateDose,
   onSnoozeDose,
   onNavigate,
@@ -290,6 +291,7 @@ export default function InicioView({
         futureDoses={futureDoses}
         medications={medications}
         onToggleDoseStatus={onToggleDoseStatus}
+        onRequestSkip={onRequestSkip}
         onUpdateDose={onUpdateDose}
         onSnoozeDose={onSnoozeDose}
       />
@@ -341,7 +343,7 @@ export default function InicioView({
 
                 <div className="divide-y divide-slate-100">
                   {pendingDoses.map((dose) => (
-                    <DoseRow key={dose.id} dose={dose} status="pending" now={new Date()} onToggleDoseStatus={onToggleDoseStatus} />
+                    <DoseRow key={dose.id} dose={dose} status="pending" now={new Date()} onToggleDoseStatus={onToggleDoseStatus} onRequestSkip={onRequestSkip} />
                   ))}
                 </div>
               </div>
