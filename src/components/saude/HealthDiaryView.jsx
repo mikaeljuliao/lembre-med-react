@@ -525,7 +525,7 @@ export default function HealthDiaryView() {
             }}
           >
             <p style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-              Histórico anterior
+              Histórico anterior ({historyEntries.length})
             </p>
             {showHistory ? (
               <ChevronUp style={{ width: '20px', height: '20px', color: '#64748b' }} />
@@ -557,11 +557,21 @@ export default function HealthDiaryView() {
                     />
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 2px', fontWeight: 600 }}>
-                        {entry.metricLabel} · {formatDate(entry.timestamp)}
+                        {entry.metricLabel} · {formatDate(entry.timestamp)} às {formatTime(entry.timestamp)}
                       </p>
                       <p style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
                         {entry.value} {entry.unit}
                       </p>
+                      {entry.context && (
+                        <p style={{ fontSize: '13px', color: '#64748b', margin: '2px 0 0' }}>
+                          {entry.context}
+                        </p>
+                      )}
+                      {entry.note && (
+                        <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0 0' }}>
+                          {entry.note}
+                        </p>
+                      )}
                     </div>
                     <button
                       type="button"
@@ -574,7 +584,7 @@ export default function HealthDiaryView() {
                         padding: '4px',
                       }}
                     >
-                      <Trash2 style={{ width: '16px', height: '16px' }} />
+                      <Trash2 style={{ width: '16px', height: '16px' }} aria-hidden="true" />
                     </button>
                   </div>
                 );
