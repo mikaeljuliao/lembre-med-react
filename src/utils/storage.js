@@ -338,6 +338,7 @@ export function saveMedicationEvent(event) {
     : -1;
 
   const medicationEvent = {
+    ...(existingIndex >= 0 ? history[existingIndex] : {}),
     id: existingIndex >= 0 ? history[existingIndex].id : 'hist-' + Date.now(),
     timestamp: eventTimestamp,
     ...event,
