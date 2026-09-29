@@ -86,6 +86,7 @@ export default function HealthDiaryView() {
   const [form, setForm] = useState({ metricId: 'pressao', value: '', context: '', note: '' });
   const [showForm, setShowForm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [historyMetric, setHistoryMetric] = useState('todos');
 
   useEffect(() => {
     setEntries(getStored());
@@ -509,80 +510,261 @@ export default function HealthDiaryView() {
       </div>
 
       {historyEntries.length > 0 && (
-        <div>
+        <section aria-labelledby="history-title">
           <button
             type="button"
             onClick={() => setShowHistory((v) => !v)}
+            aria-expanded={showHistory}
+            aria-controls="health-history-list"
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               width: '100%',
-              background: 'transparent',
-              border: 'none',
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '18px',
               cursor: 'pointer',
-              padding: '0 0 12px',
+              padding: '16px 18px',
+              textAlign: 'left',
             }}
           >
-            <p style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-              Histórico anterior
-            </p>
+            <div>
+              <p
+                id="history-title"
+                style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}
+              >
+                Histórico
+              </p>
+              <p style={{ fontSize: '13px', color: '#64748b', margin: '3px 0 0' }}>
+                {historyEntries.length} {historyEntries.length === 1 ? 'registro anterior' : 'registros anteriores'}
+              </p>
+            </div>
             {showHistory ? (
-              <ChevronUp style={{ width: '20px', height: '20px', color: '#64748b' }} />
+              <ChevronUp aria-hidden="true" style={{ width: '20px', height: '20px', color: '#64748b' }} />
             ) : (
-              <ChevronDown style={{ width: '20px', height: '20px', color: '#64748b' }} />
+              <ChevronDown aria-hidden="true" style={{ width: '20px', height: '20px', color: '#64748b' }} />
             )}
           </button>
 
           {showHistory && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {historyEntries.slice(0, 20).map((entry) => {
-                const metric = METRICS.find((m) => m.id === entry.metricId);
-                const Icon = metric?.icon || Heart;
-                return (
-                  <div
-                    key={entry.id}
-                    className="health-diary-history-entry" style={{
-                      background: '#f8fafc',
-                      borderRadius: '14px',
-                      padding: '12px 16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      border: '1px solid #e2e8f0',
-                    }}
-                  >
-                    <Icon
-                      style={{ width: '18px', height: '18px', color: metric?.color || '#64748b', flexShrink: 0 }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 2px', fontWeight: 600 }}>
-                        {entry.metricLabel} · {formatDate(entry.timestamp)}
-                      </p>
-                      <p style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                        {entry.value} {entry.unit}
-                      </p>
-                    </div>
+            <div
+              id="health-history-list"
+              style={{ marginTop: '12px' }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '8px',
+                  overflowX: 'auto',
+                  paddingBottom: '4px',
+                  marginBottom: '14px',
+                }}
+              >
+                {[
+                  { id: 'todos', label: 'Todas' },
+                  ...METRICS.map((metric) => ({ id: metric.id, label: metric.label })),
+                ].map((filter) => {
+                  const isActive = historyMetric === filter.id;
+                  return (
                     <button
+                      key={filter.id}
                       type="button"
-                      onClick={() => handleDelete(entry.id)}
+                      onClick={() => setHistoryMetric(filter.id)}
+                      aria-pressed={isActive}
                       style={{
-                        background: 'transparent',
-                        border: 'none',
+                        flexShrink: 0,
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '999px',
+                        padding: '8px 12px',
+                        background: isActive ? '#ede9fe' : '#ffffff',
+                        color: isActive ? '#6d28d9' : '#64748b',
+                        fontWeight: 700,
+                        fontSize: '13px',
                         cursor: 'pointer',
-                        color: '#cbd5e1',
-                        padding: '4px',
                       }}
                     >
-                      <Trash2 style={{ width: '16px', height: '16px' }} />
+                      {filter.label}
                     </button>
+                  );
+                })}
+              </div>
+
+              {(() => {
+                const filteredEntries =
+                  historyMetric === 'todos'
+                    ? historyEntries
+                    : historyEntries.filter((entry) => entry.metricId === historyMetric);
+
+                const groups = filteredEntries.reduce((acc, entry) => {
+                  const dateKey = entry.timestamp.slice(0, 10);
+                  if (!acc[dateKey]) acc[dateKey] = [];
+                  acc[dateKey].push(entry);
+                  return acc;
+                }, {});
+
+                const groupEntries = Object.entries(groups);
+
+                if (groupEntries.length === 0) {
+                  return (
+                    <div
+                      style={{
+                        background: '#f8fafc',
+                        borderRadius: '16px',
+                        padding: '24px 18px',
+                        textAlign: 'center',
+                        border: '1px dashed #cbd5e1',
+                      }}
+                    >
+                      <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
+                        Nenhuma medida deste tipo no histórico.
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                    {groupEntries.map(([dateKey, dateEntries]) => (
+                      <section key={dateKey} aria-labelledby={`history-date-${dateKey}`}>
+                        <p
+                          id={`history-date-${dateKey}`}
+                          style={{
+                            fontSize: '13px',
+                            fontWeight: 800,
+                            color: '#475569',
+                            margin: '0 0 8px',
+                            textTransform: 'capitalize',
+                          }}
+                        >
+                          {formatDate(dateEntries[0].timestamp)}
+                        </p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {dateEntries.map((entry) => {
+                            const metric = METRICS.find((m) => m.id === entry.metricId);
+                            const Icon = metric?.icon || Heart;
+
+                            return (
+                              <div
+                                key={entry.id}
+                                className="health-diary-history-entry"
+                                style={{
+                                  background: '#ffffff',
+                                  borderRadius: '14px',
+                                  padding: '14px 16px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '12px',
+                                  border: '1px solid #e2e8f0',
+                                  boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: '36px',
+                                    height: '36px',
+                                    borderRadius: '10px',
+                                    background: metric?.bg || '#f8fafc',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  <Icon
+                                    aria-hidden="true"
+                                    style={{
+                                      width: '18px',
+                                      height: '18px',
+                                      color: metric?.color || '#64748b',
+                                    }}
+                                  />
+                                </div>
+
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'baseline',
+                                      justifyContent: 'space-between',
+                                      gap: '12px',
+                                      flexWrap: 'wrap',
+                                    }}
+                                  >
+                                    <p
+                                      style={{
+                                        fontSize: '14px',
+                                        color: '#334155',
+                                        margin: 0,
+                                        fontWeight: 700,
+                                      }}
+                                    >
+                                      {entry.metricLabel}
+                                    </p>
+                                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                      {formatTime(entry.timestamp)}
+                                    </span>
+                                  </div>
+
+                                  <p
+                                    style={{
+                                      fontSize: '18px',
+                                      fontWeight: 900,
+                                      color: metric?.color || '#0f172a',
+                                      margin: '2px 0 0',
+                                    }}
+                                  >
+                                    {entry.value}{' '}
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#94a3b8' }}>
+                                      {entry.unit}
+                                    </span>
+                                  </p>
+
+                                  {entry.context && (
+                                    <p style={{ fontSize: '12px', color: '#64748b', margin: '3px 0 0' }}>
+                                      {entry.context}
+                                    </p>
+                                  )}
+
+                                  {entry.note && (
+                                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0' }}>
+                                      {entry.note}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(entry.id)}
+                                  aria-label={`Excluir registro de ${entry.metricLabel} de ${formatDate(entry.timestamp)} às ${formatTime(entry.timestamp)}`}
+                                  title="Excluir registro"
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: '#94a3b8',
+                                    padding: '7px',
+                                    borderRadius: '8px',
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  <Trash2 aria-hidden="true" style={{ width: '17px', height: '17px' }} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    ))}
                   </div>
                 );
-              })}
+              })()}
             </div>
           )}
-        </div>
+        </section>
       )}
+
     </div>
   );
 }
