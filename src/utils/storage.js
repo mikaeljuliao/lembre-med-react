@@ -360,6 +360,17 @@ export function saveMedicationEvent(event) {
   return updated;
 }
 
+export function removeMedicationEvent(doseId) {
+  if (!doseId) return getStoredHistory();
+
+  const history = getStoredHistory().filter(
+    (entry) => String(entry.doseId || '') !== String(doseId)
+  );
+
+  localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
+  return history;
+}
+
 export function addHistoryEntry(entry) {
   return saveMedicationEvent(entry);
 }
