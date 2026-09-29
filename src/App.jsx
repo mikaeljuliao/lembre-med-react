@@ -323,6 +323,14 @@ export default function App() {
           };
         });
 
+        const updatedMedications = medications.map((item) =>
+          String(item.id) === String(medication.id)
+            ? { ...item, dataFim: today }
+            : item
+        );
+
+        setMedications(updatedMedications);
+        saveStoredMedications(updatedMedications);
         setTreatments(updatedTreatments);
         saveStoredTreatments(updatedTreatments);
 
