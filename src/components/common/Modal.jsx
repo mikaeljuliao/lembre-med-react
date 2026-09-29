@@ -36,7 +36,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
               className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-ring"
               aria-label="Fechar modal"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
 
