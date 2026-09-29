@@ -49,7 +49,7 @@ export default function MedicationListView({
             onClick={onOpenAdd}
             className="mt-5 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 py-4 text-lg font-black text-blue-700 shadow-md transition hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-white/40"
           >
-            <Plus className="h-6 w-6" />
+            <Plus className="h-6 w-6" aria-hidden="true" />
             Adicionar remédio
           </button>
         </div>
@@ -57,14 +57,14 @@ export default function MedicationListView({
 
       {medications.length > 0 && (
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <Search aria-hidden="true" className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Buscar remédio..."
+            placeholder="Buscar por nome ou princípio ativo..."
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             className="min-h-14 w-full rounded-2xl border-2 border-slate-200 bg-white pl-12 pr-4 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            aria-label="Buscar remédio"
+            aria-label="Buscar remédio por nome ou princípio ativo" autoComplete="off"
           />
         </div>
       )}
@@ -114,7 +114,7 @@ export default function MedicationListView({
                   aria-label={'Ver detalhes de ' + medication.nome}
                 >
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 border-blue-100 bg-blue-50 text-blue-600">
-                    <Pill className="h-8 w-8" />
+                    <Pill className="h-8 w-8" aria-hidden="true" />
                   </div>
 
                   <div className="min-w-0 flex-1">
@@ -134,7 +134,7 @@ export default function MedicationListView({
 
                     <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold text-blue-700">
                       <span className="inline-flex items-center gap-1.5">
-                        <Clock3 className="h-4 w-4" />
+                        <Clock3 className="h-4 w-4" aria-hidden="true" />
                         {isAsNeeded
                           ? 'Quando precisar'
                           : medication.tipoUso === 'interval'
@@ -155,7 +155,7 @@ export default function MedicationListView({
                     </p>
                   </div>
 
-                  <ChevronRight className="h-6 w-6 shrink-0 text-slate-400" />
+                  <ChevronRight aria-hidden="true" className="h-6 w-6 shrink-0 text-slate-400" />
                 </button>
 
                 <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-5 py-3 sm:px-6">
@@ -168,7 +168,7 @@ export default function MedicationListView({
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-red-200 bg-white text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
                     aria-label={'Excluir ' + medication.nome}
                   >
-                    <Trash2 className="h-5 w-5" />
+                    <Trash2 aria-hidden="true" className="h-5 w-5" />
                   </button>
                 </div>
               </div>
