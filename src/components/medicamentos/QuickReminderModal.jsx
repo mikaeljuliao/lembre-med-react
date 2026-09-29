@@ -351,7 +351,7 @@ export default function QuickReminderModal({
               return (
                 <button key={`${item.nome}-${item.medication?.id ?? index}`} type="button" onClick={() => handleSuggestionSelect(item)} className={`flex min-h-14 items-center gap-3 rounded-2xl border-2 px-3 py-2 text-left ${selected ? 'border-blue-600 bg-blue-50 text-blue-800' : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'}`} aria-pressed={selected}>
                   <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${selected ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
-                    {selected ? <Check className="h-5 w-5" strokeWidth={3} /> : <Pill className="h-5 w-5" />}
+                    {selected ? <Check className="h-5 w-5" strokeWidth={3} /> : <Pill aria-hidden="true" className="h-5 w-5" />}
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-black">{item.nome}</span>
@@ -551,7 +551,7 @@ export default function QuickReminderModal({
 
         <div className="sticky bottom-0 z-10 mt-6 bg-white/95 pb-1 pt-3 backdrop-blur-sm">
         <button type="button" onClick={handleSave} disabled={!isReady} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 text-xl font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-200">
-          <Check className="h-6 w-6" strokeWidth={3} />
+          <Check aria-hidden="true" className="h-6 w-6" strokeWidth={3} />
           {isEditing ? 'Salvar alterações' : isExistingMedication ? 'Adicionar horário' : 'Cadastrar remédio'}
         </button>
         </div>
