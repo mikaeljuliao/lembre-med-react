@@ -167,6 +167,11 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, his
                         Programada para {scheduledAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     )}
+                    {entry.status === 'skipped' && entry.skipReason && (
+                      <p className="mt-1 text-xs font-semibold text-slate-600">
+                        Motivo: {entry.skipReason}
+                      </p>
+                    )}
                   </div>
                 );
               })}
