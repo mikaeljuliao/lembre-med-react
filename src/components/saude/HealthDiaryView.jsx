@@ -586,7 +586,7 @@ export default function HealthDiaryView() {
                 Histórico de medidas
               </p>
               <p style={{ fontSize: '13px', color: '#64748b', margin: '3px 0 0' }}>
-                {} registros anteriores
+                {historyMetricCount} registros anteriores
               </p>
             </div>
             {showHistory ? (
