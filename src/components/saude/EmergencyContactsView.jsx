@@ -134,7 +134,7 @@ export default function EmergencyContactsView() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-          <Star style={{ width: '24px', height: '24px', color: '#fca5a5' }} />
+          <Star aria-hidden="true" style={{ width: '24px', height: '24px', color: '#fca5a5' }} />
           <span
             style={{
               fontSize: '13px',
@@ -168,7 +168,7 @@ export default function EmergencyContactsView() {
           <a
             key={c.id}
             href={`tel:${normalizePhoneNumber(c.telefone)}`}
-            aria-label={`Ligar para ${c.nome}, ${c.telefone}`} 
+            aria-label={`Ligar para ${c.nome}, ${c.telefone}`}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -193,7 +193,7 @@ export default function EmergencyContactsView() {
                 flexShrink: 0,
               }}
             >
-              <Phone style={{ width: '26px', height: '26px', color: '#ffffff' }} />
+              <Phone aria-hidden="true" style={{ width: '26px', height: '26px', color: '#ffffff' }} />
             </div>
             <div style={{ flex: 1 }}>
               <p
@@ -261,7 +261,7 @@ export default function EmergencyContactsView() {
             boxShadow: '0 6px 16px rgba(220,38,38,0.35)',
           }}
         >
-          <Plus style={{ width: '24px', height: '24px' }} />
+          <Plus aria-hidden="true" style={{ width: '24px', height: '24px' }} />
           Adicionar contato
         </button>
       )}
@@ -299,7 +299,7 @@ export default function EmergencyContactsView() {
                 color: '#64748b',
               }}
             >
-              <X style={{ width: '18px', height: '18px' }} />
+              <X aria-hidden="true" style={{ width: '18px', height: '18px' }} />
             </button>
           </div>
 
@@ -326,7 +326,7 @@ export default function EmergencyContactsView() {
                     cursor: 'pointer',
                   }}
                 >
-                  <Icon style={{ width: '16px', height: '16px' }} />
+                  <Icon aria-hidden="true" style={{ width: '16px', height: '16px' }} />
                   {t.label}
                 </button>
               );
@@ -347,9 +347,10 @@ export default function EmergencyContactsView() {
             </label>
             <input
               type="text"
+              autoComplete="name"
               value={form.nome}
               onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-              placeholder="Ex: Dra. Maria Silva"
+              placeholder="Ex.: Maria Silva"
               style={{
                 width: '100%',
                 padding: '14px 16px',
@@ -379,9 +380,11 @@ export default function EmergencyContactsView() {
             </label>
             <input
               type="tel"
+              inputMode="tel"
+              autoComplete="tel"
               value={form.telefone}
               onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
-              placeholder="Ex: (11) 99999-9999"
+              placeholder="Ex.: (85) 99999-9999"
               style={{
                 width: '100%',
                 padding: '14px 16px',
@@ -413,7 +416,7 @@ export default function EmergencyContactsView() {
               type="text"
               value={form.nota}
               onChange={(e) => setForm((f) => ({ ...f, nota: e.target.value }))}
-              placeholder="Ex: Cardiologista, segunda a sexta"
+              placeholder="Ex.: Cardiologista, segunda a sexta"
               style={{
                 width: '100%',
                 padding: '14px 16px',
@@ -519,7 +522,7 @@ export default function EmergencyContactsView() {
                     flexShrink: 0,
                   }}
                 >
-                  <Icon style={{ width: '22px', height: '22px', color }} />
+                  <Icon aria-hidden="true" style={{ width: '22px', height: '22px', color }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p
@@ -557,7 +560,7 @@ export default function EmergencyContactsView() {
                       flexShrink: 0,
                     }}
                   >
-                    <Phone style={{ width: '20px', height: '20px' }} />
+                    <Phone aria-hidden="true" style={{ width: '20px', height: '20px' }} />
                   </a>
                   <button
                     type="button"
@@ -575,7 +578,7 @@ export default function EmergencyContactsView() {
                       color: '#64748b',
                     }}
                   >
-                    <Edit2 style={{ width: '18px', height: '18px' }} />
+                    <Edit2 aria-hidden="true" style={{ width: '18px', height: '18px' }} />
                   </button>
                   <button
                     type="button"
@@ -593,7 +596,7 @@ export default function EmergencyContactsView() {
                       color: '#dc2626',
                     }}
                   >
-                    <Trash2 style={{ width: '18px', height: '18px' }} />
+                    <Trash2 aria-hidden="true" style={{ width: '18px', height: '18px' }} />
                   </button>
                 </div>
               </div>
