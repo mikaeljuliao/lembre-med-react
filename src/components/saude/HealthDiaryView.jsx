@@ -509,89 +509,76 @@ export default function HealthDiaryView() {
       </div>
 
       {historyEntries.length > 0 && (
-        <div>
+        <section className="health-diary-history">
           <button
             type="button"
             onClick={() => setShowHistory((v) => !v)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '0 0 12px',
-            }}
+            className="health-diary-history-toggle"
+            aria-expanded={showHistory}
           >
-            <p style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-              Histórico anterior ({historyEntries.length})
-            </p>
-            {showHistory ? (
-              <ChevronUp style={{ width: '20px', height: '20px', color: '#64748b' }} />
-            ) : (
-              <ChevronDown style={{ width: '20px', height: '20px', color: '#64748b' }} />
-            )}
+            <div>
+              <p className="health-diary-history-title">
+                Histórico anterior
+                <span className="health-diary-history-count">{historyEntries.length}</span>
+              </p>
+              <p className="health-diary-history-subtitle">
+                Medidas registradas em dias anteriores
+              </p>
+            </div>
+            <span className="health-diary-history-chevron" aria-hidden="true">
+              {showHistory ? <ChevronUp /> : <ChevronDown />}
+            </span>
           </button>
 
           {showHistory && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="health-diary-history-list">
               {historyEntries.slice(0, 20).map((entry) => {
                 const metric = METRICS.find((m) => m.id === entry.metricId);
                 const Icon = metric?.icon || Heart;
                 return (
-                  <div
-                    key={entry.id}
-                    className="health-diary-history-entry" style={{
-                      background: '#f8fafc',
-                      borderRadius: '14px',
-                      padding: '12px 16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      border: '1px solid #e2e8f0',
-                    }}
-                  >
-                    <Icon
-                      style={{ width: '18px', height: '18px', color: metric?.color || '#64748b', flexShrink: 0 }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 2px', fontWeight: 600 }}>
-                        {entry.metricLabel} · {formatDate(entry.timestamp)} às {formatTime(entry.timestamp)}
+                  <article key={entry.id} className="health-diary-history-entry">
+                    <div
+                      className="health-diary-history-icon"
+                      style={{
+                        background: metric?.bg || '#f8fafc',
+                        color: metric?.color || '#64748b',
+                      }}
+                    >
+                      <Icon aria-hidden="true" />
+                    </div>
+
+                    <div className="health-diary-history-content">
+                      <p className="health-diary-history-metric">{entry.metricLabel}</p>
+                      <p className="health-diary-history-date">
+                        {formatDate(entry.timestamp)} às {formatTime(entry.timestamp)}
                       </p>
-                      <p style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                        {entry.value} {entry.unit}
+                      <p className="health-diary-history-value">
+                        {entry.value}
+                        <span>{entry.unit}</span>
                       </p>
                       {entry.context && (
-                        <p style={{ fontSize: '13px', color: '#64748b', margin: '2px 0 0' }}>
-                          {entry.context}
-                        </p>
+                        <p className="health-diary-history-context">{entry.context}</p>
                       )}
                       {entry.note && (
-                        <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0 0' }}>
-                          {entry.note}
-                        </p>
+                        <p className="health-diary-history-note">{entry.note}</p>
                       )}
                     </div>
+
                     <button
                       type="button"
                       onClick={() => handleDelete(entry.id)}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#cbd5e1',
-                        padding: '4px',
-                      }}
+                      className="health-diary-history-delete"
+                      aria-label={'Excluir registro de ' + entry.metricLabel + ' de ' + formatDate(entry.timestamp)}
+                      title="Excluir registro"
                     >
-                      <Trash2 style={{ width: '16px', height: '16px' }} aria-hidden="true" />
+                      <Trash2 aria-hidden="true" />
                     </button>
-                  </div>
+                  </article>
                 );
               })}
             </div>
           )}
-        </div>
+        </section>
       )}
     </div>
   );
