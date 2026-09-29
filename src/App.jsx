@@ -22,7 +22,7 @@ import {
   getStoredDoses,
   saveStoredDosesForDate,
   getStoredHistory,
-  addHistoryEntry,
+  saveMedicationEvent,
 } from './utils/storage';
 import { getLocalDateString } from './utils/reminderEngine';
 import { generateDosesForDate, isSameMedication } from './utils/businessLogic';
@@ -358,7 +358,7 @@ export default function App() {
       }
     }
 
-    const newHistory = addHistoryEntry({
+    const newHistory = saveMedicationEvent({
       medicationId: medication.id,
       data: today,
       horario: now.toTimeString().slice(0, 5),
@@ -398,7 +398,7 @@ export default function App() {
     });
 
     if (previousStatus !== newStatus && (isTaken || newStatus === 'skipped')) {
-      const newHist = addHistoryEntry({
+      const newHist = saveMedicationEvent({
         doseId: currentDose.id,
         medicationId: currentDose.medicationId,
         data: currentDose.data,
