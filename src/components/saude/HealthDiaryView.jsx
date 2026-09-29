@@ -6,6 +6,7 @@ import {
   Scale,
   Plus,
   Trash2,
+  Pencil,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -86,17 +87,23 @@ export default function HealthDiaryView() {
   const [form, setForm] = useState({ metricId: 'pressao', value: '', context: '', note: '' });
   const [showForm, setShowForm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [editingEntryId, setEditingEntryId] = useState(null);
 
   useEffect(() => {
     setEntries(getStored());
   }, []);
 
+  const resetForm = () => {
+    setForm({ metricId: 'pressao', value: '', context: '', note: '' });
+    setEditingEntryId(null);
+    setShowForm(false);
+  };
+
   const handleSave = () => {
     if (!form.value.trim()) return;
+
     const metric = METRICS.find((m) => m.id === form.metricId);
-    const newEntry = {
-      id: `hd-${Date.now()}`,
-      timestamp: new Date().toISOString(),
+    const entryData = {
       metricId: form.metricId,
       metricLabel: metric.label,
       unit: metric.unit,
@@ -104,11 +111,34 @@ export default function HealthDiaryView() {
       context: form.context.trim(),
       note: form.note.trim(),
     };
-    const updated = [newEntry, ...entries];
+
+    const updated = editingEntryId
+      ? entries.map((entry) =>
+          entry.id === editingEntryId ? { ...entry, ...entryData } : entry
+        )
+      : [
+          {
+            id: `hd-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            ...entryData,
+          },
+          ...entries,
+        ];
+
     setEntries(updated);
     saveStored(updated);
-    setForm({ metricId: 'pressao', value: '', context: '', note: '' });
-    setShowForm(false);
+    resetForm();
+  };
+
+  const handleEdit = (entry) => {
+    setForm({
+      metricId: entry.metricId,
+      value: entry.value || '',
+      context: entry.context || '',
+      note: entry.note || '',
+    });
+    setEditingEntryId(entry.id);
+    setShowForm(true);
   };
 
   const handleDelete = (id) => {
@@ -210,7 +240,7 @@ export default function HealthDiaryView() {
           }}
         >
           <p style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: '0 0 18px' }}>
-            Nova medida
+            {editingEntryId ? 'Editar medida' : 'Nova medida'}
           </p>
 
           <div style={{ display: 'flex', gap: '10px', marginBottom: '18px', flexWrap: 'wrap' }}>
@@ -350,7 +380,7 @@ export default function HealthDiaryView() {
           <div className="health-diary-actions" style={{ display: 'flex', gap: '10px' }}>
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={resetForm}
               style={{
                 flex: 1,
                 padding: '14px',
@@ -384,7 +414,7 @@ export default function HealthDiaryView() {
                 boxShadow: form.value.trim() ? '0 4px 12px rgba(124,58,237,0.35)' : 'none',
               }}
             >
-              Salvar medida
+              {editingEntryId ? 'Salvar alterações' : 'Salvar medida'}
             </button>
           </div>
         </div>
@@ -486,21 +516,40 @@ export default function HealthDiaryView() {
                       </p>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(entry.id)}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: '#cbd5e1',
-                      padding: '6px',
-                      borderRadius: '8px',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Trash2 style={{ width: '18px', height: '18px' }} />
-                  </button>
+                  <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(entry)}
+                      aria-label={`Editar medida de ${entry.metricLabel}`}
+                      title="Editar medida"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#64748b',
+                        padding: '8px',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      <Pencil style={{ width: '18px', height: '18px' }} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(entry.id)}
+                      aria-label={`Excluir medida de ${entry.metricLabel}`}
+                      title="Excluir medida"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#94a3b8',
+                        padding: '8px',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      <Trash2 style={{ width: '18px', height: '18px' }} />
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -563,19 +612,40 @@ export default function HealthDiaryView() {
                         {entry.value} {entry.unit}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(entry.id)}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#cbd5e1',
-                        padding: '4px',
-                      }}
-                    >
-                      <Trash2 style={{ width: '16px', height: '16px' }} />
-                    </button>
+                    <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(entry)}
+                        aria-label={`Editar medida de ${entry.metricLabel}`}
+                        title="Editar medida"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#64748b',
+                          padding: '6px',
+                          borderRadius: '8px',
+                        }}
+                      >
+                        <Pencil style={{ width: '16px', height: '16px' }} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(entry.id)}
+                        aria-label={`Excluir medida de ${entry.metricLabel}`}
+                        title="Excluir medida"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#94a3b8',
+                          padding: '6px',
+                          borderRadius: '8px',
+                        }}
+                      >
+                        <Trash2 style={{ width: '16px', height: '16px' }} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
