@@ -257,6 +257,8 @@ export default function HealthDiaryView() {
                   key={m.id}
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, metricId: m.id }))}
+                  aria-pressed={isActive}
+                  aria-label={`Selecionar medida: ${m.label}`}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -291,6 +293,7 @@ export default function HealthDiaryView() {
               Valor ({selectedMetric?.unit})
             </label>
             <input
+              id="health-measurement-value"
               type="text"
               inputMode="decimal"
               value={form.value}
@@ -317,6 +320,7 @@ export default function HealthDiaryView() {
           {form.metricId === 'glicemia' && (
             <div style={{ marginBottom: '14px' }}>
               <label
+                htmlFor="health-measurement-context"
                 style={{
                   display: 'block',
                   fontSize: '14px',
@@ -328,6 +332,7 @@ export default function HealthDiaryView() {
                 Quando foi medida?
               </label>
               <select
+                id="health-measurement-context"
                 value={form.context}
                 onChange={(e) => setForm((f) => ({ ...f, context: e.target.value }))}
                 style={{
@@ -364,6 +369,7 @@ export default function HealthDiaryView() {
               Observação (opcional)
             </label>
             <input
+              id="health-measurement-note"
               type="text"
               value={form.note}
               onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
@@ -483,6 +489,7 @@ export default function HealthDiaryView() {
                     }}
                   >
                     <Icon
+                      aria-hidden="true"
                       style={{ width: '22px', height: '22px', color: metric?.color || '#64748b' }}
                     />
                   </div>
