@@ -195,8 +195,25 @@ export default function RemediosView({
                 </p>
               </div>
             ) : (
-              filteredHistory.map((entry) => {
+              filteredHistory.map((entry, index) => {
               const isTaken = entry.status === 'taken';
+              const entryDate = entry.timestamp ? new Date(entry.timestamp) : null;
+              const previousEntry = filteredHistory[index - 1];
+              const previousDate = previousEntry?.timestamp ? new Date(previousEntry.timestamp) : null;
+              const startsNewDay =
+                entryDate &&
+                !Number.isNaN(entryDate.getTime()) &&
+                (!previousDate ||
+                  Number.isNaN(previousDate.getTime()) ||
+                  entryDate.toLocaleDateString('pt-BR') !== previousDate.toLocaleDateString('pt-BR'));
+              const dateLabel = entryDate
+                ? entryDate.toLocaleDateString('pt-BR', {
+                    weekday: 'long',
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                  })
+                : 'Data não informada';
               const scheduledAt = entry.scheduledAt ? new Date(entry.scheduledAt) : null;
               const recordedAt = entry.timestamp ? new Date(entry.timestamp) : null;
               const hasValidScheduledAt = scheduledAt && !Number.isNaN(scheduledAt.getTime());
@@ -208,7 +225,15 @@ export default function RemediosView({
                 recordedAt.getTime() - scheduledAt.getTime() >= 60000;
 
               return (
-                <div key={entry.id} className="px-5 py-4 sm:px-6">
+                <div key={entry.id}>
+                  {startsNewDay && (
+                    <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 sm:px-6">
+                      <p className="text-xs font-black uppercase tracking-wide text-slate-500">
+                        {dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
+                      </p>
+                    </div>
+                  )}
+                  <div className="px-5 py-4 sm:px-6">
                   <div className="flex items-start gap-3">
                     <div
                       className={
@@ -270,6 +295,7 @@ export default function RemediosView({
                         </p>
                       )}
                     </div>
+                  </div>
                   </div>
                 </div>
               );
