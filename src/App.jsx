@@ -525,6 +525,7 @@ export default function App() {
         isOpen={isDetailMedOpen}
         onClose={() => setIsDetailMedOpen(false)}
         medication={selectedDetailMed}
+        history={history}
         onEdit={(medication) => {
           setIsDetailMedOpen(false);
           setSelectedDetailMed(medication);
