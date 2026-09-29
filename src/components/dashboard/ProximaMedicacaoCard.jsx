@@ -44,6 +44,7 @@ export default function ProximaMedicacaoCard({
   futureDoses = [],
   medications = [],
   onToggleDoseStatus,
+  onRequestSkip,
   onUpdateDose,
   onSnoozeDose,
 }) {
@@ -213,17 +214,11 @@ export default function ProximaMedicacaoCard({
   };
 
   const handleSkip = () => {
-    if (!selectedDose) return;
+    if (!selectedDose || !onRequestSkip) return;
 
     stopAlarmSound();
     announcedAlarmRef.current = null;
-    const currentIndex = todayPendingDoses.findIndex(
-      (dose) => dose.id === selectedDose.id
-    );
-    const nextDose = todayPendingDoses[currentIndex + 1];
-
-    onToggleDoseStatus(selectedDose.id, 'skipped');
-    setSelectedDoseId(nextDose?.id || null);
+    onRequestSkip(selectedDose);
   };
 
   const handleMute = () => {
