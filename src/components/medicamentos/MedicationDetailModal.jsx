@@ -1,6 +1,6 @@
 import Modal from '../common/Modal';
 import Badge from '../common/Badge';
-import { Pill, BookOpenText, Calendar, Clock3, Utensils, Info, Pencil } from 'lucide-react';
+import { Pill, BookOpenText, Calendar, Clock3, Utensils, Info, Pencil, Square } from 'lucide-react';
 import { OFFICIAL_MEDICINES } from '../../data/officialMedicines';
 
 const MEAL_LABELS = {
@@ -11,7 +11,7 @@ const MEAL_LABELS = {
   depois: 'Depois da refeição',
 };
 
-export default function MedicationDetailModal({ isOpen, onClose, medication, onOpenOfficialInfo, onEdit }) {
+export default function MedicationDetailModal({ isOpen, onClose, medication, onOpenOfficialInfo, onEdit, onEndTreatment }) {
   if (!medication) return null;
 
   const officialMatch = OFFICIAL_MEDICINES.find(
@@ -22,11 +22,17 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Meu medicamento">
-      <div className="mb-4 flex gap-2">
-        <button type="button" onClick={() => onEdit(medication)} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200">
+      <div className="mb-4 grid gap-2 sm:grid-cols-2">
+        <button type="button" onClick={() => onEdit(medication)} className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200">
           <Pencil className="h-4 w-4" />
           Editar informações
         </button>
+        {onEndTreatment && !isAsNeeded && (
+          <button type="button" onClick={() => onEndTreatment(medication)} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 text-sm font-black text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-300">
+            <Square className="h-4 w-4" />
+            Encerrar lembretes
+          </button>
+        )}
       </div>
       <div className="max-h-[78vh] space-y-4 overflow-y-auto pr-1">
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
