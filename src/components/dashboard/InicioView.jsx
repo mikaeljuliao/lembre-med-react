@@ -42,7 +42,7 @@ function getDoseTime(dose) {
   return (Number(hours) || 0) * 60 * 60000 + (Number(minutes) || 0) * 60000;
 }
 
-function DoseRow({ dose, status, now }) {
+function DoseRow({ dose, status, now, onToggleDoseStatus }) {
   const target = getReminderState(dose, now).target;
   const isTaken = status === 'taken';
   const isSkipped = status === 'skipped';
@@ -77,18 +77,31 @@ function DoseRow({ dose, status, now }) {
         </p>
       </div>
 
-      <span
-        className={
-          'shrink-0 rounded-full px-3 py-1.5 text-xs font-black ' +
-          (isTaken
-            ? 'bg-emerald-100 text-emerald-700'
-            : isSkipped
-              ? 'bg-slate-100 text-slate-600'
-              : 'bg-amber-100 text-amber-800')
-        }
-      >
-        {isTaken ? 'Tomado' : isSkipped ? 'Não tomada' : 'Pendente'}
-      </span>
+      <div className="flex shrink-0 items-center gap-2">
+        <span
+          className={
+            'rounded-full px-3 py-1.5 text-xs font-black ' +
+            (isTaken
+              ? 'bg-emerald-100 text-emerald-700'
+              : isSkipped
+                ? 'bg-slate-100 text-slate-600'
+                : 'bg-amber-100 text-amber-800')
+          }
+        >
+          {isTaken ? 'Tomado' : isSkipped ? 'Não tomada' : 'Pendente'}
+        </span>
+
+        {(isTaken || isSkipped) && onToggleDoseStatus && (
+          <button
+            type="button"
+            onClick={() => onToggleDoseStatus(dose.id, 'pending')}
+            className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-600 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label={'Corrigir registro de ' + dose.medicationNome}
+          >
+            Corrigir
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -306,7 +319,7 @@ export default function InicioView({
 
                 <div className="divide-y divide-slate-100">
                   {pendingDoses.map((dose) => (
-                    <DoseRow key={dose.id} dose={dose} status="pending" now={new Date()} />
+                    <DoseRow key={dose.id} dose={dose} status="pending" now={new Date()} onToggleDoseStatus={onToggleDoseStatus} />
                   ))}
                 </div>
               </div>
@@ -325,7 +338,7 @@ export default function InicioView({
 
                 <div className="divide-y divide-slate-100">
                   {takenDoses.map((dose) => (
-                    <DoseRow key={dose.id} dose={dose} status="taken" now={new Date()} />
+                    <DoseRow key={dose.id} dose={dose} status="taken" now={new Date()} onToggleDoseStatus={onToggleDoseStatus} />
                   ))}
                 </div>
               </div>
@@ -341,7 +354,7 @@ export default function InicioView({
 
                 <div className="divide-y divide-slate-100">
                   {skippedDoses.map((dose) => (
-                    <DoseRow key={dose.id} dose={dose} status="skipped" now={new Date()} />
+                    <DoseRow key={dose.id} dose={dose} status="skipped" now={new Date()} onToggleDoseStatus={onToggleDoseStatus} />
                   ))}
                 </div>
               </div>
