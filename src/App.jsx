@@ -281,6 +281,44 @@ export default function App() {
       'success'
     );
   };
+  const handleEndMedicationTreatment = (medication) => {
+    if (!medication) return;
+
+    setDeleteRequest({
+      type: 'endTreatment',
+      title: 'Encerrar lembretes',
+      message: 'Deseja encerrar os lembretes de "' + medication.nome + '"? Os registros anteriores continuarão no histórico.',
+      item: medication,
+      onConfirm: () => {
+        const today = getLocalDateString();
+        const updatedTreatments = treatments.map((treatment) => {
+          const belongsToMedication = (treatment.medicamentos || []).some(
+            (item) => String(item.medicamentoId || '') === String(medication.id)
+          );
+
+          if (!belongsToMedication) return treatment;
+
+          return {
+            ...treatment,
+            status: 'inactive',
+            dataFim: treatment.dataFim || today,
+          };
+        });
+
+        setTreatments(updatedTreatments);
+        saveStoredTreatments(updatedTreatments);
+
+        const refreshedDoses = getStoredDoses(today);
+        setSelectedDate(today);
+        setDoses(refreshedDoses);
+        setIsDetailMedOpen(false);
+        setDeleteRequest(null);
+
+        showToast('Lembretes de ' + medication.nome + ' encerrados. O histórico foi preservado.', 'info');
+      },
+    });
+  };
+
   const handleDeleteMedication = (medId) => {
     const med = medications.find((medication) => medication.id === medId);
     if (!med) return;
@@ -494,6 +532,7 @@ export default function App() {
         }}
         onOpenOfficialInfo={() => setActiveTab('saude')}
         onRegisterUse={handleRegisterAsNeededUse}
+        onEndTreatment={handleEndMedicationTreatment}
       />
       <QuickReminderModal
         isOpen={isQuickReminderModalOpen}
