@@ -54,6 +54,7 @@ export default function App() {
   const [isDetailMedOpen, setIsDetailMedOpen] = useState(false);
   const [selectedDetailMed, setSelectedDetailMed] = useState(null);
   const [deleteRequest, setDeleteRequest] = useState(null);
+  const [skipRequest, setSkipRequest] = useState(null);
 
   useEffect(() => {
     setMedications(getStoredMedications());
@@ -414,7 +415,7 @@ export default function App() {
     showToast('Uso de ' + medication.nome + ' registrado.', 'success');
   };
 
-  const handleToggleDoseStatus = (doseId, newStatus) => {
+  const handleToggleDoseStatus = (doseId, newStatus, skipReason = '') => {
     const dose = doses.find((item) => item.id === doseId);
     if (!dose) return;
 
@@ -425,12 +426,14 @@ export default function App() {
 
     const isTaken = newStatus === 'taken';
     const previousStatus = currentDose.status;
+    const recordedAt = new Date().toISOString();
     const updatedDoses = dateDoses.map((item) => {
       if (item.id !== doseId) return item;
       return {
         ...item,
         status: newStatus,
-        takenAt: isTaken ? new Date().toISOString() : null,
+        takenAt: isTaken ? recordedAt : null,
+        skipReason: newStatus === 'skipped' ? skipReason || null : null,
         snoozedUntil: null,
         alarmMuted: false,
       };
@@ -438,7 +441,6 @@ export default function App() {
 
     if (previousStatus !== newStatus) {
       if (isTaken || newStatus === 'skipped') {
-        const recordedAt = new Date().toISOString();
         const newHist = saveMedicationEvent({
           doseId: currentDose.id,
           medicationId: currentDose.medicationId,
@@ -451,9 +453,12 @@ export default function App() {
           dosagem: currentDose.dosagem,
           treatmentNome: currentDose.treatmentNome,
           status: newStatus,
+          skipReason: newStatus === 'skipped' ? skipReason || null : null,
           observacao: isTaken
             ? 'Dose registrada pelo usuário.'
-            : 'Dose não realizada pelo usuário.',
+            : skipReason
+              ? 'Dose não realizada pelo usuário. Motivo: ' + skipReason
+              : 'Dose não realizada pelo usuário.',
         });
         setHistory(newHist);
       } else if (newStatus === 'pending') {
@@ -467,6 +472,18 @@ export default function App() {
     if (newStatus === 'taken') showToast('Dose registrada! ✓');
     if (newStatus === 'skipped') showToast('Dose não registrada.', 'info');
     if (newStatus === 'pending') showToast('Dose restaurada para pendente.', 'info');
+  };
+
+  const handleRequestSkip = (dose) => {
+    if (!dose) return;
+    setSkipRequest({ dose });
+  };
+
+  const handleConfirmSkip = (reason) => {
+    if (!skipRequest?.dose) return;
+    const doseId = skipRequest.dose.id;
+    setSkipRequest(null);
+    handleToggleDoseStatus(doseId, 'skipped', reason);
   };
 
   const handleUpdateDose = (doseId, changes) => {
@@ -496,6 +513,7 @@ export default function App() {
             futureDoses={futureDoses}
             medications={medications}
             onToggleDoseStatus={handleToggleDoseStatus}
+            onRequestSkip={handleRequestSkip}
             onUpdateDose={handleUpdateDose}
             onSnoozeDose={handleSnoozeDose}
             onNavigate={setActiveTab}
@@ -543,6 +561,64 @@ export default function App() {
         initialMedication={selectedDetailMed}
         isEditing={Boolean(selectedDetailMed && isQuickReminderModalOpen)}
       />
+      {skipRequest && (
+        <Modal
+          isOpen={!!skipRequest}
+          onClose={() => setSkipRequest(null)}
+          title="Registrar dose não tomada"
+        >
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-500">Dose</p>
+              <p className="mt-1 text-lg font-black text-slate-900">
+                {skipRequest.dose.medicationNome}
+              </p>
+              <p className="mt-1 text-sm font-bold text-slate-500">
+                {skipRequest.dose.dosagem} · {skipRequest.dose.horario}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm font-black text-slate-900">
+                Quer registrar o motivo?
+              </p>
+              <p className="mt-1 text-xs font-semibold text-slate-500">
+                É opcional. O registro da dose continuará salvo mesmo sem motivo.
+              </p>
+              <div className="mt-3 grid gap-2">
+                {['Esqueci', 'Decidi não tomar', 'Não estava disponível', 'Outro motivo'].map((reason) => (
+                  <button
+                    key={reason}
+                    type="button"
+                    onClick={() => handleConfirmSkip(reason)}
+                    className="min-h-12 w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-left text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => handleConfirmSkip('')}
+                className="min-h-12 rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700"
+              >
+                Registrar sem motivo
+              </button>
+              <button
+                type="button"
+                onClick={() => setSkipRequest(null)}
+                className="min-h-12 rounded-xl bg-slate-900 px-4 py-3 text-sm font-black text-white"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {deleteRequest && (
         <Modal
           isOpen={!!deleteRequest}
