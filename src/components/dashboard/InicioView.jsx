@@ -4,6 +4,7 @@ import {
   Check,
   CircleAlert,
   Clock3,
+  XCircle,
   Plus,
 } from 'lucide-react';
 import ProximaMedicacaoCard from './ProximaMedicacaoCard';
@@ -77,10 +78,10 @@ function DoseRow({ dose, status, now, onToggleDoseStatus }) {
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
         <span
           className={
-            'rounded-full px-3 py-1.5 text-xs font-black ' +
+            'rounded-full px-3 py-1.5 text-center text-xs font-black ' +
             (isTaken
               ? 'bg-emerald-100 text-emerald-700'
               : isSkipped
@@ -90,6 +91,27 @@ function DoseRow({ dose, status, now, onToggleDoseStatus }) {
         >
           {isTaken ? 'Tomado' : isSkipped ? 'Não tomada' : 'Pendente'}
         </span>
+
+        {status === 'pending' && onToggleDoseStatus && (
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onToggleDoseStatus(dose.id, 'taken')}
+              className="min-h-10 rounded-xl bg-emerald-600 px-3 text-xs font-black text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              aria-label={'Registrar como tomada: ' + dose.medicationNome}
+            >
+              JÁ TOMEI
+            </button>
+            <button
+              type="button"
+              onClick={() => onToggleDoseStatus(dose.id, 'skipped')}
+              className="min-h-10 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500"
+              aria-label={'Registrar como não tomada: ' + dose.medicationNome}
+            >
+              NÃO TOMEI
+            </button>
+          </div>
+        )}
 
         {(isTaken || isSkipped) && onToggleDoseStatus && (
           <button
