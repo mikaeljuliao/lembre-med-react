@@ -775,6 +775,7 @@ export default function HealthDiaryView() {
             </div>
           )}
         </section>
+      )}
 
     </div>
   );
