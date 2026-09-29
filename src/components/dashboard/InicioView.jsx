@@ -4,6 +4,7 @@ import {
   Check,
   CircleAlert,
   Clock3,
+  XCircle,
   Plus,
 } from 'lucide-react';
 import ProximaMedicacaoCard from './ProximaMedicacaoCard';
@@ -42,7 +43,7 @@ function getDoseTime(dose) {
   return (Number(hours) || 0) * 60 * 60000 + (Number(minutes) || 0) * 60000;
 }
 
-function DoseRow({ dose, status, now }) {
+function DoseRow({ dose, status, now, onToggleDoseStatus, onRequestSkip }) {
   const target = getReminderState(dose, now).target;
   const isTaken = status === 'taken';
   const isSkipped = status === 'skipped';
@@ -77,18 +78,52 @@ function DoseRow({ dose, status, now }) {
         </p>
       </div>
 
-      <span
-        className={
-          'shrink-0 rounded-full px-3 py-1.5 text-xs font-black ' +
-          (isTaken
-            ? 'bg-emerald-100 text-emerald-700'
-            : isSkipped
-              ? 'bg-slate-100 text-slate-600'
-              : 'bg-amber-100 text-amber-800')
-        }
-      >
-        {isTaken ? 'Tomado' : isSkipped ? 'Não tomada' : 'Pendente'}
-      </span>
+      <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+        <span
+          className={
+            'rounded-full px-3 py-1.5 text-center text-xs font-black ' +
+            (isTaken
+              ? 'bg-emerald-100 text-emerald-700'
+              : isSkipped
+                ? 'bg-slate-100 text-slate-600'
+                : 'bg-amber-100 text-amber-800')
+          }
+        >
+          {isTaken ? 'Tomado' : isSkipped ? 'Não tomada' : 'Pendente'}
+        </span>
+
+        {status === 'pending' && onToggleDoseStatus && (
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onToggleDoseStatus(dose.id, 'taken')}
+              className="min-h-10 rounded-xl bg-emerald-600 px-3 text-xs font-black text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              aria-label={'Registrar como tomada: ' + dose.medicationNome}
+            >
+              JÁ TOMEI
+            </button>
+            <button
+              type="button"
+              onClick={() => onRequestSkip?.(dose)}
+              className="min-h-10 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500"
+              aria-label={'Registrar como não tomada: ' + dose.medicationNome}
+            >
+              NÃO TOMEI
+            </button>
+          </div>
+        )}
+
+        {(isTaken || isSkipped) && onToggleDoseStatus && (
+          <button
+            type="button"
+            onClick={() => onToggleDoseStatus(dose.id, 'pending')}
+            className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-600 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label={'Corrigir registro de ' + dose.medicationNome}
+          >
+            Corrigir
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -191,6 +226,7 @@ export default function InicioView({
   futureDoses = [],
   medications = [],
   onToggleDoseStatus,
+  onRequestSkip,
   onUpdateDose,
   onSnoozeDose,
   onNavigate,
@@ -255,6 +291,7 @@ export default function InicioView({
         futureDoses={futureDoses}
         medications={medications}
         onToggleDoseStatus={onToggleDoseStatus}
+        onRequestSkip={onRequestSkip}
         onUpdateDose={onUpdateDose}
         onSnoozeDose={onSnoozeDose}
       />
@@ -306,7 +343,7 @@ export default function InicioView({
 
                 <div className="divide-y divide-slate-100">
                   {pendingDoses.map((dose) => (
-                    <DoseRow key={dose.id} dose={dose} status="pending" now={new Date()} />
+                    <DoseRow key={dose.id} dose={dose} status="pending" now={new Date()} onToggleDoseStatus={onToggleDoseStatus} onRequestSkip={onRequestSkip} />
                   ))}
                 </div>
               </div>
@@ -325,7 +362,7 @@ export default function InicioView({
 
                 <div className="divide-y divide-slate-100">
                   {takenDoses.map((dose) => (
-                    <DoseRow key={dose.id} dose={dose} status="taken" now={new Date()} />
+                    <DoseRow key={dose.id} dose={dose} status="taken" now={new Date()} onToggleDoseStatus={onToggleDoseStatus} />
                   ))}
                 </div>
               </div>
@@ -341,7 +378,7 @@ export default function InicioView({
 
                 <div className="divide-y divide-slate-100">
                   {skippedDoses.map((dose) => (
-                    <DoseRow key={dose.id} dose={dose} status="skipped" now={new Date()} />
+                    <DoseRow key={dose.id} dose={dose} status="skipped" now={new Date()} onToggleDoseStatus={onToggleDoseStatus} />
                   ))}
                 </div>
               </div>

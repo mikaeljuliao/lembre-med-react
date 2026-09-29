@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
+  XCircle,
   ChevronLeft,
   ChevronRight,
   Volume2,
@@ -43,6 +44,7 @@ export default function ProximaMedicacaoCard({
   futureDoses = [],
   medications = [],
   onToggleDoseStatus,
+  onRequestSkip,
   onUpdateDose,
   onSnoozeDose,
 }) {
@@ -209,6 +211,14 @@ export default function ProximaMedicacaoCard({
 
     onToggleDoseStatus(selectedDose.id, 'taken');
     setSelectedDoseId(nextDose?.id || null);
+  };
+
+  const handleSkip = () => {
+    if (!selectedDose || !onRequestSkip) return;
+
+    stopAlarmSound();
+    announcedAlarmRef.current = null;
+    onRequestSkip(selectedDose);
   };
 
   const handleMute = () => {
@@ -518,6 +528,15 @@ export default function ProximaMedicacaoCard({
             >
               <Check className="h-6 w-6" strokeWidth={3} />
               JÁ TOMEI
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSkip}
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-white/35 bg-white/10 px-5 py-3 text-base font-black text-white transition hover:bg-white/15 focus:outline-none focus:ring-4 focus:ring-white"
+            >
+              <XCircle className="h-5 w-5" />
+              NÃO TOMEI
             </button>
 
             {selectedDose.isDue && (

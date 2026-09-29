@@ -1,7 +1,8 @@
 import Modal from '../common/Modal';
 import Badge from '../common/Badge';
-import { Pill, BookOpenText, Calendar, Clock3, Utensils, Info, Pencil } from 'lucide-react';
+import { Pill, BookOpenText, Calendar, Clock3, Utensils, Info, Pencil, Square } from 'lucide-react';
 import { OFFICIAL_MEDICINES } from '../../data/officialMedicines';
+import { calculateAdherence } from '../../utils/businessLogic';
 
 const MEAL_LABELS = {
   sem_orientacao: 'Sem orientação',
@@ -11,7 +12,7 @@ const MEAL_LABELS = {
   depois: 'Depois da refeição',
 };
 
-export default function MedicationDetailModal({ isOpen, onClose, medication, onOpenOfficialInfo, onEdit }) {
+export default function MedicationDetailModal({ isOpen, onClose, medication, history = [], onOpenOfficialInfo, onEdit, onEndTreatment }) {
   if (!medication) return null;
 
   const officialMatch = OFFICIAL_MEDICINES.find(
@@ -19,14 +20,25 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
   );
   const horarios = Array.isArray(medication.horarios) ? medication.horarios : [];
   const isAsNeeded = medication.tipoUso === 'as_needed';
+  const medicationHistory = history.filter(
+    (entry) => String(entry.medicationId || '') === String(medication.id)
+  );
+  const adherence = calculateAdherence(medicationHistory);
+  const recentMedicationHistory = medicationHistory.slice(0, 5);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Meu medicamento">
-      <div className="mb-4 flex gap-2">
-        <button type="button" onClick={() => onEdit(medication)} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200">
+      <div className="mb-4 grid gap-2 sm:grid-cols-2">
+        <button type="button" onClick={() => onEdit(medication)} className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200">
           <Pencil className="h-4 w-4" />
           Editar informações
         </button>
+        {onEndTreatment && !isAsNeeded && (
+          <button type="button" onClick={() => onEndTreatment(medication)} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 text-sm font-black text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-300">
+            <Square className="h-4 w-4" />
+            Encerrar lembretes
+          </button>
+        )}
       </div>
       <div className="max-h-[78vh] space-y-4 overflow-y-auto pr-1">
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
@@ -105,6 +117,73 @@ export default function MedicationDetailModal({ isOpen, onClose, medication, onO
           )}
           {medication.dataFim && <p className="mt-3 text-sm font-bold text-blue-800">Lembrete até {new Date(medication.dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}.</p>}
         </div>
+
+        {medicationHistory.length > 0 && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h5 className="text-base font-black text-slate-900">Uso registrado</h5>
+                <p className="mt-1 text-xs font-semibold text-slate-500">
+                  Adesão calculada apenas sobre doses registradas.
+                </p>
+              </div>
+              <span className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-black text-blue-700">
+                {adherence.adherencePercentage}%
+              </span>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="rounded-xl bg-emerald-50 px-3 py-2">
+                <p className="text-xs font-bold text-emerald-700">Tomadas</p>
+                <p className="mt-1 text-lg font-black text-emerald-900">{adherence.takenDoses}</p>
+              </div>
+              <div className="rounded-xl bg-slate-50 px-3 py-2">
+                <p className="text-xs font-bold text-slate-600">Não tomadas</p>
+                <p className="mt-1 text-lg font-black text-slate-900">{adherence.skippedDoses}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              {recentMedicationHistory.map((entry) => {
+                const recordedAt = entry.timestamp ? new Date(entry.timestamp) : null;
+                const scheduledAt = entry.scheduledAt ? new Date(entry.scheduledAt) : null;
+                const validRecordedAt = recordedAt && !Number.isNaN(recordedAt.getTime());
+                const validScheduledAt = scheduledAt && !Number.isNaN(scheduledAt.getTime());
+
+                return (
+                  <div key={entry.id} className="rounded-xl bg-slate-50 px-3 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-black text-slate-900">
+                        {entry.status === 'taken' ? 'Tomada' : 'Não tomada'}
+                      </span>
+                      <span className="text-xs font-bold text-slate-500">
+                        {validRecordedAt
+                          ? recordedAt.toLocaleDateString('pt-BR') + ' às ' + recordedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                          : 'Sem horário'}
+                      </span>
+                    </div>
+                    {validScheduledAt && (
+                      <p className="mt-1 text-xs font-semibold text-slate-500">
+                        Programada para {scheduledAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    )}
+                    {entry.status === 'skipped' && entry.skipReason && (
+                      <p className="mt-1 text-xs font-semibold text-slate-600">
+                        Motivo: {entry.skipReason}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {medicationHistory.length > 5 && (
+              <p className="mt-3 text-xs font-bold text-slate-500">
+                Mostrando os 5 registros mais recentes. O histórico completo fica em Remédios.
+              </p>
+            )}
+          </div>
+        )}
 
         {(MEAL_LABELS[medication.orientacaoAlimentacao] || medication.finalidade || medication.observacoes) && (
           <div className="space-y-3">

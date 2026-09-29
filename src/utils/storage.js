@@ -291,10 +291,13 @@ function reconcileHistoryWithStoredDoses(history) {
         dosagem: dose.dosagem,
         treatmentNome: dose.treatmentNome,
         status: dose.status,
+        skipReason: dose.skipReason || null,
         observacao:
           dose.status === 'taken'
             ? 'Dose recuperada do estado salvo.'
-            : 'Registro recuperado do estado salvo.',
+            : dose.skipReason
+              ? 'Registro recuperado do estado salvo. Motivo: ' + dose.skipReason
+              : 'Registro recuperado do estado salvo.',
       });
 
       if (doseId) existingDoseIds.add(doseId);
@@ -330,14 +333,48 @@ export function getStoredHistory() {
   return reconciled;
 }
 
-export function addHistoryEntry(entry) {
+export function saveMedicationEvent(event) {
   const history = getStoredHistory();
-  const newEntry = {
-    id: 'hist-' + Date.now(),
-    timestamp: new Date().toISOString(),
-    ...entry,
+  const eventTimestamp = event.timestamp || new Date().toISOString();
+  const existingIndex = event.doseId
+    ? history.findIndex((entry) => String(entry.doseId) === String(event.doseId))
+    : -1;
+
+  const medicationEvent = {
+    ...(existingIndex >= 0 ? history[existingIndex] : {}),
+    id: existingIndex >= 0 ? history[existingIndex].id : 'hist-' + Date.now(),
+    timestamp: eventTimestamp,
+    ...event,
   };
-  const updated = [newEntry, ...history];
+
+  const updated = [...history];
+
+  if (existingIndex >= 0) {
+    updated[existingIndex] = medicationEvent;
+  } else {
+    updated.unshift(medicationEvent);
+  }
+
+  updated.sort(
+    (first, second) =>
+      new Date(second.timestamp).getTime() - new Date(first.timestamp).getTime()
+  );
+
   localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(updated));
   return updated;
+}
+
+export function removeMedicationEvent(doseId) {
+  if (!doseId) return getStoredHistory();
+
+  const history = getStoredHistory().filter(
+    (entry) => String(entry.doseId || '') !== String(doseId)
+  );
+
+  localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
+  return history;
+}
+
+export function addHistoryEntry(entry) {
+  return saveMedicationEvent(entry);
 }

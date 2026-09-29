@@ -67,20 +67,19 @@ export function calculateAdherence(occurrences = []) {
     };
   }
 
-  const takenDoses = occurrences.filter((d) => d.status === 'taken').length;
-  const skippedDoses = occurrences.filter((d) => d.status === 'skipped').length;
-  const missedDoses = occurrences.filter((d) => d.status === 'missed').length;
-  const pendingDoses = occurrences.filter((d) => d.status === 'pending').length;
+  const takenDoses = occurrences.filter((dose) => dose.status === 'taken').length;
+  const skippedDoses = occurrences.filter((dose) => dose.status === 'skipped').length;
+  const missedDoses = occurrences.filter((dose) => dose.status === 'missed').length;
+  const pendingDoses = occurrences.filter((dose) => dose.status === 'pending').length;
 
-  const evaluatedDoses = takenDoses + skippedDoses + missedDoses;
-  const totalDoses = occurrences.length;
-
-  const denominator = evaluatedDoses > 0 ? evaluatedDoses : totalDoses;
+  const evaluatedDoses = takenDoses + skippedDoses;
   const adherencePercentage =
-    denominator > 0 ? Math.round((takenDoses / denominator) * 1000) / 10 : 100;
+    evaluatedDoses > 0
+      ? Math.round((takenDoses / evaluatedDoses) * 1000) / 10
+      : 100;
 
   return {
-    totalDoses,
+    totalDoses: occurrences.length,
     takenDoses,
     skippedDoses,
     missedDoses,

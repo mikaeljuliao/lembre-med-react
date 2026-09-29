@@ -19,18 +19,31 @@ describe('businessLogic tests', () => {
       expect(result.totalDoses).toBe(0);
     });
 
-    it('calculates adherence percentage correctly for mixed statuses', () => {
+    it('calculates adherence using only taken and skipped doses', () => {
       const occurrences = [
         { status: 'taken' },
         { status: 'taken' },
         { status: 'skipped' },
         { status: 'missed' },
+        { status: 'pending' },
       ];
       const result = calculateAdherence(occurrences);
-      expect(result.totalDoses).toBe(4);
+
+      expect(result.totalDoses).toBe(5);
       expect(result.takenDoses).toBe(2);
-      // 2 taken out of 4 evaluated = 50%
-      expect(result.adherencePercentage).toBe(50);
+      expect(result.skippedDoses).toBe(1);
+      expect(result.missedDoses).toBe(1);
+      expect(result.pendingDoses).toBe(1);
+      expect(result.adherencePercentage).toBe(66.7);
+    });
+
+    it('does not evaluate pending doses as adherence failures', () => {
+      const result = calculateAdherence([
+        { status: 'pending' },
+        { status: 'pending' },
+      ]);
+
+      expect(result.adherencePercentage).toBe(100);
     });
   });
 
