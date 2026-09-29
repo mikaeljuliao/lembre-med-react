@@ -11,19 +11,25 @@ export default function RemediosView({
   onViewDetails,
 }) {
   const [historyMedicationFilter, setHistoryMedicationFilter] = useState('all');
+  const [historyStatusFilter, setHistoryStatusFilter] = useState('all');
+  const [showAllHistory, setShowAllHistory] = useState(false);
 
   const recentHistory = history.slice(0, 10);
+  const historyEntries = showAllHistory ? history : recentHistory;
   const historyMedications = medications.filter((medication) =>
     history.some(
       (entry) => String(entry.medicationId || '') === String(medication.id)
     )
   );
-  const filteredHistory =
-    historyMedicationFilter === 'all'
-      ? recentHistory
-      : recentHistory.filter(
-          (entry) => String(entry.medicationId || '') === historyMedicationFilter
-        );
+  const filteredHistory = historyEntries.filter((entry) => {
+    const matchesMedication =
+      historyMedicationFilter === 'all' ||
+      String(entry.medicationId || '') === historyMedicationFilter;
+    const matchesStatus =
+      historyStatusFilter === 'all' || entry.status === historyStatusFilter;
+
+    return matchesMedication && matchesStatus;
+  });
 
   const adherenceByMedication = Object.values(
     history.reduce((groups, entry) => {
@@ -143,13 +149,14 @@ export default function RemediosView({
               <div>
                 <h3 className="text-base font-black text-slate-900">Registros recentes</h3>
                 <p className="mt-1 text-sm font-semibold text-slate-500">
-                  Mostrando os últimos {filteredHistory.length} de {history.length} registros.
+                  Mostrando {filteredHistory.length} registro{filteredHistory.length === 1 ? '' : 's'}.
+                  {showAllHistory ? ' Histórico completo.' : ' Últimos 10 registros.'}
                 </p>
               </div>
 
-              {historyMedications.length > 0 && (
-                <label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600 sm:min-w-56">
-                  Filtrar medicamento
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">
+                  Medicamento
                   <select
                     value={historyMedicationFilter}
                     onChange={(event) => setHistoryMedicationFilter(event.target.value)}
@@ -163,7 +170,20 @@ export default function RemediosView({
                     ))}
                   </select>
                 </label>
-              )}
+
+                <label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">
+                  Situação
+                  <select
+                    value={historyStatusFilter}
+                    onChange={(event) => setHistoryStatusFilter(event.target.value)}
+                    className="min-h-11 rounded-xl border-2 border-slate-200 bg-white px-3 font-semibold text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  >
+                    <option value="all">Todas</option>
+                    <option value="taken">Tomadas</option>
+                    <option value="skipped">Não tomadas</option>
+                  </select>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -256,6 +276,18 @@ export default function RemediosView({
               })
             )}
           </div>
+
+          {history.length > 10 && (
+            <div className="border-t border-slate-100 px-5 py-4 sm:px-6">
+              <button
+                type="button"
+                onClick={() => setShowAllHistory((current) => !current)}
+                className="min-h-11 w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {showAllHistory ? 'Mostrar somente os 10 mais recentes' : 'Ver histórico completo'}
+              </button>
+            </div>
+          )}
 
           <div className="border-t border-slate-100 bg-slate-50 px-5 py-4 sm:px-6">
             <div className="flex items-start gap-3">
