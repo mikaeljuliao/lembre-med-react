@@ -1,5 +1,6 @@
 import { Check, ClipboardList, History, XCircle } from 'lucide-react';
 import MedicationListView from '../medicamentos/MedicationListView';
+import { calculateAdherence } from '../../utils/businessLogic';
 
 export default function RemediosView({
   medications = [],
@@ -9,6 +10,33 @@ export default function RemediosView({
   onViewDetails,
 }) {
   const recentHistory = history.slice(0, 10);
+  const adherenceByMedication = Object.values(
+    history.reduce((groups, entry) => {
+      const medicationKey = entry.medicationId
+        ? String(entry.medicationId)
+        : String(entry.medicationNome || '').trim().toLowerCase();
+
+      if (!medicationKey) return groups;
+
+      if (!groups[medicationKey]) {
+        groups[medicationKey] = {
+          medicationId: entry.medicationId || null,
+          medicationNome: entry.medicationNome || 'Medicamento',
+          events: [],
+        };
+      }
+
+      groups[medicationKey].events.push(entry);
+      return groups;
+    }, {})
+  )
+    .map((group) => ({
+      ...group,
+      adherence: calculateAdherence(group.events),
+    }))
+    .sort((first, second) =>
+      first.medicationNome.localeCompare(second.medicationNome, 'pt-BR')
+    );
 
   return (
     <div className="space-y-6 pb-24">
@@ -56,6 +84,43 @@ export default function RemediosView({
               </div>
             </div>
           </div>
+
+          {adherenceByMedication.length > 0 && (
+            <div className="border-t border-slate-100 px-5 py-5 sm:px-6">
+              <div>
+                <h3 className="text-base font-black text-slate-900">
+                  Adesão registrada por medicamento
+                </h3>
+                <p className="mt-1 text-sm font-semibold leading-5 text-slate-500">
+                  Considera apenas doses que foram registradas como tomadas ou não tomadas.
+                </p>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {adherenceByMedication.map((item) => (
+                  <div
+                    key={item.medicationId || item.medicationNome}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="min-w-0 text-sm font-black text-slate-900">
+                        {item.medicationNome}
+                      </p>
+                      <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-sm font-black text-slate-700">
+                        {item.adherence.adherencePercentage}%
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs font-bold text-slate-500">
+                      {item.adherence.takenDoses} tomada
+                      {item.adherence.takenDoses === 1 ? '' : 's'} ·{' '}
+                      {item.adherence.skippedDoses} não tomada
+                      {item.adherence.skippedDoses === 1 ? '' : 's'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="divide-y divide-slate-100">
             {recentHistory.map((entry) => {
