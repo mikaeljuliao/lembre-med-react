@@ -330,14 +330,36 @@ export function getStoredHistory() {
   return reconciled;
 }
 
-export function addHistoryEntry(entry) {
+export function saveMedicationEvent(event) {
   const history = getStoredHistory();
-  const newEntry = {
-    id: 'hist-' + Date.now(),
-    timestamp: new Date().toISOString(),
-    ...entry,
+  const eventTimestamp = event.timestamp || new Date().toISOString();
+  const existingIndex = event.doseId
+    ? history.findIndex((entry) => String(entry.doseId) === String(event.doseId))
+    : -1;
+
+  const medicationEvent = {
+    id: existingIndex >= 0 ? history[existingIndex].id : 'hist-' + Date.now(),
+    timestamp: eventTimestamp,
+    ...event,
   };
-  const updated = [newEntry, ...history];
+
+  const updated = [...history];
+
+  if (existingIndex >= 0) {
+    updated[existingIndex] = medicationEvent;
+  } else {
+    updated.unshift(medicationEvent);
+  }
+
+  updated.sort(
+    (first, second) =>
+      new Date(second.timestamp).getTime() - new Date(first.timestamp).getTime()
+  );
+
   localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(updated));
   return updated;
+}
+
+export function addHistoryEntry(entry) {
+  return saveMedicationEvent(entry);
 }
