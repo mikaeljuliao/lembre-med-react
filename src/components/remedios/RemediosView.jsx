@@ -1,4 +1,5 @@
 import { Check, ClipboardList, History, XCircle } from 'lucide-react';
+import { useState } from 'react';
 import MedicationListView from '../medicamentos/MedicationListView';
 import { calculateAdherence } from '../../utils/businessLogic';
 
@@ -9,7 +10,21 @@ export default function RemediosView({
   onDelete,
   onViewDetails,
 }) {
+  const [historyMedicationFilter, setHistoryMedicationFilter] = useState('all');
+
   const recentHistory = history.slice(0, 10);
+  const historyMedications = medications.filter((medication) =>
+    history.some(
+      (entry) => String(entry.medicationId || '') === String(medication.id)
+    )
+  );
+  const filteredHistory =
+    historyMedicationFilter === 'all'
+      ? recentHistory
+      : recentHistory.filter(
+          (entry) => String(entry.medicationId || '') === historyMedicationFilter
+        );
+
   const adherenceByMedication = Object.values(
     history.reduce((groups, entry) => {
       const medicationKey = entry.medicationId
@@ -70,6 +85,7 @@ export default function RemediosView({
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+
               <div className="rounded-2xl bg-slate-50 px-4 py-3">
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Registradas</p>
                 <p className="mt-1 text-xl font-black text-slate-900">{history.filter((entry) => entry.status === 'taken').length}</p>
@@ -79,8 +95,8 @@ export default function RemediosView({
                 <p className="mt-1 text-xl font-black text-slate-900">{history.filter((entry) => entry.status === 'skipped').length}</p>
               </div>
               <div className="col-span-2 rounded-2xl bg-slate-50 px-4 py-3 sm:col-span-1">
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Exibindo</p>
-                <p className="mt-1 text-xl font-black text-slate-900">Últimos {recentHistory.length}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Medicamentos</p>
+                <p className="mt-1 text-xl font-black text-slate-900">{adherenceByMedication.length}</p>
               </div>
             </div>
           </div>
@@ -122,8 +138,44 @@ export default function RemediosView({
             </div>
           )}
 
+          <div className="border-t border-slate-100 px-5 py-5 sm:px-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-base font-black text-slate-900">Registros recentes</h3>
+                <p className="mt-1 text-sm font-semibold text-slate-500">
+                  Mostrando os últimos {filteredHistory.length} de {history.length} registros.
+                </p>
+              </div>
+
+              {historyMedications.length > 0 && (
+                <label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600 sm:min-w-56">
+                  Filtrar medicamento
+                  <select
+                    value={historyMedicationFilter}
+                    onChange={(event) => setHistoryMedicationFilter(event.target.value)}
+                    className="min-h-11 rounded-xl border-2 border-slate-200 bg-white px-3 font-semibold text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  >
+                    <option value="all">Todos os medicamentos</option>
+                    {historyMedications.map((medication) => (
+                      <option key={medication.id} value={String(medication.id)}>
+                        {medication.nome}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
+          </div>
+
           <div className="divide-y divide-slate-100">
-            {recentHistory.map((entry) => {
+            {filteredHistory.length === 0 ? (
+              <div className="px-5 py-8 text-center sm:px-6">
+                <p className="text-sm font-bold text-slate-600">
+                  Nenhum registro encontrado para este medicamento.
+                </p>
+              </div>
+            ) : (
+              filteredHistory.map((entry) => {
               const isTaken = entry.status === 'taken';
               const scheduledAt = entry.scheduledAt ? new Date(entry.scheduledAt) : null;
               const recordedAt = entry.timestamp ? new Date(entry.timestamp) : null;
@@ -170,26 +222,39 @@ export default function RemediosView({
                         </span>
                       </div>
 
-                      <p className="mt-1 text-sm font-semibold text-slate-500">
-                        Registrado em{' '}
+                      <p className="mt-1 text-sm font-bold text-slate-700">
+                        {isTaken ? 'Tomada' : 'Não tomada'}{' '}
                         {hasValidRecordedAt
-                          ? recordedAt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+                          ? 'em ' +
+                            recordedAt.toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                            }) +
                             ' às ' +
-                            recordedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                          : 'data não disponível'}
+                            recordedAt.toLocaleTimeString('pt-BR', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : 'sem horário registrado'}
                       </p>
 
                       {hasValidScheduledAt && (
                         <p className="mt-1 text-sm font-semibold text-slate-500">
-                          Programado para {scheduledAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                          {wasRecordedLate && ' · registrado depois do horário'}
+                          {isTaken ? 'Programada para' : 'Estava programada para'}{' '}
+                          {scheduledAt.toLocaleTimeString('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                          {wasRecordedLate && ' · tomada depois do horário'}
                         </p>
                       )}
                     </div>
                   </div>
                 </div>
               );
-            })}
+              })
+            )}
           </div>
 
           <div className="border-t border-slate-100 bg-slate-50 px-5 py-4 sm:px-6">
