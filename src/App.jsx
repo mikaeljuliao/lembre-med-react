@@ -130,6 +130,12 @@ export default function App() {
           treatment.id === existingTreatment.id ? updatedTreatment : treatment
         );
 
+        const updatedMedications = medications.map((item) =>
+          String(item.id) === String(medication.id)
+            ? { ...item, dataFim: today }
+            : item
+        );
+
         setMedications(updatedMedications);
         saveStoredMedications(updatedMedications);
         setTreatments(updatedTreatments);
@@ -299,10 +305,21 @@ export default function App() {
 
           if (!belongsToMedication) return treatment;
 
+          const remainingMedications = (treatment.medicamentos || []).filter(
+            (item) => String(item.medicamentoId || '') !== String(medication.id)
+          );
+
+          if (remainingMedications.length === 0) {
+            return {
+              ...treatment,
+              status: 'inactive',
+              dataFim: today,
+            };
+          }
+
           return {
             ...treatment,
-            status: 'inactive',
-            dataFim: treatment.dataFim || today,
+            medicamentos: remainingMedications,
           };
         });
 
