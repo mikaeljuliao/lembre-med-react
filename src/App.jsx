@@ -23,6 +23,7 @@ import {
   saveStoredDosesForDate,
   getStoredHistory,
   saveMedicationEvent,
+  removeMedicationEvent,
 } from './utils/storage';
 import { getLocalDateString } from './utils/reminderEngine';
 import { generateDosesForDate, isSameMedication } from './utils/businessLogic';
@@ -397,22 +398,29 @@ export default function App() {
       };
     });
 
-    if (previousStatus !== newStatus && (isTaken || newStatus === 'skipped')) {
-      const newHist = saveMedicationEvent({
-        doseId: currentDose.id,
-        medicationId: currentDose.medicationId,
-        data: currentDose.data,
-        horario: currentDose.horario,
-        scheduledAt: currentDose.scheduledAt,
-        medicationNome: currentDose.medicationNome,
-        dosagem: currentDose.dosagem,
-        treatmentNome: currentDose.treatmentNome,
-        status: newStatus,
-        observacao: isTaken
-          ? 'Dose registrada pelo usuário.'
-          : 'Dose não registrada pelo usuário.',
-      });
-      setHistory(newHist);
+    if (previousStatus !== newStatus) {
+      if (isTaken || newStatus === 'skipped') {
+        const recordedAt = new Date().toISOString();
+        const newHist = saveMedicationEvent({
+          doseId: currentDose.id,
+          medicationId: currentDose.medicationId,
+          data: currentDose.data,
+          horario: currentDose.horario,
+          scheduledAt: currentDose.scheduledAt,
+          timestamp: recordedAt,
+          takenAt: isTaken ? recordedAt : null,
+          medicationNome: currentDose.medicationNome,
+          dosagem: currentDose.dosagem,
+          treatmentNome: currentDose.treatmentNome,
+          status: newStatus,
+          observacao: isTaken
+            ? 'Dose registrada pelo usuário.'
+            : 'Dose não realizada pelo usuário.',
+        });
+        setHistory(newHist);
+      } else if (newStatus === 'pending') {
+        setHistory(removeMedicationEvent(currentDose.id));
+      }
     }
 
     saveStoredDosesForDate(doseDate, updatedDoses);
